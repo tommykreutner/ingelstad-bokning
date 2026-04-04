@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prova-på-dagar — Ingelstadgymnasiet v152709</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#2d5a3d;--forest-dark:#1e3d2a;--forest-mid:#3d7a54;
+  --forest-light:#e8f4ed;--forest-pale:#f4faf6;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --sky:#0369a1;--sky-light:#e0f2fe;
+  --red:#dc2626;--red-light:#fee2e2;
+  --ink:#1a2e1e;--ink2:#4a6552;--muted:#7a9485;
+  --border:#c8ddd0;--bg:#f7faf8;--card:#fff;
+  --radius:10px;--radius-lg:16px;
+  --shadow:0 2px 12px rgba(45,90,61,.08);
+  --shadow-lg:0 8px 40px rgba(45,90,61,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px;}
+h1,h2,h3{font-family:'Playfair Display',serif;}
+button,input,select,textarea{font-family:'Nunito',sans-serif;}
+.hidden{display:none!important;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 20px;border-radius:var(--radius);border:none;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .18s;min-height:44px;}
+.btn-primary{background:var(--forest);color:#fff;}
+.btn-primary:active{background:var(--forest-dark);}
+.btn-secondary{background:var(--forest-light);color:var(--forest);}
+.btn-ghost{background:transparent;color:var(--forest);border:1.5px solid var(--border);}
+.btn-danger{background:var(--red-light);color:var(--red);}
+.btn-sm{padding:7px 14px;font-size:.82rem;min-height:36px;}
+.btn-full{width:100%;}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;}
+.badge-admin{background:#fef3c7;color:#92400e;}
+.badge-personal{background:var(--sky-light);color:var(--sky);}
+.badge-internat{background:#f3e8ff;color:#6b21a8;}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:700;}
+.tag-fm{background:#dbeafe;color:#1e40af;}
+.tag-em{background:#dcfce7;color:#15803d;}
+.tag-hel{background:#fef9c3;color:#713f12;}
+.tag-na{background:#fce7f3;color:#9d174d;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:.82rem;font-weight:700;color:var(--ink2);margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:1rem;color:var(--ink);background:#fff;min-height:44px;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--forest);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.form-hint{font-size:.78rem;color:var(--muted);margin-top:4px;}
+.error-box{background:var(--red-light);color:var(--red);border-radius:8px;padding:10px 14px;font-size:.87rem;margin-bottom:14px;}
+
+/* LOGIN */
+#screen-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--forest-dark) 0%,var(--forest-mid) 100%);padding:20px;}
+.login-card{background:#fff;border-radius:20px;padding:36px 28px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+.login-logo-icon{width:40px;height:40px;background:var(--forest);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;flex-shrink:0;}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+.demo-section>p{font-size:.72rem;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.demo-btn{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:.85rem;color:var(--ink);cursor:pointer;margin-bottom:6px;min-height:44px;}
+.demo-btn strong{color:var(--forest);}
+.demo-btn span{color:var(--muted);font-size:.78rem;}
+
+/* APP */
+#screen-app{display:none;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--forest-dark);color:#fff;height:54px;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.topbar-brand{font-family:'Playfair Display',serif;font-size:1rem;flex:1;}
+.topbar-brand small{font-family:'Nunito',sans-serif;font-size:.7rem;opacity:.5;margin-left:6px;}
+.btn-logout{background:rgba(255,255,255,.15);color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:.8rem;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:150;box-shadow:0 -2px 12px rgba(0,0,0,.08);}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;border:none;background:none;color:var(--muted);font-size:.62rem;font-weight:700;cursor:pointer;min-height:56px;}
+.bnav-btn .bi{font-size:1.3rem;}
+.bnav-btn.active{color:var(--forest);}
+.main-content{flex:1;overflow-y:auto;padding:20px 16px 80px;}
+.page-view{display:none;}
+.page-view.active{display:block;}
+.page-header{margin-bottom:20px;}
+.page-header h1{font-size:1.5rem;margin-bottom:3px;}
+.page-header p{color:var(--muted);font-size:.87rem;}
+
+/* BOOKING */
+#screen-booking{display:flex;flex-direction:column;min-height:100vh;}
+.bk-header{background:var(--forest-dark);color:#fff;padding:16px;display:flex;align-items:center;gap:12px;}
+.bk-logo{width:34px;height:34px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.bk-progress{background:#fff;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.ps{display:flex;align-items:center;gap:6px;padding:11px 10px;font-size:.72rem;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;flex-shrink:0;}
+.ps.active{color:var(--forest);border-bottom-color:var(--forest);font-weight:700;}
+.ps.done{color:var(--forest-mid);}
+.ps .sn{width:19px;height:19px;border-radius:50%;background:var(--border);color:var(--muted);font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ps.active .sn{background:var(--forest);color:#fff;}
+.ps.done .sn{background:var(--forest-light);color:var(--forest);}
+.bk-body{flex:1;overflow-y:auto;padding:20px 16px 40px;}
+.step-card{background:#fff;border-radius:var(--radius-lg);padding:24px 20px;box-shadow:var(--shadow);margin-bottom:16px;}
+.step-card h2{font-size:1.2rem;margin-bottom:6px;}
+.step-desc{color:var(--muted);font-size:.87rem;margin-bottom:20px;line-height:1.5;}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.choice-btn{border:2px solid var(--border);border-radius:var(--radius);padding:14px 12px;background:#fff;cursor:pointer;text-align:left;transition:border-color .15s,background .15s;min-height:80px;}
+.choice-btn.selected{border-color:var(--forest);background:var(--forest-light);}
+.choice-btn strong{display:block;font-size:.9rem;margin-bottom:3px;}
+.choice-btn span{font-size:.76rem;color:var(--muted);}
+.ci{font-size:1.4rem;margin-bottom:6px;display:block;}
+.prog-card{border:2px solid var(--border);border-radius:var(--radius);padding:14px;background:#fff;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.prog-card.selected{border-color:var(--forest);background:var(--forest-light);}
+.prog-card.nv-card{border-color:#f9a8d4;}
+.prog-card.nv-card.selected{background:#fce7f3;border-color:#ec4899;}
+.prog-card .pi{font-size:1.5rem;flex-shrink:0;}
+.prog-card h3{font-size:.93rem;margin-bottom:2px;}
+.prog-card p{font-size:.78rem;color:var(--muted);}
+.na-note{background:#fce7f3;border-radius:9px;padding:12px;font-size:.82rem;color:#9d174d;margin-bottom:14px;line-height:1.5;}
+.info-box{background:var(--forest-light);border-radius:9px;padding:12px 14px;font-size:.84rem;color:var(--forest-dark);margin-bottom:14px;line-height:1.5;}
+.info-box.amber{background:var(--amber-light);color:#7c3d0d;}
+.slot-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;background:#fff;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:10px;}
+.slot-card.selected{border-color:var(--forest);background:var(--forest-light);}
+.slot-card.full{opacity:.5;cursor:not-allowed;}
+.sl-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.sl-date{font-weight:700;font-size:.93rem;}
+.sl-spots{font-size:.75rem;color:var(--muted);}
+.sl-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.sl-combo{font-size:.78rem;color:var(--forest-mid);margin-top:5px;font-style:italic;}
+.sum-line{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:.88rem;gap:12px;}
+.sum-line:last-child{border-bottom:none;}
+.sum-line .sl{color:var(--muted);flex-shrink:0;}
+.sum-line .sv{font-weight:600;text-align:right;}
+.success-wrap{text-align:center;padding:32px 8px;}
+.success-wrap .sicon{font-size:3.5rem;margin-bottom:12px;}
+.success-wrap h2{font-size:1.6rem;color:var(--forest);margin-bottom:8px;}
+.success-wrap p{color:var(--muted);line-height:1.6;margin-bottom:16px;font-size:.9rem;}
+.bk-ref{background:var(--forest-light);border-radius:10px;padding:16px 20px;display:inline-block;margin-bottom:20px;}
+.bk-ref p{font-size:.75rem;color:var(--muted);margin-bottom:3px;}
+.bk-ref strong{font-size:1.5rem;color:var(--forest);letter-spacing:.1em;}
+
+/* DASHBOARD */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.stat-card{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+.stat-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.stat-val{font-size:1.8rem;font-family:'Playfair Display',serif;color:var(--ink);line-height:1;}
+.stat-sub{font-size:.75rem;color:var(--muted);margin-top:3px;}
+.sec-title{font-size:1rem;font-family:'Playfair Display',serif;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+
+/* TABLE */
+.table-wrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:480px;}
+th{background:var(--forest-pale);color:var(--ink2);font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:10px 14px;font-size:.85rem;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+.td-m{color:var(--muted);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end;animation:fadeIn .2s;}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-height:88vh;overflow-y:auto;animation:slideUp .25s ease;}
+.modal h3{font-size:1.15rem;margin-bottom:5px;}
+.modal-sub{color:var(--muted);font-size:.85rem;margin-bottom:20px;}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.modal-footer{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.modal-footer .btn{flex:1;}
+
+/* TOGGLE */
+.toggle{position:relative;width:44px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;inset:0;background:var(--border);border-radius:13px;cursor:pointer;transition:.2s;}
+.tslider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle input:checked+.tslider{background:var(--forest);}
+.toggle input:checked+.tslider:before{transform:translateX(18px);}
+
+/* MISC */
+.card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+.flex-between{display:flex;justify-content:space-between;align-items:center;}
+.mt-8{margin-top:8px;}
+.mt-12{margin-top:12px;}
+.mb-8{margin-bottom:8px;}
+.text-muted{color:var(--muted);}
+.text-sm{font-size:.82rem;}
+.fw-6{font-weight:600;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:var(--forest-light);color:var(--forest);font-size:.75rem;font-weight:700;margin:2px;}
+.slot-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);}
+.slot-row:last-child{border-bottom:none;}
+.nv-item{border:1.5px solid var(--border);border-radius:9px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;transition:all .15s;}
+.nv-item.active{border-color:var(--forest);background:var(--forest-light);}
+
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN (personal/admin only, hidden by default) -->
+<div id="screen-login" style="display:none;min-height:100vh;flex-direction:column;background:linear-gradient(160deg,var(--forest-dark) 0%,var(--forest-mid) 100%);padding:20px;align-items:center;justify-content:center;">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🌲</div>
+      <div>
+        <h2 style="font-size:1rem;color:var(--forest);">Ingelstadgymnasiet</h2>
+        <p style="font-size:.75rem;color:var(--muted);">Personalinloggning</p>
+      </div>
+    </div>
+    <h1 style="font-size:1.5rem;margin-bottom:4px;">Logga in</h1>
+    <p style="color:var(--muted);font-size:.87rem;margin-bottom:20px;">För personal och administratörer</p>
+    <div id="login-error" class="error-box hidden"></div>
+    <div class="form-group"><label>Användarnamn</label><input type="text" id="login-user" placeholder="användarnamn" autocomplete="username"></div>
+    <div class="form-group"><label>Lösenord</label><input type="password" id="login-pass" placeholder="lösenord" autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-full" style="font-size:1rem;padding:14px;" onclick="doLogin()">Logga in</button>
+    <hr class="divider">
+    <div class="demo-section">
+      <p>Testinloggningar</p>
+      <button class="demo-btn" onclick="quickLogin('admin')">🔑 <strong>Admin</strong> <span>— full kontroll</span></button>
+      <button class="demo-btn" onclick="quickLogin('djurvard')">🐾 <strong>Personal Djurvård</strong></button>
+      <button class="demo-btn" onclick="quickLogin('na')">🔬 <strong>Personal NV</strong></button>
+      <button class="demo-btn" onclick="quickLogin('internat')">🛏️ <strong>Internatansvarig</strong></button>
+    </div>
+    <hr class="divider">
+    <button class="btn btn-ghost btn-full" onclick="showBooking()">← Tillbaka till bokning</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="screen-app">
+  <div class="topbar">
+    <span class="topbar-brand">🌲 Ingelstad <small id="topbar-role"></small></span>
+    <span id="topbar-user" style="font-size:.78rem;opacity:.6;margin-right:4px;"></span>
+    <button class="btn-logout" onclick="doLogout()">Logga ut</button>
+  </div>
+  <div class="main-content" id="app-main">
+    <div id="page-dashboard" class="page-view"></div>
+    <div id="page-bookings" class="page-view"></div>
+    <div id="page-slots" class="page-view"></div>
+    <div id="page-overnight" class="page-view"></div>
+    <div id="page-admin" class="page-view"></div>
+    <div id="page-progadmin" class="page-view"></div>
+    <div id="page-internatadmin" class="page-view"></div>
+    <div id="page-stats" class="page-view"></div>
+  </div>
+  <div class="bottom-nav" id="bottom-nav"></div>
+</div>
+
+<!-- BOOKING FLOW -->
+<div id="screen-booking">
+  <div class="bk-header">
+    <div class="bk-logo">🌲</div>
+    <div style="flex:1;"><h1 style="font-size:1.05rem;color:#fff;">Prova-på-dagar</h1><p style="font-size:.72rem;opacity:.65;color:#fff;">Ingelstadgymnasiet</p></div>
+    <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none;" onclick="showLogin()">← Tillbaka</button>
+  </div>
+  <div class="bk-progress" id="bk-progress"></div>
+  <div class="bk-body" id="bk-body"></div>
+  <div style="background:var(--forest-dark);padding:12px 16px;text-align:center;flex-shrink:0;">
+    <button onclick="showStaffLogin()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:.72rem;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:underline;min-height:28px;">Personalinloggning</button>
+  </div>
+</div>
+
+<div id="modal-ct"></div>
+
+<script>
+const DB = {
+  settings:{schoolName:'Ingelstadgymnasiet',senderEmail:'provapå@ingelstad.nu',adminEmails:['admin@ingelstad.nu','rektor@ingelstad.nu'],kitchenEmail:'koket@ingelstad.nu',internatEmail:'internat@ingelstad.nu',smtpHost:'smtp.ingelstad.nu',smtpPort:'587',smtpUser:'noreply@ingelstad.nu',smtpPass:'',overnightCapacity:3,internatEmailText:'Välkommen till internatet! Incheckning sker i receptionen från kl 17:00. Frukost serveras 07:00–08:00. Ta med sängkläder eller hyr på plats.',adminEmailText:'Välkommen till Ingelstadgymnasiet! Vi ser fram emot ditt besök. Ta med bekräftelsekoden nedan.\n\nParkering finns vid huvudentrén. Check-in sker i receptionen kl 08:00.',blockedDates:['2026-04-27','2026-04-28','2026-04-29','2026-04-30','2026-05-01'],openTerms:['VT26'],termHistory:['HT24','VT24']},
+  programs:[
+    {id:'na',slotMode:'closed',name:'Naturvetenskap (NV)',icon:'🔬',isNV:true,hidden:true,defaultCapacity:8,emailText:'NV-programmet välkomnar dig! Ta med din vetenskapliga nyfikenhet. Vi ses i labbsalen.',nvCompatible:['djursjuk','hasthallning','lb-lantbruk'],description:'Utforska naturens lagar med experiment och teori.'},
+    {id:'djurvard',slotMode:'open',name:'Djurvård',icon:'🐾',isNV:false,defaultCapacity:10,emailText:'Djurvårdsprogrammet: Klä dig i bekväma kläder. Vi arbetar med levande djur!',nvCompatible:[],description:'Lär dig ta hand om och arbeta med djur professionellt.'},
+    {id:'djursjuk',slotMode:'closed',name:'Djursjukvård',icon:'💉',isNV:false,defaultCapacity:8,emailText:'Djursjukvårdsprogrammet: Vi ses i kliniken. Medicinska moment ingår under dagen.',nvCompatible:[],description:'Sjukvård och behandling av djur inom veterinär och klinik.'},
+    {id:'hasthallning',slotMode:'open',name:'Hästhållning',icon:'🐴',isNV:false,defaultCapacity:10,emailText:'Hästhållning: Ta med stövlar och kläder som tål lite smuts. Vi ses i stallet!',nvCompatible:[],description:'Arbeta med hästar och lär dig om skötsel och ridning.'},
+    {id:'dv-hund',slotMode:'closed',name:'DV-Hund',icon:'🐕',isNV:false,defaultCapacity:10,emailText:'DV-Hund: Välkommen till hundverksamheten! Ta med ombyteskläder.',nvCompatible:[],description:'Djurvård med inriktning mot hundar — träning, skötsel och vård.'},
+    {id:'lb-entreprenad',slotMode:'closed',name:'LB-Entreprenad',icon:'🚜',isNV:false,defaultCapacity:12,emailText:'LB-Entreprenad: Vi ses vid maskinparken. Rejäla skor rekommenderas.',nvCompatible:[],description:'Lantbruksmaskiner, entreprenad och markarbete i praktiken.'},
+    {id:'lb-lantbruk',slotMode:'closed',name:'LB-Lantbruk',icon:'🌾',isNV:false,defaultCapacity:12,emailText:'LB-Lantbruk: Välkommen till gården! Praktiska moment ingår under dagen.',nvCompatible:[],description:'Lantbruk, djurskötsel och grödor — ett liv på landet i praktiken.'},
+  ],
+  users:[
+    {id:'admin',name:'Anna Admin',role:'admin',program:null,pass:'admin123',email:'anna@ingelstad.nu'},
+    {id:'djurvard',name:'Björn Persson',role:'personal',program:'djurvard',pass:'pass',email:'bjorn@ingelstad.nu'},
+    {id:'na',name:'Cecilia Holm',role:'personal',program:'na',pass:'pass',email:'cecilia@ingelstad.nu'},
+    {id:'internat',name:'David Internat',role:'internat',program:null,pass:'pass',email:'david@ingelstad.nu'},
+    {id:'hast',name:'Eva Hästgren',role:'personal',program:'hasthallning',pass:'pass',email:'eva@ingelstad.nu'},
+    {id:'hund',name:'Fredrik Hundberg',role:'personal',program:'dv-hund',pass:'pass',email:'fredrik@ingelstad.nu'},
+    {id:'lbent',name:'Gunnar Entreprenad',role:'personal',program:'lb-entreprenad',pass:'pass',email:'gunnar@ingelstad.nu'},
+    {id:'lblant',name:'Helena Lantbruk',role:'personal',program:'lb-lantbruk',pass:'pass',email:'helena@ingelstad.nu'},
+  ],
+  slots:[
+    {id:'s1',programId:'djurvard',date:'2026-03-30',type:'fm',capacity:10,booked:3},
+    {id:'s2',programId:'djurvard',date:'2026-03-30',type:'em',capacity:10,booked:7},
+    {id:'s3',programId:'djurvard',date:'2026-04-13',type:'hel',capacity:10,booked:2},
+    {id:'s4',programId:'djursjuk',date:'2026-03-30',type:'fm',capacity:8,booked:2},
+    {id:'s5',programId:'djursjuk',date:'2026-03-30',type:'em',capacity:8,booked:5},
+    {id:'s6',programId:'djursjuk',date:'2026-04-13',type:'hel',capacity:8,booked:1},
+    {id:'s7',programId:'na',date:'2026-03-30',type:'fm',capacity:8,booked:4},
+    {id:'s8',programId:'na',date:'2026-04-13',type:'em',capacity:8,booked:2},
+    {id:'s9',programId:'hasthallning',date:'2026-03-30',type:'hel',capacity:10,booked:4},
+    {id:'s10',programId:'hasthallning',date:'2026-04-13',type:'fm',capacity:10,booked:2},
+    {id:'s11',programId:'dv-hund',date:'2026-03-30',type:'em',capacity:10,booked:3},
+    {id:'s12',programId:'dv-hund',date:'2026-04-13',type:'hel',capacity:10,booked:1},
+    {id:'s13',programId:'lb-entreprenad',date:'2026-03-30',type:'fm',capacity:12,booked:5},
+    {id:'s14',programId:'lb-lantbruk',date:'2026-03-30',type:'em',capacity:12,booked:3},
+    {id:'s15',programId:'lb-lantbruk',date:'2026-04-13',type:'hel',capacity:12,booked:6},
+    {id:'s16',programId:'djurvard',date:'2026-03-31',type:'hel',capacity:10,booked:1},
+    {id:'s17',programId:'djursjuk',date:'2026-03-31',type:'fm',capacity:8,booked:0},
+    {id:'s18',programId:'na',date:'2026-03-31',type:'em',capacity:8,booked:1},
+    {id:'s19',programId:'hasthallning',date:'2026-03-31',type:'em',capacity:10,booked:2},
+    {id:'s20',programId:'lb-lantbruk',date:'2026-03-31',type:'hel',capacity:12,booked:3},
+    {id:'s21',programId:'djurvard',date:'2026-04-14',type:'fm',capacity:10,booked:0},
+    {id:'s22',programId:'hasthallning',date:'2026-04-14',type:'hel',capacity:10,booked:1},
+    {id:'s23',programId:'lb-lantbruk',date:'2026-04-14',type:'fm',capacity:12,booked:0},
+    {id:'s24',programId:'na',date:'2026-04-14',type:'fm',capacity:8,booked:0},
+    {id:'s25',programId:'djursjuk',date:'2026-04-14',type:'em',capacity:8,booked:0},
+    {id:'s26',programId:'djurvard',date:'2026-03-31',type:'fm',capacity:10,booked:0},
+    {id:'s27',programId:'hasthallning',date:'2026-03-30',type:'fm',capacity:10,booked:2},
+    {id:'s28',programId:'lb-lantbruk',date:'2026-03-30',type:'fm',capacity:12,booked:1},
+    {id:'s29',programId:'djurvard',date:'2026-04-14',type:'em',capacity:10,booked:0},
+    {id:'s30',programId:'hasthallning',date:'2026-04-13',type:'em',capacity:10,booked:1},
+    {id:'s50',programId:'djurvard',date:'2026-03-30',type:'fm',capacity:10,booked:0},
+    {id:'s51',programId:'djurvard',date:'2026-03-30',type:'em',capacity:10,booked:0},
+    {id:'s52',programId:'djurvard',date:'2026-03-30',type:'hel',capacity:10,booked:0},
+    {id:'s53',programId:'djurvard',date:'2026-03-31',type:'fm',capacity:10,booked:0},
+    {id:'s54',programId:'djurvard',date:'2026-03-31',type:'em',capacity:10,booked:0},
+    {id:'s55',programId:'djurvard',date:'2026-03-31',type:'hel',capacity:10,booked:0},
+    {id:'s56',programId:'djursjuk',date:'2026-03-30',type:'fm',capacity:8,booked:0},
+    {id:'s57',programId:'djursjuk',date:'2026-03-30',type:'em',capacity:8,booked:0},
+    {id:'s58',programId:'djursjuk',date:'2026-03-30',type:'hel',capacity:8,booked:0},
+    {id:'s59',programId:'djursjuk',date:'2026-03-31',type:'fm',capacity:8,booked:0},
+    {id:'s60',programId:'djursjuk',date:'2026-03-31',type:'em',capacity:8,booked:0},
+    {id:'s61',programId:'djursjuk',date:'2026-03-31',type:'hel',capacity:8,booked:0},
+    {id:'s62',programId:'hasthallning',date:'2026-03-30',type:'fm',capacity:10,booked:0},
+    {id:'s63',programId:'hasthallning',date:'2026-03-30',type:'em',capacity:10,booked:0},
+    {id:'s64',programId:'hasthallning',date:'2026-03-30',type:'hel',capacity:10,booked:0},
+    {id:'s65',programId:'hasthallning',date:'2026-03-31',type:'fm',capacity:10,booked:0},
+    {id:'s66',programId:'hasthallning',date:'2026-03-31',type:'em',capacity:10,booked:0},
+    {id:'s67',programId:'hasthallning',date:'2026-03-31',type:'hel',capacity:10,booked:0},
+    {id:'s68',programId:'dv-hund',date:'2026-03-30',type:'fm',capacity:10,booked:0},
+    {id:'s69',programId:'dv-hund',date:'2026-03-30',type:'em',capacity:10,booked:0},
+    {id:'s70',programId:'dv-hund',date:'2026-03-30',type:'hel',capacity:10,booked:0},
+    {id:'s71',programId:'dv-hund',date:'2026-03-31',type:'fm',capacity:10,booked:0},
+    {id:'s72',programId:'dv-hund',date:'2026-03-31',type:'em',capacity:10,booked:0},
+    {id:'s73',programId:'dv-hund',date:'2026-03-31',type:'hel',capacity:10,booked:0},
+    {id:'s74',programId:'lb-entreprenad',date:'2026-03-30',type:'hel',capacity:12,booked:0},
+    {id:'s75',programId:'lb-entreprenad',date:'2026-03-31',type:'hel',capacity:12,booked:0},
+    {id:'s76',programId:'lb-lantbruk',date:'2026-03-30',type:'hel',capacity:12,booked:0},
+    {id:'s77',programId:'lb-lantbruk',date:'2026-03-31',type:'hel',capacity:12,booked:0},
+    {id:'s78',programId:'na',date:'2026-03-30',type:'fm',capacity:8,booked:0},
+    {id:'s79',programId:'na',date:'2026-03-31',type:'fm',capacity:8,booked:0},
+    {id:'s80',programId:'djurvard',date:'2026-04-06',type:'fm',capacity:10,booked:0},
+    {id:'s81',programId:'djurvard',date:'2026-04-06',type:'em',capacity:10,booked:0},
+    {id:'s82',programId:'djurvard',date:'2026-04-06',type:'hel',capacity:10,booked:0},
+    {id:'s83',programId:'djurvard',date:'2026-04-07',type:'fm',capacity:10,booked:0},
+    {id:'s84',programId:'djurvard',date:'2026-04-07',type:'em',capacity:10,booked:0},
+    {id:'s85',programId:'djurvard',date:'2026-04-07',type:'hel',capacity:10,booked:0},
+    {id:'s86',programId:'djursjuk',date:'2026-04-06',type:'fm',capacity:8,booked:0},
+    {id:'s87',programId:'djursjuk',date:'2026-04-06',type:'em',capacity:8,booked:0},
+    {id:'s88',programId:'djursjuk',date:'2026-04-06',type:'hel',capacity:8,booked:0},
+    {id:'s89',programId:'djursjuk',date:'2026-04-07',type:'fm',capacity:8,booked:0},
+    {id:'s90',programId:'djursjuk',date:'2026-04-07',type:'em',capacity:8,booked:0},
+    {id:'s91',programId:'djursjuk',date:'2026-04-07',type:'hel',capacity:8,booked:0},
+    {id:'s92',programId:'hasthallning',date:'2026-04-06',type:'fm',capacity:10,booked:0},
+    {id:'s93',programId:'hasthallning',date:'2026-04-06',type:'em',capacity:10,booked:0},
+    {id:'s94',programId:'hasthallning',date:'2026-04-06',type:'hel',capacity:10,booked:0},
+    {id:'s95',programId:'hasthallning',date:'2026-04-07',type:'fm',capacity:10,booked:0},
+    {id:'s96',programId:'hasthallning',date:'2026-04-07',type:'em',capacity:10,booked:0},
+    {id:'s97',programId:'hasthallning',date:'2026-04-07',type:'hel',capacity:10,booked:0},
+    {id:'s98',programId:'dv-hund',date:'2026-04-06',type:'fm',capacity:10,booked:0},
+    {id:'s99',programId:'dv-hund',date:'2026-04-06',type:'em',capacity:10,booked:0},
+    {id:'s100',programId:'dv-hund',date:'2026-04-06',type:'hel',capacity:10,booked:0},
+    {id:'s101',programId:'dv-hund',date:'2026-04-07',type:'fm',capacity:10,booked:0},
+    {id:'s102',programId:'dv-hund',date:'2026-04-07',type:'em',capacity:10,booked:0},
+    {id:'s103',programId:'dv-hund',date:'2026-04-07',type:'hel',capacity:10,booked:0},
+    {id:'s104',programId:'lb-entreprenad',date:'2026-04-06',type:'hel',capacity:12,booked:0},
+    {id:'s105',programId:'lb-entreprenad',date:'2026-04-07',type:'hel',capacity:12,booked:0},
+    {id:'s106',programId:'lb-lantbruk',date:'2026-04-06',type:'hel',capacity:12,booked:0},
+    {id:'s107',programId:'lb-lantbruk',date:'2026-04-07',type:'hel',capacity:12,booked:0},
+    {id:'s108',programId:'na',date:'2026-04-06',type:'fm',capacity:8,booked:0},
+    {id:'s109',programId:'na',date:'2026-04-07',type:'fm',capacity:8,booked:0},
+    {id:'s110',programId:'djurvard',date:'2026-04-13',type:'fm',capacity:10,booked:0},
+    {id:'s111',programId:'djurvard',date:'2026-04-13',type:'em',capacity:10,booked:0},
+    {id:'s112',programId:'djurvard',date:'2026-04-13',type:'hel',capacity:10,booked:0},
+    {id:'s113',programId:'djurvard',date:'2026-04-14',type:'fm',capacity:10,booked:0},
+    {id:'s114',programId:'djurvard',date:'2026-04-14',type:'em',capacity:10,booked:0},
+    {id:'s115',programId:'djurvard',date:'2026-04-14',type:'hel',capacity:10,booked:0},
+    {id:'s116',programId:'djursjuk',date:'2026-04-13',type:'fm',capacity:8,booked:0},
+    {id:'s117',programId:'djursjuk',date:'2026-04-13',type:'em',capacity:8,booked:0},
+    {id:'s118',programId:'djursjuk',date:'2026-04-13',type:'hel',capacity:8,booked:0},
+    {id:'s119',programId:'djursjuk',date:'2026-04-14',type:'fm',capacity:8,booked:0},
+    {id:'s120',programId:'djursjuk',date:'2026-04-14',type:'em',capacity:8,booked:0},
+    {id:'s121',programId:'djursjuk',date:'2026-04-14',type:'hel',capacity:8,booked:0},
+    {id:'s122',programId:'hasthallning',date:'2026-04-13',type:'fm',capacity:10,booked:0},
+    {id:'s123',programId:'hasthallning',date:'2026-04-13',type:'em',capacity:10,booked:0},
+    {id:'s124',programId:'hasthallning',date:'2026-04-13',type:'hel',capacity:10,booked:0},
+    {id:'s125',programId:'hasthallning',date:'2026-04-14',type:'fm',capacity:10,booked:0},
+    {id:'s126',programId:'hasthallning',date:'2026-04-14',type:'em',capacity:10,booked:0},
+    {id:'s127',programId:'hasthallning',date:'2026-04-14',type:'hel',capacity:10,booked:0},
+    {id:'s128',programId:'dv-hund',date:'2026-04-13',type:'fm',capacity:10,booked:0},
+    {id:'s129',programId:'dv-hund',date:'2026-04-13',type:'em',capacity:10,booked:0},
+    {id:'s130',programId:'dv-hund',date:'2026-04-13',type:'hel',capacity:10,booked:0},
+    {id:'s131',programId:'dv-hund',date:'2026-04-14',type:'fm',capacity:10,booked:0},
+    {id:'s132',programId:'dv-hund',date:'2026-04-14',type:'em',capacity:10,booked:0},
+    {id:'s133',programId:'dv-hund',date:'2026-04-14',type:'hel',capacity:10,booked:0},
+    {id:'s134',programId:'lb-entreprenad',date:'2026-04-13',type:'hel',capacity:12,booked:0},
+    {id:'s135',programId:'lb-entreprenad',date:'2026-04-14',type:'hel',capacity:12,booked:0},
+    {id:'s136',programId:'lb-lantbruk',date:'2026-04-13',type:'hel',capacity:12,booked:0},
+    {id:'s137',programId:'lb-lantbruk',date:'2026-04-14',type:'hel',capacity:12,booked:0},
+    {id:'s138',programId:'na',date:'2026-04-13',type:'fm',capacity:8,booked:0},
+    {id:'s139',programId:'na',date:'2026-04-14',type:'fm',capacity:8,booked:0},
+    {id:'s140',programId:'djurvard',date:'2026-04-20',type:'fm',capacity:10,booked:0},
+    {id:'s141',programId:'djurvard',date:'2026-04-20',type:'em',capacity:10,booked:0},
+    {id:'s142',programId:'djurvard',date:'2026-04-20',type:'hel',capacity:10,booked:0},
+    {id:'s143',programId:'djurvard',date:'2026-04-21',type:'fm',capacity:10,booked:0},
+    {id:'s144',programId:'djurvard',date:'2026-04-21',type:'em',capacity:10,booked:0},
+    {id:'s145',programId:'djurvard',date:'2026-04-21',type:'hel',capacity:10,booked:0},
+    {id:'s146',programId:'djursjuk',date:'2026-04-20',type:'fm',capacity:8,booked:0},
+    {id:'s147',programId:'djursjuk',date:'2026-04-20',type:'em',capacity:8,booked:0},
+    {id:'s148',programId:'djursjuk',date:'2026-04-20',type:'hel',capacity:8,booked:0},
+    {id:'s149',programId:'djursjuk',date:'2026-04-21',type:'fm',capacity:8,booked:0},
+    {id:'s150',programId:'djursjuk',date:'2026-04-21',type:'em',capacity:8,booked:0},
+    {id:'s151',programId:'djursjuk',date:'2026-04-21',type:'hel',capacity:8,booked:0},
+    {id:'s152',programId:'hasthallning',date:'2026-04-20',type:'fm',capacity:10,booked:0},
+    {id:'s153',programId:'hasthallning',date:'2026-04-20',type:'em',capacity:10,booked:0},
+    {id:'s154',programId:'hasthallning',date:'2026-04-20',type:'hel',capacity:10,booked:0},
+    {id:'s155',programId:'hasthallning',date:'2026-04-21',type:'fm',capacity:10,booked:0},
+    {id:'s156',programId:'hasthallning',date:'2026-04-21',type:'em',capacity:10,booked:0},
+    {id:'s157',programId:'hasthallning',date:'2026-04-21',type:'hel',capacity:10,booked:0},
+    {id:'s158',programId:'dv-hund',date:'2026-04-20',type:'fm',capacity:10,booked:0},
+    {id:'s159',programId:'dv-hund',date:'2026-04-20',type:'em',capacity:10,booked:0},
+    {id:'s160',programId:'dv-hund',date:'2026-04-20',type:'hel',capacity:10,booked:0},
+    {id:'s161',programId:'dv-hund',date:'2026-04-21',type:'fm',capacity:10,booked:0},
+    {id:'s162',programId:'dv-hund',date:'2026-04-21',type:'em',capacity:10,booked:0},
+    {id:'s163',programId:'dv-hund',date:'2026-04-21',type:'hel',capacity:10,booked:0},
+    {id:'s164',programId:'lb-entreprenad',date:'2026-04-20',type:'hel',capacity:12,booked:0},
+    {id:'s165',programId:'lb-entreprenad',date:'2026-04-21',type:'hel',capacity:12,booked:0},
+    {id:'s166',programId:'lb-lantbruk',date:'2026-04-20',type:'hel',capacity:12,booked:0},
+    {id:'s167',programId:'lb-lantbruk',date:'2026-04-21',type:'hel',capacity:12,booked:0},
+    {id:'s168',programId:'na',date:'2026-04-20',type:'fm',capacity:8,booked:0},
+    {id:'s169',programId:'na',date:'2026-04-21',type:'fm',capacity:8,booked:0},
+    {id:'s170',programId:'djurvard',date:'2026-04-27',type:'fm',capacity:10,booked:0},
+    {id:'s171',programId:'djurvard',date:'2026-04-27',type:'em',capacity:10,booked:0},
+    {id:'s172',programId:'djurvard',date:'2026-04-27',type:'hel',capacity:10,booked:0},
+    {id:'s173',programId:'djurvard',date:'2026-04-28',type:'fm',capacity:10,booked:0},
+    {id:'s174',programId:'djurvard',date:'2026-04-28',type:'em',capacity:10,booked:0},
+    {id:'s175',programId:'djurvard',date:'2026-04-28',type:'hel',capacity:10,booked:0},
+    {id:'s176',programId:'djursjuk',date:'2026-04-27',type:'fm',capacity:8,booked:0},
+    {id:'s177',programId:'djursjuk',date:'2026-04-27',type:'em',capacity:8,booked:0},
+    {id:'s178',programId:'djursjuk',date:'2026-04-27',type:'hel',capacity:8,booked:0},
+    {id:'s179',programId:'djursjuk',date:'2026-04-28',type:'fm',capacity:8,booked:0},
+    {id:'s180',programId:'djursjuk',date:'2026-04-28',type:'em',capacity:8,booked:0},
+    {id:'s181',programId:'djursjuk',date:'2026-04-28',type:'hel',capacity:8,booked:0},
+    {id:'s182',programId:'hasthallning',date:'2026-04-27',type:'fm',capacity:10,booked:0},
+    {id:'s183',programId:'hasthallning',date:'2026-04-27',type:'em',capacity:10,booked:0},
+    {id:'s184',programId:'hasthallning',date:'2026-04-27',type:'hel',capacity:10,booked:0},
+    {id:'s185',programId:'hasthallning',date:'2026-04-28',type:'fm',capacity:10,booked:0},
+    {id:'s186',programId:'hasthallning',date:'2026-04-28',type:'em',capacity:10,booked:0},
+    {id:'s187',programId:'hasthallning',date:'2026-04-28',type:'hel',capacity:10,booked:0},
+    {id:'s188',programId:'dv-hund',date:'2026-04-27',type:'fm',capacity:10,booked:0},
+    {id:'s189',programId:'dv-hund',date:'2026-04-27',type:'em',capacity:10,booked:0},
+    {id:'s190',programId:'dv-hund',date:'2026-04-27',type:'hel',capacity:10,booked:0},
+    {id:'s191',programId:'dv-hund',date:'2026-04-28',type:'fm',capacity:10,booked:0},
+    {id:'s192',programId:'dv-hund',date:'2026-04-28',type:'em',capacity:10,booked:0},
+    {id:'s193',programId:'dv-hund',date:'2026-04-28',type:'hel',capacity:10,booked:0},
+    {id:'s194',programId:'lb-entreprenad',date:'2026-04-27',type:'hel',capacity:12,booked:0},
+    {id:'s195',programId:'lb-entreprenad',date:'2026-04-28',type:'hel',capacity:12,booked:0},
+    {id:'s196',programId:'lb-lantbruk',date:'2026-04-27',type:'hel',capacity:12,booked:0},
+    {id:'s197',programId:'lb-lantbruk',date:'2026-04-28',type:'hel',capacity:12,booked:0},
+    {id:'s198',programId:'na',date:'2026-04-27',type:'fm',capacity:8,booked:0},
+    {id:'s199',programId:'na',date:'2026-04-28',type:'fm',capacity:8,booked:0},
+    {id:'s200',programId:'djurvard',date:'2026-05-04',type:'fm',capacity:10,booked:0},
+    {id:'s201',programId:'djurvard',date:'2026-05-04',type:'em',capacity:10,booked:0},
+    {id:'s202',programId:'djurvard',date:'2026-05-04',type:'hel',capacity:10,booked:0},
+    {id:'s203',programId:'djurvard',date:'2026-05-05',type:'fm',capacity:10,booked:0},
+    {id:'s204',programId:'djurvard',date:'2026-05-05',type:'em',capacity:10,booked:0},
+    {id:'s205',programId:'djurvard',date:'2026-05-05',type:'hel',capacity:10,booked:0},
+    {id:'s206',programId:'djursjuk',date:'2026-05-04',type:'fm',capacity:8,booked:0},
+    {id:'s207',programId:'djursjuk',date:'2026-05-04',type:'em',capacity:8,booked:0},
+    {id:'s208',programId:'djursjuk',date:'2026-05-04',type:'hel',capacity:8,booked:0},
+    {id:'s209',programId:'djursjuk',date:'2026-05-05',type:'fm',capacity:8,booked:0},
+    {id:'s210',programId:'djursjuk',date:'2026-05-05',type:'em',capacity:8,booked:0},
+    {id:'s211',programId:'djursjuk',date:'2026-05-05',type:'hel',capacity:8,booked:0},
+    {id:'s212',programId:'hasthallning',date:'2026-05-04',type:'fm',capacity:10,booked:0},
+    {id:'s213',programId:'hasthallning',date:'2026-05-04',type:'em',capacity:10,booked:0},
+    {id:'s214',programId:'hasthallning',date:'2026-05-04',type:'hel',capacity:10,booked:0},
+    {id:'s215',programId:'hasthallning',date:'2026-05-05',type:'fm',capacity:10,booked:0},
+    {id:'s216',programId:'hasthallning',date:'2026-05-05',type:'em',capacity:10,booked:0},
+    {id:'s217',programId:'hasthallning',date:'2026-05-05',type:'hel',capacity:10,booked:0},
+    {id:'s218',programId:'dv-hund',date:'2026-05-04',type:'fm',capacity:10,booked:0},
+    {id:'s219',programId:'dv-hund',date:'2026-05-04',type:'em',capacity:10,booked:0},
+    {id:'s220',programId:'dv-hund',date:'2026-05-04',type:'hel',capacity:10,booked:0},
+    {id:'s221',programId:'dv-hund',date:'2026-05-05',type:'fm',capacity:10,booked:0},
+    {id:'s222',programId:'dv-hund',date:'2026-05-05',type:'em',capacity:10,booked:0},
+    {id:'s223',programId:'dv-hund',date:'2026-05-05',type:'hel',capacity:10,booked:0},
+    {id:'s224',programId:'lb-entreprenad',date:'2026-05-04',type:'hel',capacity:12,booked:0},
+    {id:'s225',programId:'lb-entreprenad',date:'2026-05-05',type:'hel',capacity:12,booked:0},
+    {id:'s226',programId:'lb-lantbruk',date:'2026-05-04',type:'hel',capacity:12,booked:0},
+    {id:'s227',programId:'lb-lantbruk',date:'2026-05-05',type:'hel',capacity:12,booked:0},
+    {id:'s228',programId:'na',date:'2026-05-04',type:'fm',capacity:8,booked:0},
+    {id:'s229',programId:'na',date:'2026-05-05',type:'fm',capacity:8,booked:0},
+    {id:'s230',programId:'djurvard',date:'2026-05-11',type:'fm',capacity:10,booked:0},
+    {id:'s231',programId:'djurvard',date:'2026-05-11',type:'em',capacity:10,booked:0},
+    {id:'s232',programId:'djurvard',date:'2026-05-11',type:'hel',capacity:10,booked:0},
+    {id:'s233',programId:'djurvard',date:'2026-05-12',type:'fm',capacity:10,booked:0},
+    {id:'s234',programId:'djurvard',date:'2026-05-12',type:'em',capacity:10,booked:0},
+    {id:'s235',programId:'djurvard',date:'2026-05-12',type:'hel',capacity:10,booked:0},
+    {id:'s236',programId:'djursjuk',date:'2026-05-11',type:'fm',capacity:8,booked:0},
+    {id:'s237',programId:'djursjuk',date:'2026-05-11',type:'em',capacity:8,booked:0},
+    {id:'s238',programId:'djursjuk',date:'2026-05-11',type:'hel',capacity:8,booked:0},
+    {id:'s239',programId:'djursjuk',date:'2026-05-12',type:'fm',capacity:8,booked:0},
+    {id:'s240',programId:'djursjuk',date:'2026-05-12',type:'em',capacity:8,booked:0},
+    {id:'s241',programId:'djursjuk',date:'2026-05-12',type:'hel',capacity:8,booked:0},
+    {id:'s242',programId:'hasthallning',date:'2026-05-11',type:'fm',capacity:10,booked:0},
+    {id:'s243',programId:'hasthallning',date:'2026-05-11',type:'em',capacity:10,booked:0},
+    {id:'s244',programId:'hasthallning',date:'2026-05-11',type:'hel',capacity:10,booked:0},
+    {id:'s245',programId:'hasthallning',date:'2026-05-12',type:'fm',capacity:10,booked:0},
+    {id:'s246',programId:'hasthallning',date:'2026-05-12',type:'em',capacity:10,booked:0},
+    {id:'s247',programId:'hasthallning',date:'2026-05-12',type:'hel',capacity:10,booked:0},
+    {id:'s248',programId:'dv-hund',date:'2026-05-11',type:'fm',capacity:10,booked:0},
+    {id:'s249',programId:'dv-hund',date:'2026-05-11',type:'em',capacity:10,booked:0},
+    {id:'s250',programId:'dv-hund',date:'2026-05-11',type:'hel',capacity:10,booked:0},
+    {id:'s251',programId:'dv-hund',date:'2026-05-12',type:'fm',capacity:10,booked:0},
+    {id:'s252',programId:'dv-hund',date:'2026-05-12',type:'em',capacity:10,booked:0},
+    {id:'s253',programId:'dv-hund',date:'2026-05-12',type:'hel',capacity:10,booked:0},
+    {id:'s254',programId:'lb-entreprenad',date:'2026-05-11',type:'hel',capacity:12,booked:0},
+    {id:'s255',programId:'lb-entreprenad',date:'2026-05-12',type:'hel',capacity:12,booked:0},
+    {id:'s256',programId:'lb-lantbruk',date:'2026-05-11',type:'hel',capacity:12,booked:0},
+    {id:'s257',programId:'lb-lantbruk',date:'2026-05-12',type:'hel',capacity:12,booked:0},
+    {id:'s258',programId:'na',date:'2026-05-11',type:'fm',capacity:8,booked:0},
+    {id:'s259',programId:'na',date:'2026-05-12',type:'fm',capacity:8,booked:0},
+    {id:'s260',programId:'djurvard',date:'2026-05-18',type:'fm',capacity:10,booked:0},
+    {id:'s261',programId:'djurvard',date:'2026-05-18',type:'em',capacity:10,booked:0},
+    {id:'s262',programId:'djurvard',date:'2026-05-18',type:'hel',capacity:10,booked:0},
+    {id:'s263',programId:'djurvard',date:'2026-05-19',type:'fm',capacity:10,booked:0},
+    {id:'s264',programId:'djurvard',date:'2026-05-19',type:'em',capacity:10,booked:0},
+    {id:'s265',programId:'djurvard',date:'2026-05-19',type:'hel',capacity:10,booked:0},
+    {id:'s266',programId:'djursjuk',date:'2026-05-18',type:'fm',capacity:8,booked:0},
+    {id:'s267',programId:'djursjuk',date:'2026-05-18',type:'em',capacity:8,booked:0},
+    {id:'s268',programId:'djursjuk',date:'2026-05-18',type:'hel',capacity:8,booked:0},
+    {id:'s269',programId:'djursjuk',date:'2026-05-19',type:'fm',capacity:8,booked:0},
+    {id:'s270',programId:'djursjuk',date:'2026-05-19',type:'em',capacity:8,booked:0},
+    {id:'s271',programId:'djursjuk',date:'2026-05-19',type:'hel',capacity:8,booked:0},
+    {id:'s272',programId:'hasthallning',date:'2026-05-18',type:'fm',capacity:10,booked:0},
+    {id:'s273',programId:'hasthallning',date:'2026-05-18',type:'em',capacity:10,booked:0},
+    {id:'s274',programId:'hasthallning',date:'2026-05-18',type:'hel',capacity:10,booked:0},
+    {id:'s275',programId:'hasthallning',date:'2026-05-19',type:'fm',capacity:10,booked:0},
+    {id:'s276',programId:'hasthallning',date:'2026-05-19',type:'em',capacity:10,booked:0},
+    {id:'s277',programId:'hasthallning',date:'2026-05-19',type:'hel',capacity:10,booked:0},
+    {id:'s278',programId:'dv-hund',date:'2026-05-18',type:'fm',capacity:10,booked:0},
+    {id:'s279',programId:'dv-hund',date:'2026-05-18',type:'em',capacity:10,booked:0},
+    {id:'s280',programId:'dv-hund',date:'2026-05-18',type:'hel',capacity:10,booked:0},
+    {id:'s281',programId:'dv-hund',date:'2026-05-19',type:'fm',capacity:10,booked:0},
+    {id:'s282',programId:'dv-hund',date:'2026-05-19',type:'em',capacity:10,booked:0},
+    {id:'s283',programId:'dv-hund',date:'2026-05-19',type:'hel',capacity:10,booked:0},
+    {id:'s284',programId:'lb-entreprenad',date:'2026-05-18',type:'hel',capacity:12,booked:0},
+    {id:'s285',programId:'lb-entreprenad',date:'2026-05-19',type:'hel',capacity:12,booked:0},
+    {id:'s286',programId:'lb-lantbruk',date:'2026-05-18',type:'hel',capacity:12,booked:0},
+    {id:'s287',programId:'lb-lantbruk',date:'2026-05-19',type:'hel',capacity:12,booked:0},
+    {id:'s288',programId:'na',date:'2026-05-18',type:'fm',capacity:8,booked:0},
+    {id:'s289',programId:'na',date:'2026-05-19',type:'fm',capacity:8,booked:0}
+    ,
+    {id:'s290',programId:'na',date:'2026-04-14',type:'em',capacity:8,booked:0},
+    {id:'s291',programId:'na',date:'2026-03-30',type:'em',capacity:8,booked:0},
+    {id:'s292',programId:'na',date:'2026-03-31',type:'em',capacity:8,booked:0},
+    {id:'s293',programId:'na',date:'2026-04-06',type:'em',capacity:8,booked:0},
+    {id:'s294',programId:'na',date:'2026-04-07',type:'em',capacity:8,booked:0},
+    {id:'s295',programId:'na',date:'2026-04-13',type:'em',capacity:8,booked:0},
+    {id:'s296',programId:'na',date:'2026-04-14',type:'em',capacity:8,booked:0},
+    {id:'s297',programId:'na',date:'2026-04-20',type:'em',capacity:8,booked:0},
+    {id:'s298',programId:'na',date:'2026-04-21',type:'em',capacity:8,booked:0},
+    {id:'s299',programId:'na',date:'2026-04-27',type:'em',capacity:8,booked:0},
+    {id:'s300',programId:'na',date:'2026-04-28',type:'em',capacity:8,booked:0},
+    {id:'s301',programId:'na',date:'2026-05-04',type:'em',capacity:8,booked:0},
+    {id:'s302',programId:'na',date:'2026-05-05',type:'em',capacity:8,booked:0},
+    {id:'s303',programId:'na',date:'2026-05-11',type:'em',capacity:8,booked:0},
+    {id:'s304',programId:'na',date:'2026-05-12',type:'em',capacity:8,booked:0},
+    {id:'s305',programId:'na',date:'2026-05-18',type:'em',capacity:8,booked:0},
+    {id:'s306',programId:'na',date:'2026-05-19',type:'em',capacity:8,booked:0}
+  ],
+  overnight:[{date:'2026-03-29',booked:1},{date:'2026-04-12',booked:2}],
+  roomBookings:[{bookingId:'IGY-001',room:1,date:'2026-03-29'},{bookingId:'IGY-003',room:2,date:'2026-03-29'},{bookingId:'IGY-003',room:2,date:'2026-04-12'}],
+  closedRooms:[],  // [{room:1|2|3|'all', date:'YYYY-MM-DD'}]
+  bookings:[
+    {id:'IGY-001',studentName:'Erik Svensson',studentEmail:'erik@mail.se',guardianEmail:'mamma@mail.se',phone:'070-1234567',school:'Virestad skola',municipality:'Älmhult',grade:'9',days:2,overnight:true,slots:['s1','s4'],specialFood:'Vegetarisk',otherInfo:'',code:'A7K2',createdAt:'2026-02-21'},
+    {id:'IGY-002',studentName:'Maja Lindqvist',studentEmail:'maja@mail.se',guardianEmail:'pappa@mail.se',phone:'070-9876543',school:'Älmhults skola',municipality:'Älmhult',grade:'9',days:1,overnight:false,slots:['s3'],specialFood:'',otherInfo:'Mild nötallergi',code:'B3X9',createdAt:'2026-03-03'},
+    {id:'IGY-003',studentName:'Lucas Berg',studentEmail:'lucas@mail.se',guardianEmail:'vard@mail.se',phone:'076-1112233',school:'Ljungby skola',municipality:'Ljungby',grade:'9',days:2,overnight:true,slots:['s7','s2'],specialFood:'Glutenfri',otherInfo:'',code:'C5M1',createdAt:'2026-03-08'},
+  ]
+};
+
+let currentUser=null, bookingState={};
+
+// AUTH
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-error');
+  errEl.classList.add('hidden');
+  fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.error){errEl.textContent=data.error;errEl.classList.remove('hidden');return;}
+      const usr=DB.users.find(x=>x.id==='admin')||DB.users[0];
+      const u2=Object.assign({},usr,{id:data.user.id,name:data.user.name,role:data.user.role,program:data.user.program_id,email:data.user.email});
+      loginAs(u2);
+    })
+    .catch(()=>{errEl.textContent='Inloggningsfel, försök igen';errEl.classList.remove('hidden');});
+}
+function quickLogin(id){loginAs(DB.users.find(x=>x.id===id));}
+function loginAs(user){
+  currentUser=user;
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('screen-app').style.display='flex';
+  document.getElementById('topbar-user').textContent=user.name;
+  document.getElementById('topbar-role').textContent={admin:'Admin',personal:'Personal',internat:'Internat'}[user.role]||'';
+  renderNav();showPage('dashboard');
+}
+function doLogout(){currentUser=null;document.getElementById('screen-app').style.display='none';showBooking();}
+function showLogin(){document.getElementById('screen-booking').style.display='none';document.getElementById('screen-login').style.display='flex';}
+function showStaffLogin(){document.getElementById('screen-booking').style.display='none';document.getElementById('screen-login').style.display='flex';}
+
+// NAV
+function navItems(){
+  const r=currentUser?.role,items=[];
+  if(r) items.push({id:'dashboard',icon:'📊',label:'Översikt'});
+  if(r==='admin'||r==='personal') items.push({id:'bookings',icon:'📋',label:'Bokningar'});
+  if(r==='admin'||r==='personal') items.push({id:'slots',icon:'📅',label:'Tider'});
+  if(r==='personal') items.push({id:'progadmin',icon:'⚙️',label:'Admin'});
+  if(r==='admin'||r==='internat') items.push({id:'overnight',icon:'🛏️',label:'Internat'});
+  if(r==='internat') items.push({id:'internatadmin',icon:'⚙️',label:'Admin'});
+  if(r==='admin') items.push({id:'admin',icon:'⚙️',label:'Admin'});
+  return items;
+}
+function renderNav(){document.getElementById('bottom-nav').innerHTML=navItems().map(i=>`<button class="bnav-btn" id="bnav-${i.id}" onclick="showPage('${i.id}')"><span class="bi">${i.icon}</span>${i.label}</button>`).join('');}
+function showPage(id){
+  document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  const page=document.getElementById('page-'+id),btn=document.getElementById('bnav-'+id);
+  if(page)page.classList.add('active');if(btn)btn.classList.add('active');
+  ({dashboard:renderDashboard,bookings:renderBookings,slots:renderSlots,overnight:renderOvernight,admin:renderAdmin,stats:renderStatsPage,progadmin:renderProgAdmin,internatadmin:renderInternatAdmin})[id]?.();
+}
+
+// DASHBOARD
+
+// === TERM HELPERS ===
+function getTermId(date){
+  var d=new Date(date),y=d.getFullYear(),m=d.getMonth()+1,yy=String(y).slice(2);
+  return m>=8?'HT'+yy:'VT'+yy;
+}
+function termLabel(id){
+  return (id.slice(0,2)==='HT'?'Hoesttermin':'Vaartermin')+' 20'+id.slice(2);
+}
+function termDateRange(id){
+  var type=id.slice(0,2),year=2000+parseInt(id.slice(2));
+  return type==='HT'?{start:year+'-08-01',end:year+'-12-31'}:{start:year+'-01-01',end:year+'-06-30'};
+}
+function currentAndNextTerms(){
+  var today=new Date(),y=today.getFullYear(),m=today.getMonth()+1;
+  var yy=String(y).slice(2),nyy=String(y+1).slice(2),pyy=String(y-1).slice(2);
+  return m>=8?['HT'+yy,'VT'+nyy]:['HT'+pyy,'VT'+yy];
+}
+function autoCloseOldTerms(){
+  var today=new Date().toISOString().slice(0,10);
+  var toClose=DB.settings.openTerms.filter(function(tid){return today>termDateRange(tid).end;});
+  toClose.forEach(function(tid){
+    DB.settings.openTerms=DB.settings.openTerms.filter(function(x){return x!==tid;});
+    if(!DB.settings.termHistory.includes(tid)) DB.settings.termHistory.push(tid);
+  });
+}
+function isDateBookable(dateStr){
+  if(!DB.settings.openTerms.includes(getTermId(dateStr))) return false;
+  // Compare date strings directly to avoid timezone issues
+  var todayStr=new Date().toISOString().slice(0,10);
+  var todayDate=new Date(todayStr), slotDate=new Date(dateStr);
+  if((slotDate-todayDate)/(1000*60*60*24)<7) return false;
+  if(DB.settings.blockedDates.includes(dateStr)) return false;
+  return true;
+}
+function isDateInOpenTerm(dateStr){
+  return DB.settings.openTerms.includes(getTermId(dateStr));
+}
+function renderTermRows(){
+  autoCloseOldTerms();
+  var available=currentAndNextTerms();
+  var history=DB.settings.termHistory.slice().reverse();
+  var html='<div>';
+  available.forEach(function(tid){
+    var open=DB.settings.openTerms.includes(tid);
+    var r=termDateRange(tid);
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'
+      +'<div><strong class="text-sm">'+termLabel(tid).replace('Hoest','H\xf6st').replace('Vaar','V\xe5r')+'</strong>'
+      +'<div class="text-sm text-muted">'+fmtDate(r.start)+' \u2013 '+fmtDate(r.end)+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<span style="font-size:.75rem;font-weight:700;color:'+(open?'var(--forest)':'var(--muted)')+';">'+(open?'\u2705 \xd6ppen':'🔒 St\xe4ngd')+'</span>'
+      +'<label class="toggle"><input type="checkbox" '+(open?'checked':'')
+      +' onchange="toggleTerm(\''+tid+'\',this.checked)"><span class="tslider"></span></label>'
+      +'</div></div>';
+  });
+  html+='</div>';
+  if(history.length>0) html+='<p class="text-sm text-muted" style="margin-top:8px;"><strong>Arkiv:</strong> '+history.map(function(tid){return termLabel(tid).replace('Hoest','H\xf6st').replace('Vaar','V\xe5r');}).join(', ')+'</p>';
+  return html;
+}
+function toggleTerm(tid,open){
+  if(open){
+    if(!DB.settings.openTerms.includes(tid)) DB.settings.openTerms.push(tid);
+    DB.settings.termHistory=DB.settings.termHistory.filter(function(x){return x!==tid;});
+  } else {
+    DB.settings.openTerms=DB.settings.openTerms.filter(function(x){return x!==tid;});
+    if(!DB.settings.termHistory.includes(tid)) DB.settings.termHistory.push(tid);
+  }
+  renderAdmin();
+  toast(termLabel(tid).replace('Hoest','H\xf6st').replace('Vaar','V\xe5r')+': '+(open?'\xd6ppnad f\xf6r bokning':'St\xe4ngd f\xf6r bokning'));
+}
+
+
+// === STATISTICS ===
+function getSchoolYear(dateStr){
+  var d=new Date(dateStr),y=d.getFullYear(),m=d.getMonth()+1;
+  return m>=8?(y+'/'+(String(y+1).slice(2))):(y-1+'/'+(String(y).slice(2)));
+}
+function getCurrentSchoolYear(){return getSchoolYear(new Date().toISOString().slice(0,10));}
+function getPrevSchoolYear(){
+  var d=new Date(),y=d.getFullYear(),m=d.getMonth()+1;
+  return m>=8?((y-1)+'/'+(String(y).slice(2))):((y-2)+'/'+(String(y-1).slice(2)));
+}
+function buildStatsList(){
+  var currentSY=getCurrentSchoolYear(),prevSY=getPrevSchoolYear(),rows=[];
+  DB.bookings.forEach(function(b){
+    var sy=getSchoolYear(b.createdAt),include=false,note='';
+    if(sy===currentSY&&(b.grade==='9'||b.grade==='Har gått ut grundskolan')){include=true;note=b.grade==='9'?'Åk 9':'Ut grundskolan';}
+    if(sy===prevSY&&b.grade==='8'){include=true;note='Åk 8 (föreg. låsår)';}
+    if(!include)return;
+    var progs=[...new Set(b.slots.map(function(sid){
+      var sl=DB.slots.find(function(s){return s.id===sid;});
+      return sl?DB.programs.find(function(p){return p.id===sl.programId;})?.name:'';
+    }).filter(Boolean))].join(', ');
+    rows.push({name:b.studentName,school:b.school,municipality:b.municipality||'',grade:b.grade,programs:progs,note:note,schoolYear:sy});
+  });
+  return rows.sort(function(a,b){return a.municipality.localeCompare(b.municipality)||a.school.localeCompare(b.school);});
+}
+function renderStatsPage(){
+  var rows=buildStatsList();
+  var cSY=getCurrentSchoolYear(),pSY=getPrevSchoolYear();
+  var html='<div class="page-header"><h1>Statistik</h1><p>Innevarande låsår ('+cSY+'): åk 9 & gymnasie &mdash; Föregående ('+pSY+'): åk 8</p></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">'
+    +'<button class="btn btn-secondary btn-sm" onclick="exportStatsCSV()">Exportera CSV</button>'
+    +'<button class="btn btn-secondary btn-sm" onclick="exportStatsPDF()">Exportera PDF</button>'
+    +'<button class="btn btn-primary btn-sm" onclick="emailStats()">Skicka till admin-mail</button>'
+    +'</div>';
+  if(!rows.length){html+='<div class="card text-muted text-sm">Inga relevanta bokningar hittades för dessa låsår.</div>';}
+  else{
+    html+='<div class="table-wrap"><table><thead><tr><th>Namn</th><th>Skola</th><th>Kommun</th><th>Klass</th><th>Provat på</th><th>Not</th></tr></thead><tbody>'
+      +rows.map(function(r){
+        return '<tr><td><strong>'+r.name+'</strong></td><td>'+r.school+'</td><td>'+r.municipality+'</td>'
+          +'<td>Åk '+r.grade+'</td><td class="text-sm td-m">'+r.programs+'</td>'
+          +'<td><span class="badge badge-personal" style="font-size:.66rem;">'+r.note+'</span></td></tr>';
+      }).join('')+'</tbody></table></div>'
+      +'<p class="text-sm text-muted" style="margin-top:8px;">'+rows.length+' elever totalt</p>';
+  }
+  document.getElementById('page-stats').innerHTML=html;
+}
+function exportStatsCSV(){
+  var rows=buildStatsList();
+  var lines=['﻿Namn,Skola,Hemkommun,Klass,Provat på,Not,Låsår'];
+  rows.forEach(function(r){
+    lines.push([r.name,r.school,r.municipality,r.grade,r.programs,r.note,r.schoolYear]
+      .map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(','));
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='statistik_provapaa.csv';a.click();
+}
+function exportStatsPDF(){
+  var rows=buildStatsList();
+  var win=window.open('','_blank');
+  if(!win){toast('Tillåt popups för att exportera PDF','e');return;}
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Statistik</title>'
+    +'<style>body{font-family:sans-serif;font-size:12px;padding:24px}h1{font-size:16px;margin-bottom:4px}'
+    +'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#2d5a3d;color:#fff;padding:6px 10px;text-align:left;font-size:11px}'
+    +'td{padding:6px 10px;border-bottom:1px solid #ddd;font-size:11px}@media print{.noprint{display:none}}</style></head><body>'
+    +'<h1>Statistik — Prova-på-dagar, Ingelstadgymnasiet</h1>'
+    +'<p style="color:#666;font-size:11px;">Genererad '+new Date().toLocaleDateString('sv-SE')+'</p>'
+    +'<button class="noprint" onclick="window.print()" style="margin:10px 0;padding:6px 14px;background:#2d5a3d;color:#fff;border:none;border-radius:6px;cursor:pointer;">Skriv ut / Spara PDF</button>'
+    +'<table><thead><tr><th>Namn</th><th>Skola</th><th>Kommun</th><th>Klass</th><th>Provat på</th><th>Not</th></tr></thead><tbody>'
+    +rows.map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.school+'</td><td>'+r.municipality+'</td><td>Åk '+r.grade+'</td><td>'+r.programs+'</td><td>'+r.note+'</td></tr>';}).join('')
+    +'</tbody></table><p style="margin-top:10px;font-size:10px;color:#999;">'+rows.length+' elever</p></body></html>');
+  win.document.close();
+}
+function emailStats(){
+  var rows=buildStatsList();
+  var lines='Statistik Prova-på-dagar \u2014 Ingelstadgymnasiet\n'
+    +new Date().toLocaleDateString('sv-SE')+'\n\n'
+    +rows.map(function(r){return r.name+' | '+r.school+' | '+r.municipality+' | Åk '+r.grade+' | '+r.programs;}).join('\n')
+    +'\n\n'+rows.length+' elever totalt.';
+  var emails=(DB.settings.adminEmails||[]).join(', ')||'(inga admin-adresser inlagda)';
+  showModal('<div class="modal-handle"></div><h3>E-post simulerad</h3>'
+    +'<p class="modal-sub">Skickas till: <strong>'+emails+'</strong></p>'
+    +'<div style="background:#f7faf8;border-radius:9px;padding:14px;font-size:.76rem;font-family:monospace;white-space:pre-wrap;max-height:260px;overflow-y:auto;line-height:1.6;">'+lines.replace(/\\n/g,'\n')+'</div>'
+    +'<div class="modal-footer"><button class="btn btn-primary btn-full" onclick="closeModal()">Stäng</button></div>');
+}
+function autoEmailStatsOnVTClose(tid){
+  if(tid&&tid.slice(0,2)==='VT') setTimeout(function(){toast('VT stängd — statistikmail skickat till admin (simulerat)');},900);
+}
+
+function renderDashboard(){
+  const mp=currentUser.program;
+  const bks=mp?DB.bookings.filter(b=>b.slots.some(sid=>DB.slots.find(s=>s.id===sid&&s.programId===mp))):DB.bookings;
+  const sl=mp?DB.slots.filter(s=>s.programId===mp):DB.slots;
+  const prog=currentUser.role==='personal'?DB.programs.find(p=>p.id===mp):null;
+  const ovUsed=DB.overnight.reduce((a,o)=>a+o.booked,0);
+  document.getElementById('page-dashboard').innerHTML=`
+    <div class="page-header"><h1>${prog?prog.icon+' '+prog.name:'🌲 Ingelstadgymnasiet'}</h1><p>Prova-på-dagar — översikt</p></div>
+    <div class="stat-grid">
+      ${(()=>{
+        const today=new Date().toISOString().slice(0,10);
+        const termEnd=DB.settings.openTerms.length?termDateRange(DB.settings.openTerms[0]).end:'9999-12-31';
+
+        if(currentUser.role==='personal'){
+          const upcoming=bks.filter(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.programId===mp&&s.date>=today&&s.date<=termEnd;}));
+          return '<div class="stat-card" style="grid-column:1/-1;"><div class="stat-label">Kommande bokningar</div><div class="stat-val">'+upcoming.length+'</div><div class="stat-sub">fram till terminens slut</div></div>';
+        }
+
+        if(currentUser.role==='internat'){
+          const upcomingOv=DB.bookings.filter(b=>b.overnight&&getOvernightNightsForBooking(b).some(n=>n>=today&&n<=termEnd));
+          const nextNight=DB.roomBookings.filter(rb=>rb.date>=today&&rb.date<=termEnd).map(rb=>rb.date).sort()[0]||null;
+          const nextRooms=nextNight?DB.roomBookings.filter(rb=>rb.date===nextNight):[];
+          return '<div class="stat-card" style="grid-column:1/-1;"><div class="stat-label">Kommande övernattningar</div><div class="stat-val">'+upcomingOv.length+'</div><div class="stat-sub">från idag till terminsslutet</div></div>'
+            +(nextNight?'<div class="stat-card" style="grid-column:1/-1;border-left:4px solid var(--forest);"><div class="stat-label">Nästa bokade natt</div><div class="stat-val" style="font-size:1.3rem;">'+fmtDate(nextNight)+'</div><div class="stat-sub">'+nextRooms.length+' av '+DB.settings.overnightCapacity+' rum belagda</div></div>':'');
+        }
+
+        return '<div class="stat-card"><div class="stat-label">Bokningar</div><div class="stat-val">'+bks.length+'</div><div class="stat-sub">totalt</div></div>'
+          +'<div class="stat-card"><div class="stat-label">Övernattning</div><div class="stat-val">'+ovUsed+'/'+DB.settings.overnightCapacity+'</div><div class="stat-sub">rum belagda</div></div>'
+          +'<div class="stat-card"><div class="stat-label">Program</div><div class="stat-val">'+DB.programs.filter(p=>!p.hidden).length+'</div><div class="stat-sub">aktiva</div></div>';
+      })()}
+    </div>
+    <div class="sec-title">${currentUser.role==='personal'?'Kommande dagar':currentUser.role==='internat'?'Kommande gäster':'Senaste bokningar'}</div>
+    ${(()=>{
+      const today=new Date().toISOString().slice(0,10);
+      const termEnd=DB.settings.openTerms.length?termDateRange(DB.settings.openTerms[0]).end:'9999-12-31';
+
+      if(currentUser.role==='personal'){
+        // NV-program: slots are internal, not meaningful to show directly
+        if(prog&&prog.isNV) return '<div class="card text-muted text-sm">NV bokas alltid som del av ett NV-paket. Se Bokningar-fliken för detaljer.</div>';
+        const myUpcomingSlots=DB.slots.filter(s=>s.programId===mp&&s.date>=today&&s.booked>0).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,6);
+        if(!myUpcomingSlots.length) return '<div class="card text-muted text-sm">Inga kommande bokade dagar.</div>';
+        return '<div class="table-wrap"><table><thead><tr><th>Datum</th><th>Tid</th><th>Bokade</th></tr></thead><tbody>'
+          +myUpcomingSlots.map(s=>'<tr><td><strong>'+fmtDate(s.date)+'</strong></td><td><span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span></td><td>'+s.booked+'/'+s.capacity+'</td></tr>').join('')
+          +'</tbody></table></div>';
+      }
+
+      if(currentUser.role==='internat'){
+        const upcoming=DB.bookings.filter(b=>b.overnight&&getOvernightNightsForBooking(b).some(n=>n>=today&&n<=termEnd));
+        if(!upcoming.length) return '<div class="card text-muted text-sm">Inga kommande gäster.</div>';
+        return '<div class="table-wrap"><table><thead><tr><th>Gäst</th><th>Natt</th><th>Rum</th><th>Kost</th></tr></thead><tbody>'
+          +upcoming.map(b=>{
+            const nights=getOvernightNightsForBooking(b).filter(n=>n>=today);
+            return nights.map(n=>{
+              const rb=DB.roomBookings.find(x=>x.bookingId===b.id&&x.date===n);
+              return '<tr><td><strong>'+b.studentName+'</strong><br><span class="td-m text-sm">'+b.school+'</span></td>'
+                +'<td>'+fmtDate(n)+'</td>'
+                +'<td>Rum '+(rb?rb.room:'?')+'</td>'
+                +'<td class="td-m text-sm">'+(b.specialFood||'—')+'</td></tr>';
+            }).join('');
+          }).join('')
+          +'</tbody></table></div>';
+      }
+
+      return '<div class="table-wrap"><table><thead><tr><th>Elev</th><th>Program</th><th>Dagar</th><th>Övernattning</th></tr></thead><tbody>'
+        +bks.slice(0,5).map(b=>{
+          const progs=[...new Set(b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?DB.programs.find(p=>p.id===s.programId)?.icon+' '+DB.programs.find(p=>p.id===s.programId)?.name:'';}))].join(', ');
+          return '<tr><td><strong>'+b.studentName+'</strong><br><span class="td-m text-sm">'+b.school+'</span></td><td class="td-m text-sm">'+progs+'</td><td>'+b.days+'</td><td>'+(b.overnight?'✅':'—')+'</td></tr>';
+        }).join('')
+        +'</tbody></table></div>';
+    })()}
+  `;
+}
+
+// BOOKINGS
+function renderBookings(activeDate){
+  var mp=currentUser.program;
+  var prog=mp?DB.programs.find(function(p){return p.id===mp;}):null;
+  var list=mp?DB.bookings.filter(function(b){return b.slots.some(function(sid){return DB.slots.find(function(s){return s.id===sid&&s.programId===mp;});});}):DB.bookings;
+  var mySlots=mp?DB.slots.filter(function(s){return s.programId===mp;}).sort(function(a,b){return a.date.localeCompare(b.date)||a.type.localeCompare(b.type);}):[];
+  var selectedDate=activeDate||null;
+  var dateBookings=selectedDate?list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp&&s.date===selectedDate;});}):[];
+
+  var html='<div class="page-header"><h1>Bokningar</h1><p>'+(mp?prog?.name:'Alla program')+'</p></div>';
+
+  if(mp){
+    // Personal: day overview first
+    html+='<div class="sec-title" style="margin-bottom:10px;">Mina dagar <span class="text-sm text-muted fw-6" style="font-weight:400;">klicka p\u00e5 en dag f\u00f6r att se elever</span></div>';
+    if(!mySlots.length){
+      html+='<div class="card text-muted text-sm" style="margin-bottom:16px;">Inga tider inlagda \u00e4nnu \u2014 g\u00e5 till Tider-fliken f\u00f6r att l\u00e4gga till.</div>';
+    } else {
+      var byDate={};
+      mySlots.forEach(function(sl){if(!byDate[sl.date])byDate[sl.date]=[];byDate[sl.date].push(sl);});
+      html+='<div style="margin-bottom:16px;">';
+      Object.entries(byDate).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){
+        var date=entry[0], slots=entry[1];
+        var bkgsOnDay=list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp&&s.date===date;});});
+        // Skip days with no bookings
+        if(!bkgsOnDay.length) return;
+        var isSelected=date===selectedDate;
+        var totalBooked=slots.reduce(function(a,s){return a+s.booked;},0);
+        var totalCap=slots.reduce(function(a,s){return a+s.capacity;},0);
+        var full=totalBooked>=totalCap;
+        html+='<div onclick="renderBookings(\''+date+'\')" style="border:1.5px solid '+(isSelected?'var(--forest)':full?'#fca5a5':'var(--border)')+';border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;background:'+(isSelected?'var(--forest-light)':full?'#fff7f7':'#fff')+';transition:border-color .15s;">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+          +'<div><strong style="font-size:.93rem;">'+fmtDate(date)+'</strong>'
+          +' '+slots.map(function(s){return '<span class="tag tag-'+s.type+'" style="margin-right:2px;">'+s.type.toUpperCase()+'</span>';}).join('')+'</div>'
+          +'<div style="text-align:right;flex-shrink:0;">'
+          +'<div style="font-size:.85rem;font-weight:700;color:'+(full?'var(--red)':isSelected?'var(--forest)':'var(--ink2)')+';">'+totalBooked+'/'+totalCap+' bokade</div>'
+  
+          +'</div></div>'
+          +(bkgsOnDay.length>0?'<div class="text-sm text-muted" style="margin-top:5px;">'+bkgsOnDay.map(function(b){return b.studentName;}).join(', ')+'</div>':'<div class="text-sm text-muted" style="margin-top:5px;">Inga elever bokade \xe4nnu</div>')
+          +'</div>';
+      });
+      html+='</div>';
+    }
+
+    if(selectedDate){
+      html+='<div class="sec-title" style="margin-bottom:10px;">'+fmtDate(selectedDate)
+        +' \u2014 '+dateBookings.length+' elev(er)'
+        +'<button class="btn btn-ghost btn-sm" onclick="exportDayCSV(\''+selectedDate+'\')">Exportera</button></div>';
+      if(!dateBookings.length){
+        html+='<div class="card text-muted text-sm">Inga bokningar p\u00e5 detta datum.</div>';
+      }
+      dateBookings.forEach(function(b){
+        html+='<div class="card" style="margin-bottom:10px;">'
+          +'<strong>'+b.studentName+'</strong>'
+          +'<div class="text-sm text-muted" style="line-height:1.85;margin-top:6px;">'
+          +'\ud83d\udce7 '+b.studentEmail+'<br>\ud83d\udcf1 '+b.phone
+          +'<br>\ud83c\udfe7 '+b.school+(b.municipality?' ('+b.municipality+')':'')+', \u00e5k '+b.grade
+          +(b.overnight?'<br>\ud83d\udecf\ufe0f \u00d6vernattning bokad':'')
+          +(b.specialFood?'<br>\ud83c\udf7d\ufe0f '+b.specialFood:'')
+          +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
+          +'</div></div>';
+      });
+    }
+  } else {
+    // Admin: full list with export
+    html+='<div class="mb-8"><button class="btn btn-secondary btn-sm" onclick="exportAllCSV()">Exportera CSV</button></div>';
+    if(!list.length) html+='<div class="card text-muted text-sm">Inga bokningar \u00e4nnu.</div>';
+    list.forEach(function(b){
+      html+='<div class="card" style="margin-bottom:12px;">'
+        +'<div class="flex-between mb-8"><div><strong>'+b.studentName+'</strong> <span class="badge badge-personal" style="font-size:.68rem;">'+b.id+'</span></div>'
+        +'<button class="btn btn-danger btn-sm" onclick="cancelBooking(\''+b.id+'\')">Avboka</button></div>'
+        +'<div class="text-sm text-muted" style="line-height:1.85;">'
+        +'\ud83d\udce7 '+b.studentEmail+' / '+b.guardianEmail+'<br>\ud83d\udcf1 '+b.phone
+        +'<br>\ud83c\udfe7 '+b.school+(b.municipality?' ('+b.municipality+')':'')+', \u00e5k '+b.grade
+        +(b.overnight?'<br>\ud83d\udecf\ufe0f \u00d6vernattning':'')
+        +(b.specialFood?'<br>\ud83c\udf7d\ufe0f '+b.specialFood:'')
+        +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
+        +'</div>'
+        +'<div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;">'
+        +b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var pr=s?DB.programs.find(function(p){return p.id===s.programId;}):null;return s?'<span class="chip">'+(pr?pr.icon+' '+pr.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span></span>':''}).join('')
+        +'</div></div>';
+    });
+  }
+  document.getElementById('page-bookings').innerHTML=html;
+}
+function exportDayCSV(date){
+  var mp=currentUser.program;
+  var list=DB.bookings.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp&&s.date===date;});});
+  var lines=['\ufeffNamn,Skola,Kommun,Klass,Telefon,E-post,\u00d6vernattning,Specialkost,\u00d6vrigt'];
+  list.forEach(function(b){lines.push([b.studentName,b.school,b.municipality||'',b.grade,b.phone,b.studentEmail,b.overnight?'Ja':'Nej',b.specialFood||'',b.otherInfo||''].map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(','));});
+  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bokningar_'+date+'.csv';a.click();
+}
+function exportAllCSV(){toast('CSV-export simulerad');}
+
+function cancelBooking(id){
+  showModal(`<div class="modal-handle"></div><h3>Avboka bokning?</h3><p class="modal-sub">Eleven notifieras via e-post (simulerat).</p>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-danger" onclick="DB.bookings=DB.bookings.filter(b=>b.id!=='${id}');closeModal();renderBookings();toast('Bokning avbokad')">Avboka</button></div>`);
+}
+
+// SLOTS
+function renderSlots(){
+  const mp=currentUser.program;
+  const progs=mp?DB.programs.filter(p=>p.id===mp):DB.programs;
+  document.getElementById('page-slots').innerHTML=`
+    <div class="page-header"><h1>📅 Tider</h1><p>Lägg in och hantera prova-på-tillfällen</p></div>
+    ${progs.map(prog=>`<div class="card" style="margin-bottom:16px;">
+      <div class="flex-between mb-8"><h3 style="font-size:1rem;">${prog.icon} ${prog.name}</h3>
+        <button class="btn btn-secondary btn-sm" onclick="addSlotModal('${prog.id}')">+ Lägg till</button></div>
+      <div class="info-box ${prog.slotMode==='open'?'':'amber'}" style="margin-bottom:10px;padding:8px 12px;">
+        ${prog.slotMode==='open'
+          ?'🟢 <strong>Öppen som standard</strong> — alla dagar är tillgängliga. Lägg till tider du <em>inte</em> kan ta emot för att stänga dem.'
+          :'🔴 <strong>Stängd som standard</strong> — inga dagar är tillgängliga. Lägg till tider du <em>kan</em> ta emot.'}
+      </div>
+      ${DB.slots.filter(s=>s.programId===prog.id).length===0?'<p class="text-sm text-muted">Inga tider inlagda.</p>':''}
+      ${DB.slots.filter(s=>s.programId===prog.id).map(sl=>`
+        <div class="slot-row">
+          <div style="flex:1;"><strong class="text-sm">${fmtDate(sl.date)}</strong> <span class="tag tag-${sl.type}" style="margin-left:4px;">${sl.type.toUpperCase()}</span></div>
+          ${prog.slotMode==='closed'?`<span class="text-sm text-muted">${sl.booked}/${sl.capacity} bokade</span>`:'<span class="text-sm text-muted" style="color:var(--red);">Stängd</span>'}
+          <button class="btn btn-ghost btn-sm" onclick="editSlotModal('${sl.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSlot('${sl.id}')">🗑</button>
+        </div>`).join('')}
+
+    </div>`).join('')}`;
+}
+
+
+function renderInternatAdmin(){
+  var u=DB.users.find(function(x){return x.id===currentUser.id;});
+  var emailVal=(u&&u.email)||'';
+  var cap=DB.settings.overnightCapacity;
+
+  // Group closedRooms for display
+  function closedDisplay(){
+    if(!DB.closedRooms.length) return '<p class="text-sm text-muted">Inga st\u00e4ngda n\u00e4tter.</p>';
+    var sorted=DB.closedRooms.slice().sort(function(a,b){return a.date.localeCompare(b.date)||String(a.room).localeCompare(String(b.room));});
+    return '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      +sorted.map(function(cr){
+        var label=(cr.room==='all'?'Alla rum':('Rum '+cr.room))+' \u2014 '+fmtDate(cr.date);
+        return '<span class="chip">'+label
+          +' <span onclick="removeClosedRoom(\''+cr.room+'\',\''+cr.date+'\')" style="cursor:pointer;margin-left:3px;">\u2715</span></span>';
+      }).join('')+'</div>';
+  }
+
+  document.getElementById('page-internatadmin').innerHTML=
+    '<div class="page-header"><h1>\u2699\ufe0f Internat Admin</h1><p>Instellningar och st\u00e4ngning</p></div>'
+    +'<div class="card" style="margin-bottom:16px;">'
+    +'<p class="text-sm fw-6" style="margin-bottom:10px;">E-postadress</p>'
+    +'<div class="form-group" style="margin-bottom:8px;"><label>Din e-postadress</label>'
+    +'<input type="email" id="ia-email" value="'+emailVal+'" placeholder="internat@ingelstad.nu"></div>'
+    +'<p class="form-hint" style="margin-bottom:10px;">Du f\u00e5r BCC n\u00e4r en elev bokar \u00f6vernattning.</p>'
+    +'<button class="btn btn-primary btn-sm" onclick="saveInternatEmail()">Spara adress</button>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:16px;">'
+    +'<p class="text-sm fw-6" style="margin-bottom:10px;">Internatets del i bekräftelsemail</p>'
+    +'<div class="form-group" style="margin-bottom:8px;"><label>Text till eleven vid övernattningsbokning</label>'
+    +'<textarea id="ia-emailtext" rows="4" style="font-size:.9rem;">'+(DB.settings.internatEmailText||'')+'</textarea></div>'
+    +'<p class="form-hint" style="margin-bottom:10px;">Visas i bekräftelsemailet när eleven har bokat övernattning.</p>'
+    +'<button class="btn btn-primary btn-sm" onclick="saveInternatMailText()">Spara text</button>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:16px;">'
+    +'<p class="text-sm fw-6" style="margin-bottom:10px;">Stäng rum</p>'
+    +'<p class="text-sm text-muted" style="margin-bottom:12px;">St\u00e4ng ett eller alla rum f\u00f6r en natt eller period. St\u00e4ngda rum kan inte bokas av elever.</p>'
+    +'<div class="form-group"><label>Rum</label><select id="ia-room">'
+    +Array.from({length:cap},function(_,i){return '<option value="'+(i+1)+'">Rum '+(i+1)+'</option>';}).join('')
+    +'<option value="all">Alla rum</option>'
+    +'</select></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px;">'
+    +'<button class="btn btn-secondary btn-sm" style="flex:1;" id="ia-type-day" onclick="setIAType(\'day\')">Enstaka natt</button>'
+    +'<button class="btn btn-ghost btn-sm" style="flex:1;" id="ia-type-period" onclick="setIAType(\'period\')">Period</button>'
+    +'<button class="btn btn-ghost btn-sm" style="flex:1;" id="ia-type-weekday" onclick="setIAType(\'weekday\')">Veckodag</button>'
+    +'</div>'
+    +'<div id="ia-day-wrap"><div class="form-group"><label>Datum (ankomstdagen)</label><input type="date" id="ia-date"></div></div>'
+    +'<div id="ia-period-wrap" style="display:none;">'
+    +'<div class="form-group"><label>Fr\u00e5n (ankomst)</label><input type="date" id="ia-from"></div>'
+    +'<div class="form-group"><label>Till (ankomst)</label><input type="date" id="ia-to"></div>'
+    +'</div>'
+    +'<div id="ia-weekday-wrap" style="display:none;">'
+    +'<div class="form-group"><label>Veckodag</label><select id="ia-wday">'
+    +'<option value="1">M\u00e5ndag</option>'
+    +'<option value="2">Tisdag</option>'
+    +'<option value="3">Onsdag</option>'
+    +'<option value="4">Torsdag</option>'
+    +'<option value="5">Fredag</option>'
+    +'<option value="6">L\u00f6rdag</option>'
+    +'<option value="0">S\u00f6ndag</option>'
+    +'</select></div>'
+    +'<div class="form-group"><label>Fr\u00e5n (ankomst)</label><input type="date" id="ia-wfrom"></div>'
+    +'<div class="form-group"><label>Till (ankomst)</label><input type="date" id="ia-wto"></div>'
+    +'</div>'
+    +'<button class="btn btn-danger btn-sm" onclick="saveClosedRoom()">\uD83D\uDD12 St\u00e4ng valt rum / period</button>'
+    +'</div>'
+    +'<div class="card">'
+    +'<div class="flex-between mb-8"><p class="text-sm fw-6">St\u00e4ngda n\u00e4tter</p></div>'
+    +closedDisplay()
+    +'</div>';
+}
+function setIAType(type){
+  ['day','period','weekday'].forEach(function(t){
+    var wrap=document.getElementById('ia-'+t+'-wrap');
+    var btn=document.getElementById('ia-type-'+t);
+    if(wrap) wrap.style.display=type===t?'block':'none';
+    if(btn){btn.className='btn btn-sm '+(type===t?'btn-secondary':'btn-ghost');btn.style.flex='1';}
+  });
+}
+function saveClosedRoom(){
+  var room=document.getElementById('ia-room').value;
+  var roomVal=room==='all'?'all':parseInt(room);
+  var isWeekday=document.getElementById('ia-weekday-wrap').style.display!=='none';
+  var isPeriod=!isWeekday&&document.getElementById('ia-period-wrap').style.display!=='none';
+  if(isWeekday){
+    var wday=parseInt(document.getElementById('ia-wday').value);
+    var from=document.getElementById('ia-wfrom').value;
+    var to=document.getElementById('ia-wto').value;
+    if(!from||!to){toast('Ange både från och till','e');return;}
+    var cur=new Date(from),end=new Date(to),added=0;
+    var wdayNames=['söndag','måndag','tisdag','onsdag','torsdag','fredag','lördag'];
+    while(cur<=end){
+      if(cur.getDay()===wday){
+        var d=cur.toISOString().slice(0,10);
+        if(!DB.closedRooms.some(function(cr){return cr.room===roomVal&&cr.date===d;})){
+          DB.closedRooms.push({room:roomVal,date:d});added++;
+        }
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    toast(added+' '+wdayNames[wday]+'ar stängda');
+  } else if(isPeriod){
+    var from=document.getElementById('ia-from').value;
+    var to=document.getElementById('ia-to').value;
+    if(!from||!to){toast('Ange både från och till','e');return;}
+    var cur=new Date(from),end=new Date(to),added=0;
+    while(cur<=end){
+      var d=cur.toISOString().slice(0,10);
+      if(!DB.closedRooms.some(function(cr){return cr.room===roomVal&&cr.date===d;})){
+        DB.closedRooms.push({room:roomVal,date:d});added++;
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    toast(added+' nätter stängda');
+  } else {
+    var d=document.getElementById('ia-date').value;
+    if(!d){toast('Välj ett datum','e');return;}
+    if(!DB.closedRooms.some(function(cr){return cr.room===roomVal&&cr.date===d;})){
+      DB.closedRooms.push({room:roomVal,date:d});
+    }
+    toast('Natt stängd');
+  }
+  renderInternatAdmin();
+}
+function removeClosedRoom(room,date){
+  var roomVal=room==='all'?'all':parseInt(room);
+  DB.closedRooms=DB.closedRooms.filter(function(cr){return !(cr.room===roomVal&&cr.date===date);});
+  renderInternatAdmin();toast('St\u00e4ngning borttagen');
+}
+function saveInternatEmail(){
+  var email=(document.getElementById('ia-email')||{value:''}).value.trim();
+  currentUser.email=email;
+  var u=DB.users.find(function(x){return x.id===currentUser.id;});
+  if(u) u.email=email;
+  DB.settings.internatEmail=email;
+  toast('E-postadress sparad!');
+}
+function saveInternatMailText(){
+  var el=document.getElementById('ia-emailtext');
+  if(el){DB.settings.internatEmailText=el.value;toast('Mailtext sparad!');}
+}
+function renderProgAdmin(){
+  var mp=currentUser.program;
+  var prog=mp?DB.programs.find(function(p){return p.id===mp;}):null;
+  if(!prog){document.getElementById('page-progadmin').innerHTML='<div class="card text-muted text-sm">Inget program kopplat till ditt konto.</div>';return;}
+  var u=DB.users.find(function(x){return x.id===currentUser.id;});
+  var emailVal=(u&&u.email)||'';
+  var emailTextVal=prog.emailText||'';
+  document.getElementById('page-progadmin').innerHTML=
+    '<div class="page-header"><h1>&#9881;&#65039; Admin</h1><p>'+prog.icon+' '+prog.name+'</p></div>'
+    +'<div class="card" style="margin-bottom:16px;">'
+    +'<p class="text-sm fw-6" style="margin-bottom:10px;">E-postadress</p>'
+    +'<div class="form-group" style="margin-bottom:8px;"><label>Din e-postadress</label>'
+    +'<input type="email" id="pa-email" value="'+emailVal+'" placeholder="namn@ingelstad.nu"></div>'
+    +'<p class="form-hint" style="margin-bottom:12px;">Du f\u00e5r BCC vid varje ny bokning p\u00e5 '+prog.name+'.</p>'
+    +'<button class="btn btn-primary btn-sm" onclick="saveProgEmail()">Spara adress</button>'
+    +'</div>'
+    +'<div class="card">'
+    +'<p class="text-sm fw-6" style="margin-bottom:10px;">Programmets del i bekr\u00e4ftelsemail</p>'
+    +'<div class="form-group" style="margin-bottom:8px;"><label>Text till eleven vid bokning</label>'
+    +'<textarea id="pa-emailtext" rows="5" style="font-size:.9rem;">'+emailTextVal+'</textarea></div>'
+    +'<p class="form-hint" style="margin-bottom:12px;">Visas i bekr\u00e4ftelsemailet f\u00f6r alla som bokar '+prog.name+'.</p>'
+    +'<button class="btn btn-primary btn-sm" onclick="saveProgMailText()">Spara text</button>'
+    +'</div>';
+}
+function saveProgEmail(){
+  var email=(document.getElementById('pa-email')||{value:''}).value.trim();
+  currentUser.email=email;
+  var u=DB.users.find(function(x){return x.id===currentUser.id;});
+  if(u) u.email=email;
+  toast('E-postadress sparad!');
+}
+function saveProgMailText(){
+  var mp=currentUser.program;
+  var prog=DB.programs.find(function(p){return p.id===mp;});
+  if(prog){prog.emailText=(document.getElementById('pa-emailtext')||{value:''}).value;toast('Mailtext sparad!');}
+}
+function saveProgEmailText(progId){
+  const prog=DB.programs.find(p=>p.id===progId);
+  const el=document.getElementById('prog-email-'+progId);
+  if(prog&&el){prog.emailText=el.value;toast('Mailtext sparad!');}
+}
+function addSlotModal(pid){
+  const prog=DB.programs.find(p=>p.id===pid);
+  const isOpen=prog.slotMode==='open';
+  showModal('<div class="modal-handle"></div><h3>Ny tid</h3>'
+    +'<p class="modal-sub">'+prog.icon+' '+prog.name+' — '+(isOpen?'Lägg till stängd dag':'Lägg till öppen dag')+'</p>'
+    +'<div class="info-box '+(isOpen?'amber':'')+'" style="padding:8px 12px;margin-bottom:12px;font-size:.82rem;">'
+    +(isOpen?'Programmet är <strong>öppet som standard</strong>. Välj en dag ni <strong>inte</strong> kan ta emot besök.'
+            :'Programmet är <strong>stängt som standard</strong>. Välj en dag ni <strong>kan</strong> ta emot besök och ange antal platser.')
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px;">'
+    +'<button id="stype-single" class="btn btn-primary btn-sm" style="flex:1;" onclick="setSlotType(\'single\')">Enstaka dag</button>'
+    +'<button id="stype-period" class="btn btn-ghost btn-sm" style="flex:1;" onclick="setSlotType(\'period\')">Period</button>'
+    +'<button id="stype-weekday" class="btn btn-ghost btn-sm" style="flex:1;" onclick="setSlotType(\'weekday\')">Veckodag</button>'
+    +'</div>'
+    +'<div id="slot-single-wrap">'
+    +'<div class="form-group"><label>Datum</label><input type="date" id="sl-date" min="2025-01-01"></div>'
+    +'<div class="form-group"><label>Typ</label><select id="sl-type">'
+    +'<option value="fm">Förmiddag (FM)</option>'
+    +'<option value="em">Eftermiddag (EM)</option>'
+    +'<option value="hel"'+(isOpen?' selected':'')+'>Heldag</option>'
+    +'</select></div>'
+    +'</div>'
+    +'<div id="slot-period-wrap" style="display:none;">'
+    +'<div class="form-group"><label>Från</label><input type="date" id="sl-pfrom" min="2025-01-01"></div>'
+    +'<div class="form-group"><label>Till</label><input type="date" id="sl-pto" min="2025-01-01"></div>'
+    +'<div class="form-group"><label>Typ</label><select id="sl-ptype">'
+    +'<option value="fm">Förmiddag (FM)</option>'
+    +'<option value="em">Eftermiddag (EM)</option>'
+    +'<option value="hel"'+(isOpen?' selected':'')+'>Heldag</option>'
+    +'</select></div>'
+    +'</div>'
+    +'<div id="slot-weekday-wrap" style="display:none;">'
+    +'<div class="form-group"><label>Veckodag</label><select id="sl-wday">'
+    +'<option value="1">Måndag</option><option value="2">Tisdag</option><option value="3">Onsdag</option><option value="4">Torsdag</option><option value="5">Fredag</option><option value="6">Lördag</option><option value="0">Söndag</option>'
+    +'</select></div>'
+    +'<div class="form-group"><label>Från</label><input type="date" id="sl-wfrom" min="2025-01-01"></div>'
+    +'<div class="form-group"><label>Till</label><input type="date" id="sl-wto" min="2025-01-01"></div>'
+    +'<div class="form-group"><label>Typ</label><select id="sl-wtype">'
+    +'<option value="fm">Förmiddag (FM)</option>'
+    +'<option value="em">Eftermiddag (EM)</option>'
+    +'<option value="hel"'+(isOpen?' selected':'')+'>Heldag</option>'
+    +'</select></div>'
+    +'</div>'
+    +(isOpen?'<input type="hidden" id="sl-cap" value="0">'
+            :'<div class="form-group"><label>Max platser</label><input type="number" id="sl-cap" value="'+prog.defaultCapacity+'" min="1" max="50"></div>')
+    +'<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>'
+    +'<button class="btn btn-primary" onclick="saveSlot(\''+pid+'\')">Spara</button></div>');
+}
+function setSlotType(type){
+  ['single','period','weekday'].forEach(function(t){
+    var wrap=document.getElementById('slot-'+t+'-wrap');
+    var btn=document.getElementById('stype-'+t);
+    if(wrap) wrap.style.display=type===t?'block':'none';
+    if(btn){btn.className='btn btn-sm '+(type===t?'btn-primary':'btn-ghost');btn.style.flex='1';}
+  });
+}
+function saveSlot(pid){
+  const cap=parseInt((document.getElementById('sl-cap')||{value:'8'}).value)||8;
+  const wdayNames=['öndag','måndag','tisdag','onsdag','torsdag','fredag','lördag'];
+  const isWeekday=document.getElementById('slot-weekday-wrap')&&document.getElementById('slot-weekday-wrap').style.display!=='none';
+  const isPeriod=!isWeekday&&document.getElementById('slot-period-wrap')&&document.getElementById('slot-period-wrap').style.display!=='none';
+  if(isWeekday){
+    const wday=parseInt(document.getElementById('sl-wday').value);
+    const from=document.getElementById('sl-wfrom').value;
+    const to=document.getElementById('sl-wto').value;
+    const type=document.getElementById('sl-wtype').value;
+    if(!from||!to){toast('Ange både från och till','e');return;}
+    let cur=new Date(from),end=new Date(to),added=0;
+    while(cur<=end){
+      if(cur.getDay()===wday){
+        const d=cur.toISOString().slice(0,10);
+        if(!DB.settings.blockedDates.includes(d)&&isDateInOpenTerm(d)){
+          DB.slots.push({id:'s'+Date.now()+added,programId:pid,date:d,type,capacity:cap,booked:0});added++;
+        }
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    closeModal();renderSlots();toast(added+' '+wdayNames[wday]+'ar tillagda');
+  } else if(isPeriod){
+    const from=document.getElementById('sl-pfrom').value;
+    const to=document.getElementById('sl-pto').value;
+    const type=document.getElementById('sl-ptype').value;
+    if(!from||!to){toast('Ange både från och till','e');return;}
+    let cur=new Date(from),end=new Date(to),added=0;
+    while(cur<=end){
+      const d=cur.toISOString().slice(0,10);
+      if(!DB.settings.blockedDates.includes(d)&&isDateInOpenTerm(d)){
+        DB.slots.push({id:'s'+Date.now()+added,programId:pid,date:d,type,capacity:cap,booked:0});added++;
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    closeModal();renderSlots();toast(added+' dagar tillagda');
+  } else {
+    const date=document.getElementById('sl-date').value;
+    const type=document.getElementById('sl-type').value;
+    if(!date){toast('Välj ett datum','e');return;}
+    if(DB.settings.blockedDates.includes(date)){toast('Datumet är blockerat','e');return;}
+    if(!isDateInOpenTerm(date)){toast('Terminen är inte öppen för bokning','e');return;}
+    DB.slots.push({id:'s'+Date.now(),programId:pid,date,type,capacity:cap,booked:0});
+    closeModal();renderSlots();toast('Tid sparad!');
+  }
+}
+function editSlotModal(id){
+  const sl=DB.slots.find(s=>s.id===id);
+  const prog=DB.programs.find(p=>p.id===sl.programId);
+  if(prog&&prog.slotMode==='open'){
+    // Open-mode: slot = closed day, no capacity needed — just offer delete
+    showModal('<div class="modal-handle"></div><h3>Stängd dag</h3>'
+      +'<p class="modal-sub">'+fmtDate(sl.date)+' — '+sl.type.toUpperCase()+'</p>'
+      +'<div class="info-box amber" style="margin-bottom:0;">Den här dagen är markerad som stängd. Vill du ta bort markeringen och göra dagen tillgänglig igen?</div>'
+      +'<div class="modal-footer">'
+      +'<button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>'
+      +'<button class="btn btn-danger" onclick="deleteSlot(\''+id+'\');closeModal()">Ta bort stängning</button>'
+      +'</div>');
+  } else {
+    showModal(`<div class="modal-handle"></div><h3>Ändra tid</h3><p class="modal-sub">${fmtDate(sl.date)} — ${sl.type.toUpperCase()} | ${sl.booked} bokade</p>
+      <div class="form-group"><label>Max platser (min ${sl.booked})</label><input type="number" id="ec" value="${sl.capacity}" min="${sl.booked}" max="50"></div>
+      <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveEditSlot('${id}')">Spara</button></div>`);
+  }
+}
+function saveEditSlot(id){
+  const cap=parseInt(document.getElementById('ec').value);
+  const sl=DB.slots.find(s=>s.id===id);
+  if(cap<sl.booked){toast('Kan inte sättas lägre än bokade platser','e');return;}
+  sl.capacity=cap;closeModal();renderSlots();toast('Uppdaterat!');
+}
+function deleteSlot(id){
+  if(DB.slots.find(s=>s.id===id)?.booked>0){toast('Kan inte ta bort tid med aktiva bokningar','e');return;}
+  DB.slots=DB.slots.filter(s=>s.id!==id);renderSlots();toast('Borttagen');
+}
+
+// OVERNIGHT
+
+// === ROOM ALLOCATION ===
+
+
+function overnightStayLabel(slots) {
+  // slots can be: array of combo objects {date, date2} OR array of {date} objects
+  // Extract all prova-pa dates
+  var slotDates=[];
+  if(slots&&slots.length){
+    slots.forEach(function(s){
+      if(!s) return;
+      if(s.date) slotDates.push(s.date);
+      if(s.date2) slotDates.push(s.date2);
+    });
+  }
+  slotDates=[...new Set(slotDates)].filter(Boolean).sort();
+  if(!slotDates.length) return '';
+  var day1=slotDates[0];
+  var day2=slotDates.length>1?slotDates[slotDates.length-1]:null;
+  var arrivalNight=prevDay(day1);
+  if(day2&&day2!==day1){
+    return 'Ankomst '+fmtDate(arrivalNight)+' kväll, avresa '+fmtDate(day2)+' kl 15:50 (2 nätter)';
+  }
+  return 'Ankomst '+fmtDate(arrivalNight)+' kväll, avresa '+fmtDate(day1)+' kl 15:50';
+}
+function nightLabel(date) {
+  // "Ankomst [dag före], avresa [date]"
+  var prev = prevDay(date);
+  return 'Ankomst ' + fmtDate(prev) + ', avresa ' + fmtDate(date);
+}
+function isRoomClosed(room, date) {
+  return DB.closedRooms.some(function(cr){
+    return cr.date===date && (cr.room==='all' || cr.room===room);
+  });
+}
+function availableRoomsOnNight(date) {
+  var cap = DB.settings.overnightCapacity;
+  var booked = DB.roomBookings.filter(function(rb){return rb.date===date;}).map(function(rb){return rb.room;});
+  var rooms = [];
+  for(var r=1;r<=cap;r++){
+    if(!booked.includes(r) && !isRoomClosed(r,date)) rooms.push(r);
+  }
+  return rooms;
+}
+function assignRoom(date) {
+  var cap = DB.settings.overnightCapacity;
+  var prevDate = prevDay(date);
+  var usedTonight = DB.roomBookings.filter(function(rb){return rb.date===date;}).map(function(rb){return rb.room;});
+  var usedLastNight = DB.roomBookings.filter(function(rb){return rb.date===prevDate;}).map(function(rb){return rb.room;});
+  // Prefer room free tonight AND free last night AND not closed
+  for(var r=1;r<=cap;r++){
+    if(!usedTonight.includes(r) && !usedLastNight.includes(r) && !isRoomClosed(r,date)) return r;
+  }
+  // Fall back: any free and open room
+  for(var r=1;r<=cap;r++){
+    if(!usedTonight.includes(r) && !isRoomClosed(r,date)) return r;
+  }
+  return null;
+}
+
+function getOvernightNightsForBooking(booking) {
+  // Returns array of night dates (the date the guest sleeps, i.e. check-in date)
+  // 1-day booking: [prevDay(day1)]
+  // 2-day booking: [prevDay(day1), day1]  (day1 = night between day1 and day2)
+  if(!booking.overnight) return [];
+  var slotDates=[...new Set(booking.slots.map(function(sid){
+    var s=DB.slots.find(function(x){return x.id===sid;});
+    return s?s.date:null;
+  }).filter(Boolean))].sort();
+  var day1=slotDates[0];
+  if(slotDates.length===1){
+    return [prevDay(day1)];
+  }
+  // 2 consecutive days — 2 nights
+  return [prevDay(day1), day1];
+}
+
+function renderOvernight(){
+  var today = new Date().toISOString().slice(0,10);
+  var termEnd = DB.settings.openTerms.length ? termDateRange(DB.settings.openTerms[0]).end : '9999-12-31';
+  var cap = DB.settings.overnightCapacity;
+
+  // Build list of all booked nights from today to term end
+  var bookedNights = DB.roomBookings
+    .filter(function(rb){return rb.date >= today && rb.date <= termEnd;})
+    .map(function(rb){return rb.date;});
+  var allNights = [...new Set(bookedNights)].sort();
+
+  // Build matrix: nights x rooms
+  function buildMatrix() {
+    var rows = '';
+    allNights.forEach(function(night){
+      rows += '<tr><td style="font-size:.78rem;font-weight:700;padding:8px 10px;"><div>'+fmtDate(night)+'</div><div style="font-weight:400;color:var(--muted);font-size:.7rem;">ankomst '+fmtDate(prevDay(night))+'</div></td>';
+      for(var r=1;r<=cap;r++){
+        var rb = DB.roomBookings.find(function(x){return x.date===night&&x.room===r;});
+        var bkg = rb ? DB.bookings.find(function(b){return b.id===rb.bookingId;}) : null;
+        var prevNightRb = DB.roomBookings.find(function(x){return x.date===prevDay(night)&&x.room===r;});
+        var hasCleaningIssue = prevNightRb && rb;
+        rows += '<td style="padding:6px 8px;">';
+        if(bkg){
+          rows += '<div style="background:'+(hasCleaningIssue?'#fef3c7':'var(--forest-light)')+';border:1px solid '+(hasCleaningIssue?'#d97706':'var(--forest)')+';border-radius:7px;padding:5px 8px;font-size:.76rem;">'
+            +'<strong>'+bkg.studentName.split(' ')[0]+'</strong>'
+            +(hasCleaningIssue?'<span title="Direkt ombyte" style="margin-left:4px;color:#d97706;">⚠️</span>':'')
+            +'</div>';
+        } else {
+          rows += '<div style="background:#f3f4f6;border-radius:7px;padding:5px 8px;font-size:.75rem;color:#9ca3af;text-align:center;">\u2014</div>';
+        }
+        rows += '</td>';
+      }
+      rows += '</tr>';
+    });
+    return rows;
+  }
+
+  // Next upcoming overnight
+  var nextNight = allNights.find(function(n){return n>=today;});
+  var nextNightBookings = nextNight ? DB.roomBookings.filter(function(rb){return rb.date===nextNight;}).map(function(rb){
+    var b=DB.bookings.find(function(x){return x.id===rb.bookingId;});
+    return b?'Rum '+rb.room+': '+b.studentName:'';
+  }).filter(Boolean) : [];
+
+  var html = '<div class="page-header"><h1>\uD83D\uDECF\uFE0F Internat</h1><p>'+cap+' rum \u2014 '+today+' till terminens slut</p></div>';
+
+  // Next night card
+  if(nextNight){
+    html += '<div class="card" style="margin-bottom:16px;border-left:4px solid var(--forest);">'
+      +'<div class="stat-label">N\u00e4sta \u00f6vernattning</div>'
+      +'<div style="font-size:1.4rem;font-family:\'Playfair Display\',serif;color:var(--forest);margin:4px 0;">'+fmtDate(nextNight)+'</div>'
+      +'<div class="text-sm text-muted">'+nextNightBookings.join(' &nbsp;&bull;&nbsp; ')+'</div>'
+      +'</div>';
+  } else {
+    html += '<div class="card" style="margin-bottom:16px;"><p class="text-muted text-sm">Inga kommande \u00f6vernattningar bokade.</p></div>';
+  }
+
+  // Room matrix
+  html += '<div class="sec-title" style="margin-bottom:10px;">Rumsmatris</div>';
+  if(!allNights.length){
+    html += '<div class="card text-muted text-sm">Inga \u00f6vernattningar fr\u00e5n idag till terminsslutet.</div>';
+  } else {
+    html += '<div class="table-wrap"><table style="min-width:0;">'
+      +'<thead><tr><th>Natt</th>'
+      +Array.from({length:cap},function(_,i){return '<th>Rum '+(i+1)+'</th>';}).join('')
+      +'</tr></thead>'
+      +'<tbody>'+buildMatrix()+'</tbody>'
+      +'</table></div>'
+      +'<p class="text-sm text-muted" style="margin-top:6px;">\u26a0\ufe0f = direkt ombyte (ingen ledig natt f\u00f6re)</p>';
+  }
+
+  // Upcoming guests list
+  html += '<div class="sec-title" style="margin-top:8px;margin-bottom:10px;">G\u00e4stlista</div>';
+  var upcomingBks = DB.bookings.filter(function(b){
+    return b.overnight && getOvernightNightsForBooking(b).some(function(n){return n>=today&&n<=termEnd;});
+  });
+  if(!upcomingBks.length){
+    html += '<div class="card text-muted text-sm">Inga kommande g\u00e4ster.</div>';
+  } else {
+    upcomingBks.forEach(function(b){
+      var nights = getOvernightNightsForBooking(b).filter(function(n){return n>=today;});
+      var rooms = nights.map(function(n){
+        var rb=DB.roomBookings.find(function(x){return x.bookingId===b.id&&x.date===n;});
+        return fmtDate(n)+' \u2192 Rum '+(rb?rb.room:'?');
+      });
+      html += '<div class="card" style="margin-bottom:10px;">'
+        +'<strong>'+b.studentName+'</strong>'
+        +'<div class="text-sm text-muted" style="margin-top:5px;line-height:1.8;">'
+        +'\uD83D\uDCF1 '+b.phone+'<br>\uD83C\uDFEB '+b.school
+        +(b.specialFood?'<br>\uD83C\uDF7D\uFE0F '+b.specialFood:'')
+        +(b.otherInfo?'<br>\u2139\uFE0F '+b.otherInfo:'')
+        +'<br>🛏️ '+overnightStayLabel(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?{date:s.date}:null;}).filter(Boolean))+'<br>'+rooms.join(' &nbsp;&bull;&nbsp; ')
+        +'</div></div>';
+    });
+  }
+
+  document.getElementById('page-overnight').innerHTML = html;
+}
+
+
+function editCapModal(){
+  showModal(`<div class="modal-handle"></div><h3>Ändra rumskapacitet</h3><p class="modal-sub">Totalt antal övernattningsrum (alla nätter)</p>
+    <div class="form-group"><label>Antal rum</label><input type="number" id="ov-cap" value="${DB.settings.overnightCapacity}" min="1" max="20"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="DB.settings.overnightCapacity=parseInt(document.getElementById('ov-cap').value)||3;closeModal();renderOvernight();toast('Kapacitet uppdaterad')">Spara</button></div>`);
+}
+
+// ADMIN
+function renderAdmin(){
+  document.getElementById('page-admin').innerHTML=`
+    <div class="page-header"><h1>⚙️ Inställningar</h1><p>Systemadministration</p></div>
+    
+    <div class="sec-title">Program <button class="btn btn-secondary btn-sm" onclick="addProgModal()">+ Nytt</button></div>
+    ${DB.programs.map(prog=>`<div class="card" style="margin-bottom:10px;">
+      <div class="flex-between mb-8">
+        <span><strong>${prog.icon} ${prog.name}</strong>${prog.isNV?` <span class="tag tag-na">NV</span>`:''}</span>
+        <button class="btn btn-ghost btn-sm" onclick="editProgModal('${prog.id}')">Redigera</button>
+      </div>
+      ${prog.isNV?`<p class="text-sm text-muted mb-8">NV-kompatibla program:</p>
+        ${DB.programs.filter(p=>!p.isNV).map(p=>`<div class="nv-item ${prog.nvCompatible.includes(p.id)?'active':''}">
+          <label class="toggle"><input type="checkbox" ${prog.nvCompatible.includes(p.id)?'checked':''} onchange="toggleNV('${prog.id}','${p.id}',this.checked)"><span class="tslider"></span></label>
+          <span class="text-sm">${p.icon} ${p.name}</span></div>`).join('')}`:''}
+      <p class="text-sm text-muted mt-8">Standardplatser: ${prog.defaultCapacity}</p>
+    </div>`).join('')}
+
+    <div class="sec-title" style="margin-top:4px;">Personal <button class="btn btn-secondary btn-sm" onclick="addUserModal()">+ Ny</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Namn</th><th>Roll</th><th>Program</th><th></th></tr></thead><tbody>
+    ${DB.users.map(u=>`<tr><td>${u.name}</td><td><span class="badge badge-${u.role}" style="font-size:.68rem;">${{admin:'Admin',personal:'Personal',internat:'Internat'}[u.role]}</span></td>
+      <td class="td-m text-sm">${u.program?DB.programs.find(p=>p.id===u.program)?.name||'—':'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editUserModal('${u.id}')">✏️</button></td></tr>`).join('')}
+    </tbody></table></div>
+
+    <div class="sec-title" style="margin-top:4px;">Terminer &amp; bokningsfönster</div>
+    <div class="card" style="margin-bottom:16px;"><p class="text-sm text-muted" style="margin-bottom:12px;">Endast öppna terminer är bokningsbara. Personal kan bara lägga in tider i öppna terminer. Gamla terminer arkiveras automatiskt.</p>${renderTermRows()}</div>
+    <div class="sec-title" style="margin-top:4px;">Blockerade datum <button class="btn btn-secondary btn-sm" onclick="addBlockModal()">+ Lägg till</button></div>
+    <div class="card">
+      ${DB.settings.blockedDates.length===0?'<p class="text-sm text-muted">Inga blockerade datum inlagda.</p>':
+        '<p class="text-sm text-muted" style="margin-bottom:10px;">Dessa datum är stängda för bokning (t.ex. lov och studiedagar):</p>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;">'+
+        groupBlockedDates(DB.settings.blockedDates).map(g=>
+          g.single
+            ? `<span class="chip">${fmtDate(g.from)} <span onclick="removeBlockedDate('${g.from}')" style="cursor:pointer;margin-left:2px;">✕</span></span>`
+            : `<span class="chip">📅 ${fmtDate(g.from)} – ${fmtDate(g.to)} <span onclick="removeBlockedPeriod('${g.from}','${g.to}')" style="cursor:pointer;margin-left:2px;">✕</span></span>`
+        ).join('')+
+        '</div>'
+      }
+    </div>
+
+    <div class="sec-title" style="margin-top:4px;">E-postinställningar</div>
+    <div class="card">
+      <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group mb-0"><label>Avsändar-e-post</label><input type="email" id="se-mail" value="${DB.settings.senderEmail}"></div>
+        <div class="form-group mb-0" style="grid-column:1/-1;"><label>Admin-e-poster (alltid BCC) — en per rad</label><textarea id="se-admin" rows="3" style="font-size:.85rem;min-height:70px;">${(DB.settings.adminEmails||[]).join('\n')}</textarea><p class="form-hint">Flera adresser — en per rad</p></div>
+        <div class="form-group mb-0"><label>Internatpersonal e-post</label><input type="email" id="se-internat" value="${DB.settings.internatEmail}"></div>
+        <div class="form-group mb-0"><label>Köket e-post (vid specialkost)</label><input type="email" id="se-kitchen" value="${DB.settings.kitchenEmail}"></div>
+      </div>
+      <div class="sec-title" style="margin-top:16px;font-size:.85rem;">SMTP-inställningar</div>
+      <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group mb-0"><label>SMTP-server</label><input type="text" id="se-host" value="${DB.settings.smtpHost}"></div>
+        <div class="form-group mb-0"><label>Port</label><input type="text" id="se-port" value="${DB.settings.smtpPort}"></div>
+        <div class="form-group mb-0"><label>Användare</label><input type="text" id="se-user" value="${DB.settings.smtpUser}"></div>
+        <div class="form-group mb-0"><label>Lösenord</label><input type="password" id="se-pass" placeholder="••••••••"></div>
+      </div>
+      <div class="form-group" style="margin-top:12px;margin-bottom:8px;"><label>Allmän del i bekräftelsemail</label><textarea id="se-text" rows="4">${DB.settings.adminEmailText}</textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="saveEmail()">Spara</button>
+    </div>`;
+}
+function toggleNV(pid,tid,checked){const p=DB.programs.find(x=>x.id===pid);if(checked&&!p.nvCompatible.includes(tid))p.nvCompatible.push(tid);else p.nvCompatible=p.nvCompatible.filter(x=>x!==tid);toast('NV-konfiguration uppdaterad');}
+function toggleSlotMode(pid,isOpen){
+  const p=DB.programs.find(x=>x.id===pid);
+  p.slotMode=isOpen?'open':'closed';
+  renderAdmin();
+  toast(p.name+': '+( isOpen?'Öppen som standard':'Stängd som standard'));
+}
+function addBlockModal(){showModal('<div class="modal-handle"></div><h3>Blockera datum</h3><p class="modal-sub">Inga bokningar kan göras på blockerade datum.</p>'
+  +'<div style="display:flex;gap:8px;margin-bottom:16px;">'
+  +'<button id="btype-day" class="btn btn-primary btn-sm" style="flex:1;" onclick="setBlockType(\'day\')">Enstaka dag</button>'
+  +'<button id="btype-period" class="btn btn-ghost btn-sm" style="flex:1;" onclick="setBlockType(\'period\')">Period</button>'
+  +'<button id="btype-weekday" class="btn btn-ghost btn-sm" style="flex:1;" onclick="setBlockType(\'weekday\')">Veckodag</button>'
+  +'</div>'
+  +'<div id="block-day-wrap"><div class="form-group"><label>Datum</label><input type="date" id="bd-single"></div></div>'
+  +'<div id="block-period-wrap" style="display:none;"><div class="form-group"><label>Från och med</label><input type="date" id="bd-from"></div><div class="form-group"><label>Till och med</label><input type="date" id="bd-to"></div></div>'
+  +'<div id="block-weekday-wrap" style="display:none;">'
+  +'<div class="form-group"><label>Veckodag</label><select id="bd-wday">'
+  +'<option value="1">Måndag</option>'
+    +'<option value="2">Tisdag</option>'
+    +'<option value="3">Onsdag</option>'
+    +'<option value="4">Torsdag</option>'
+    +'<option value="5">Fredag</option>'
+    +'<option value="6">Lördag</option>'
+    +'<option value="0">Söndag</option>'
+  +'</select></div>'
+  +'<div class="form-group"><label>Från och med</label><input type="date" id="bd-wfrom"></div>'
+  +'<div class="form-group"><label>Till och med</label><input type="date" id="bd-wto"></div>'
+  +'</div>'
+  +'<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveBlock()">Blockera</button></div>');}
+function setBlockType(type){
+  ['day','period','weekday'].forEach(function(t){
+    var wrap=document.getElementById('block-'+t+'-wrap');
+    var btn=document.getElementById('btype-'+t);
+    if(wrap) wrap.style.display=type===t?'block':'none';
+    if(btn){btn.className='btn btn-sm '+(type===t?'btn-primary':'btn-ghost');btn.style.flex='1';}
+  });
+}
+function groupBlockedDates(dates){
+  if(!dates||dates.length===0) return [];
+  const sorted=[...dates].sort();
+  const groups=[];
+  let start=sorted[0], prev=sorted[0];
+  for(let i=1;i<sorted.length;i++){
+    const d=sorted[i];
+    const prevDate=new Date(prev), curDate=new Date(d);
+    const diffDays=(curDate-prevDate)/(1000*60*60*24);
+    if(diffDays===1){prev=d;}
+    else{groups.push(start===prev?{single:true,from:start}:{single:false,from:start,to:prev});start=d;prev=d;}
+  }
+  groups.push(start===prev?{single:true,from:start}:{single:false,from:start,to:prev});
+  return groups;
+}
+function removeBlockedDate(d){
+  DB.settings.blockedDates=DB.settings.blockedDates.filter(x=>x!==d);
+  renderAdmin();toast('Datum frigjort');
+}
+function removeBlockedPeriod(from,to){
+  let cur=new Date(from);const end=new Date(to);
+  while(cur<=end){const d=cur.toISOString().slice(0,10);DB.settings.blockedDates=DB.settings.blockedDates.filter(x=>x!==d);cur.setDate(cur.getDate()+1);}
+  renderAdmin();toast('Period frigjord');
+}
+function saveBlock(){
+  const isWeekday=document.getElementById('block-weekday-wrap').style.display!=='none';
+  const isPeriod=!isWeekday&&document.getElementById('block-period-wrap').style.display!=='none';
+  const wdayNames=['öndag','måndag','tisdag','onsdag','torsdag','fredag','lördag'];
+  if(isWeekday){
+    const wday=parseInt(document.getElementById('bd-wday').value);
+    const from=document.getElementById('bd-wfrom').value;
+    const to=document.getElementById('bd-wto').value;
+    if(!from||!to){toast('Ange både från och till','e');return;}
+    let cur=new Date(from),end=new Date(to),added=0;
+    while(cur<=end){
+      if(cur.getDay()===wday){
+        const d=cur.toISOString().slice(0,10);
+        if(!DB.settings.blockedDates.includes(d)){DB.settings.blockedDates.push(d);added++;}
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    closeModal();renderAdmin();toast(added+' '+wdayNames[wday]+'ar blockerade');
+  } else if(isPeriod){
+    const from=document.getElementById('bd-from').value;
+    const to=document.getElementById('bd-to').value;
+    if(!from||!to){toast('Ange både från och till-datum','e');return;}
+    if(from>to){toast('Från-datum måste vara före till-datum','e');return;}
+    let cur=new Date(from),end=new Date(to),added=0;
+    while(cur<=end){
+      const d=cur.toISOString().slice(0,10);
+      if(!DB.settings.blockedDates.includes(d)){DB.settings.blockedDates.push(d);added++;}
+      cur.setDate(cur.getDate()+1);
+    }
+    closeModal();renderAdmin();toast(added+' datum blockerade');
+  } else {
+    const d=document.getElementById('bd-single').value;
+    if(!d){toast('Välj ett datum','e');return;}
+    if(!DB.settings.blockedDates.includes(d))DB.settings.blockedDates.push(d);
+    closeModal();renderAdmin();toast('Datum blockerat');
+  }
+}
+function saveEmail(){
+  DB.settings.senderEmail=document.getElementById('se-mail').value;
+  DB.settings.adminEmails=document.getElementById('se-admin').value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  DB.settings.internatEmail=document.getElementById('se-internat').value;
+  DB.settings.kitchenEmail=document.getElementById('se-kitchen').value;
+  DB.settings.smtpHost=document.getElementById('se-host').value;
+  DB.settings.smtpPort=document.getElementById('se-port').value;
+  DB.settings.smtpUser=document.getElementById('se-user').value;
+  const pass=document.getElementById('se-pass').value;
+  if(pass) DB.settings.smtpPass=pass;
+  DB.settings.adminEmailText=document.getElementById('se-text').value;
+  toast('E-postinställningar sparade!');
+}
+function addProgModal(){showModal(`<div class="modal-handle"></div><h3>Nytt program</h3>
+  <div class="form-group"><label>Namn</label><input type="text" id="np-n" placeholder="Programmets namn"></div>
+  <div class="form-group"><label>Ikon (emoji)</label><input type="text" id="np-i" placeholder="🎓" maxlength="2"></div>
+  <div class="form-group"><label>Standardplatser</label><input type="number" id="np-c" value="10" min="1"></div>
+  <div class="form-group"><label>Utgångsläge för tider</label>
+    <select id="np-mode">
+      <option value="closed">🔴 Stängd — personal öppnar dagar de kan ta emot</option>
+      <option value="open">🟢 Öppen — personal stänger dagar de inte kan</option>
+    </select>
+    <p class="form-hint">Öppen passar program som tar emot nästan varje dag. Stängd passar program med få tillfällen.</p>
+  </div>
+  <div class="form-group"><label>Text i bokningsmail</label><textarea id="np-e" placeholder="Information till eleven..."></textarea></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <label class="toggle"><input type="checkbox" id="np-nv"><span class="tslider"></span></label>
+    <span class="text-sm">NV-program (kombineras med annat program)</span></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveNewProg()">Spara</button></div>`);}
+function saveNewProg(){
+  const name=document.getElementById('np-n').value.trim();
+  if(!name){toast('Ange namn','e');return;}
+  const id=name.toLowerCase().replace(/\s+/g,'').replace(/[åä]/g,'a').replace(/ö/g,'o');
+  const slotModeVal=document.getElementById('np-mode').value;
+  DB.programs.push({id,name,icon:document.getElementById('np-i').value||'🎓',isNV:document.getElementById('np-nv').checked,slotMode:slotModeVal,defaultCapacity:parseInt(document.getElementById('np-c').value)||10,emailText:document.getElementById('np-e').value,nvCompatible:[],description:''});
+  closeModal();renderAdmin();toast('Program skapat!');
+}
+function editProgModal(id){
+  const p=DB.programs.find(x=>x.id===id);
+  showModal(`<div class="modal-handle"></div><h3>Redigera ${p.name}</h3>
+    <div class="form-group"><label>Standardplatser</label><input type="number" id="ep-c" value="${p.defaultCapacity}" min="1"></div>
+    <div class="form-group"><label>Text i bokningsmail</label><textarea id="ep-e" rows="4">${p.emailText}</textarea></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveEditProg('${id}')">Spara</button></div>`);
+}
+function saveEditProg(id){const p=DB.programs.find(x=>x.id===id);p.defaultCapacity=parseInt(document.getElementById('ep-c').value)||p.defaultCapacity;p.emailText=document.getElementById('ep-e').value;closeModal();renderAdmin();toast('Sparat!');}
+function addUserModal(){showModal(`<div class="modal-handle"></div><h3>Ny användare</h3>
+  <div class="form-group"><label>Namn</label><input type="text" id="nu-n"></div>
+  <div class="form-group"><label>Användarnamn</label><input type="text" id="nu-i"></div>
+  <div class="form-group"><label>E-postadress</label><input type="email" id="nu-e" placeholder="namn@ingelstad.nu"></div>
+  <div class="form-group"><label>Lösenord</label><input type="password" id="nu-p"></div>
+  <div class="form-group"><label>Roll</label><select id="nu-r" onchange="document.getElementById('nu-pw').style.display=this.value==='personal'?'block':'none'">
+    <option value="personal">Personal</option><option value="internat">Internatansvarig</option><option value="admin">Admin</option></select></div>
+  <div class="form-group" id="nu-pw"><label>Program</label><select id="nu-prog">
+    ${DB.programs.map(p=>`<option value="${p.id}">${p.icon} ${p.name}</option>`).join('')}</select></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveNewUser()">Spara</button></div>`);}
+function saveNewUser(){
+  const n=document.getElementById('nu-n').value.trim(),i=document.getElementById('nu-i').value.trim(),p=document.getElementById('nu-p').value,r=document.getElementById('nu-r').value;
+  if(!n||!i||!p){toast('Fyll i alla fält','e');return;}
+  if(DB.users.find(u=>u.id===i)){toast('Användarnamnet är taget','e');return;}
+  const em=document.getElementById('nu-e').value;
+  DB.users.push({id:i,name:n,role:r,program:r==='personal'?document.getElementById('nu-prog').value:null,pass:p,email:em});
+  closeModal();renderAdmin();toast('Användare skapad!');
+}
+function editUserModal(id){
+  const u=DB.users.find(x=>x.id===id);
+  showModal(`<div class="modal-handle"></div><h3>Redigera ${u.name}</h3>
+    <div class="form-group"><label>E-postadress</label><input type="email" id="eu-e" value="${u.email||''}"></div>
+  <div class="form-group"><label>Nytt lösenord (tomt = oförändrat)</label><input type="password" id="eu-p"></div>
+    ${u.role==='personal'?`<div class="form-group"><label>Program</label><select id="eu-prog">${DB.programs.map(p=>`<option value="${p.id}" ${p.id===u.program?'selected':''}>${p.icon} ${p.name}</option>`).join('')}</select></div>`:''}
+    <div class="modal-footer"><button class="btn btn-danger" onclick="deleteUser('${id}')">Ta bort</button><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveEditUser('${id}')">Spara</button></div>`);
+}
+function saveEditUser(id){const u=DB.users.find(x=>x.id===id);const p=document.getElementById('eu-p')?.value;if(p)u.pass=p;u.email=document.getElementById('eu-e').value;if(u.role==='personal')u.program=document.getElementById('eu-prog').value;closeModal();renderAdmin();toast('Uppdaterat!');}
+function deleteUser(id){if(id===currentUser.id){toast('Kan inte ta bort dig själv','e');return;}DB.users=DB.users.filter(u=>u.id!==id);closeModal();renderAdmin();toast('Borttagen');}
+
+// BOOKING FLOW
+function showBooking(){
+  autoCloseOldTerms();
+  bookingState={step:1,days:null,overnight:null,programs:[],slots:[],selectedCombo:null};
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('screen-app').style.display='none';
+  document.getElementById('screen-booking').style.display='flex';
+  renderBStep();
+}
+const STEPS=['Dagar & övernattning','Välj program','Lediga tider','Dina uppgifter','Bekräfta'];
+function renderProg(){
+  document.getElementById('bk-progress').innerHTML=STEPS.map((l,i)=>{
+    const n=i+1,cls=n===bookingState.step?'active':n<bookingState.step?'done':'';
+    return`<div class="ps ${cls}"><span class="sn">${n<bookingState.step?'✓':n}</span>${l}</div>`;
+  }).join('');
+}
+function renderBStep(){renderProg();const b=document.getElementById('bk-body');const s=bookingState.step;if(s===1)bStep1(b);else if(s===2)bStep2(b);else if(s===3)bStep3(b);else if(s===4)bStep4(b);else if(s===5)bStep5(b);else if(s===6)bSuccess(b);}
+
+function bStep1(b){
+  b.innerHTML=`<div class="step-card">
+    <h2>Hur många dagar?</h2><p class="step-desc">Du kan besöka oss 1 eller 2 dagar och prova på olika program.</p>
+    <div class="choice-grid">
+      <button class="choice-btn ${bookingState.days===1?'selected':''}" onclick="bookingState.days=1;document.querySelectorAll('#bk-body .choice-grid:first-of-type .choice-btn').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')"><span class="ci">📅</span><strong>1 dag</strong><span>Besök ett program</span></button>
+      <button class="choice-btn ${bookingState.days===2?'selected':''}" onclick="bookingState.days=2;document.querySelectorAll('#bk-body .choice-grid:first-of-type .choice-btn').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')"><span class="ci">📅📅</span><strong>2 dagar</strong><span>Prova fler program</span></button>
+    </div>
+    <h2 style="margin-top:4px;">Övernattning?</h2><p class="step-desc">Vi har ${DB.settings.overnightCapacity} rum. Natten före din prova-på-dag.</p>
+    <div class="choice-grid">
+      <button class="choice-btn ${bookingState.overnight===false?'selected':''}" onclick="bookingState.overnight=false;document.querySelectorAll('#bk-body .choice-grid:last-of-type .choice-btn').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')"><span class="ci">🏠</span><strong>Nej tack</strong><span>Jag ordnar transport</span></button>
+      <button class="choice-btn ${bookingState.overnight===true?'selected':''}" onclick="bookingState.overnight=true;document.querySelectorAll('#bk-body .choice-grid:last-of-type .choice-btn').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')"><span class="ci">🛏️</span><strong>Ja, övernattning</strong><span>Rum på skolan</span></button>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="bNext1()">Fortsätt →</button>
+  </div>`;
+}
+function bNext1(){
+  if(bookingState.days===null||bookingState.overnight===null){toast('Välj alternativ för båda frågorna','e');return;}
+  // No upfront capacity check — buildCombos filters nights with no available rooms
+  bookingState.step=2;renderBStep();
+}
+
+function bStep2(b){
+  const nv=DB.programs.find(p=>p.isNV);
+  const nvPackages=nv?DB.programs.filter(p=>nv.nvCompatible.includes(p.id)).map(p=>({
+    id:'nv-'+p.id, label:'NV-'+p.name, icon:'🔬',
+    description:'Halvdag Naturvetenskap + halvdag '+p.name+'.', compatId:p.id
+  })):[];
+  const regularProgs=DB.programs.filter(p=>!p.isNV&&!p.hidden);
+  const nvSelected=bookingState.programs.filter(id=>id.startsWith('nv-'));
+  const regSelected=bookingState.programs.filter(id=>!id.startsWith('nv-'));
+  // NV-packages selected: each counts as 1 full day (but NA-halvdagen is shared)
+  // Capacity rule: nvSelected.length days used by NV (regardless of how many NV chosen,
+  // they compete for slots in step 3). Regular programs each cost 0.5 day.
+  // For selection purposes: max NV = days (can't have more NV-packages than days),
+  // remaining days after NV filled with regular (each reg = 0.5 day = 1 halvdag)
+  // Each NV-pkg fills 1 day. Each regular program fills 1 day (can repeat for day 2).
+  // Max NV-pkgs = days. Regular programs: any number, system finds slots in step 3.
+  // Only rule: can't select NV-X AND regular X (same program twice in different forms).
+  // New logic: NV uses 1 shared half-slot + 1 half-slot per compat prog
+  // Total half-slots used = 1 (NV) + nvSelected.length (compat progs) + regSelected.length
+  const maxHalfSlots=bookingState.days*2;
+  const usedHalfSlots=(nvSelected.length>0?1:0)+nvSelected.length+regSelected.length;
+  const remainingHalfSlots=maxHalfSlots-usedHalfSlots;
+  const remainingDays=remainingHalfSlots; // keep var name for compat
+
+  b.innerHTML='<div class="step-card">'+
+    '<h2>Välj program</h2>'+
+    '<p class="step-desc">Välj ett eller flera program du vill prova. Du kan välja samma program båda dagarna, eller blanda.</p>'+
+    (nvPackages.length>0?'<p style="font-size:.82rem;font-weight:700;color:var(--ink2);margin-bottom:8px;letter-spacing:.02em;">🔬 NV-INRIKTNINGAR <span style="font-weight:400;color:var(--muted);">— halvdag NV + halvdag på programmet</span></p>':'')+
+    nvPackages.map(pkg=>{
+      const sel=nvSelected.includes(pkg.id);
+      const regHasSame=regSelected.includes(pkg.compatId);
+      const noRoom=!sel&&remainingHalfSlots<1; // NV-pkg needs 1 compat half-slot (shared NV already counted)
+      const disabled=noRoom||regHasSame;
+      const reason=regHasSame?'Avmarkera '+pkg.label.replace('NV-','')+' nedan först':noRoom?'Ingen dag kvar för NV':'';
+      const click=disabled?'':'toggleProg(\''+pkg.id+'\')';
+      return '<div class="prog-card nv-card '+(sel?'selected':'')+'" style="'+(disabled?'opacity:.4;cursor:not-allowed':'')+'" onclick="'+click+'" title="'+reason+'"><span class="pi">'+pkg.icon+'</span><div><h3>'+pkg.label+' <span class=\"tag tag-na\">NV-halvdag</span></h3><p>'+pkg.description+'</p></div></div>';
+    }).join('')+
+    '<p style="font-size:.82rem;font-weight:700;color:var(--ink2);margin:12px 0 8px;letter-spacing:.02em;">PROGRAM</p>'+
+    regularProgs.map(p=>{
+      const sel=regSelected.includes(p.id);
+      const nvHasSame=nvSelected.includes('nv-'+p.id);
+      const noRoomReg=!regSelected.includes(p.id)&&remainingHalfSlots<1;
+      const disabled=nvHasSame||noRoomReg;
+      const reason=nvHasSame?'Avmarkera NV-'+p.name+' ovan först':'';
+      const click=disabled?'':'toggleProg(\''+p.id+'\')';
+      return '<div class="prog-card '+(sel?'selected':'')+'" style="'+(disabled?'opacity:.4;cursor:not-allowed':'')+'" onclick="'+click+'" title="'+reason+'"><span class="pi">'+p.icon+'</span><div><h3>'+p.name+'</h3><p>'+p.description+'</p></div></div>';
+    }).join('')+
+    '<div class="info-box" style="margin-top:8px;">'+
+    (nvSelected.length===0&&regSelected.length===0
+      ?'Välj ett eller flera program. Du kan välja samma program för båda dagarna.'
+      :'Valt: '+[
+          ...nvSelected.map(id=>{const pkg=nvPackages.find(p=>p.id===id);return pkg?'🔬 '+pkg.label:''}),
+          ...regSelected.map(id=>{const p=DB.programs.find(x=>x.id===id);return p?p.icon+' '+p.name:''})
+        ].filter(Boolean).join(', ')+'. Systemet hittar lediga tider i nästa steg.')+
+    '</div>'+
+    '<button class="btn btn-primary btn-full mt-8" onclick="bNext2()">Fortsätt →</button>'+
+    '<button class="btn btn-ghost btn-full mt-8" onclick="bookingState.step=1;renderBStep()">← Tillbaka</button>'+
+    '</div>';
+}
+function toggleProg(id){
+  const nv=DB.programs.find(p=>p.isNV);
+  const idx=bookingState.programs.indexOf(id);
+  if(idx>-1){bookingState.programs.splice(idx,1);}
+  else{
+    const nvSelected=bookingState.programs.filter(x=>x.startsWith('nv-'));
+    const regSelected=bookingState.programs.filter(x=>!x.startsWith('nv-'));
+    const isNVPkg=id.startsWith('nv-');
+    const compatId=isNVPkg?id.replace('nv-',''):null;
+    if(isNVPkg&&regSelected.includes(compatId)){toast('Avmarkera '+compatId+' som vanligt program först','e');return;}
+    if(!isNVPkg&&nvSelected.includes('nv-'+id)){toast('Avmarkera NV-versionen först','e');return;}
+    // Max NV-pkgs: days*2 half-slots minus 1 for the shared NV half = days*2-1
+    // But practical: 1 day = max 1 NV-pkg, 2 days = max 3 NV-pkgs
+    const maxNV=bookingState.days===1?1:(bookingState.days*2-1);
+    if(isNVPkg&&nvSelected.length>=maxNV){toast('Max '+maxNV+' NV-inriktningar för '+bookingState.days+' dag(ar)','e');return;}
+    bookingState.programs.push(id);
+  }
+  bStep2(document.getElementById('bk-body'));
+}
+function bNext2(){
+  if(bookingState.programs.length===0){toast('Välj minst ett program','e');return;}
+  bookingState.step=3;renderBStep();
+}
+
+// Helper: get date string for day after d
+function nextDay(d){const dt=new Date(d);dt.setDate(dt.getDate()+1);return dt.toISOString().slice(0,10);}
+
+// Build all possible slot options for a single day for given program ids (NV-packages + regular)
+function slotTypeOrder(t){return t==='fm'?0:t==='hel'?1:2;} // FM < HEL < EM for sort
+
+function slotsForDay(date, nvPkgIds, regProgIds){
+  const nv=DB.programs.find(p=>p.isNV);
+  const results=[];
+  // NV packages
+  if(nv) nvPkgIds.forEach(pkgId=>{
+    const compatId=pkgId.replace('nv-','');
+    if(!compatId) return;
+    const compatProg=DB.programs.find(p=>p.id===compatId);
+    if(!compatProg) return;
+    const nvSlots=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+    nvSlots.forEach(nvS=>{
+      const cType=nvS.type==='fm'?'em':'fm';
+      const cs=DB.slots.find(s=>s.programId===compatId&&s.date===date&&(s.type===cType||s.type==='hel')&&s.booked<s.capacity);
+      if(!cs) return;
+      // FM/EM order handled below
+      // Build accurate label: show which half is NV and which is compat
+      const nvHalf = nvS.type==='fm' ? 'FM' : 'EM';
+      const compatHalf = nvS.type==='fm' ? 'EM' : 'FM';
+      const label = '🔬 NV-'+compatProg.name+': '+nvHalf+' NV + '+compatHalf+' '+compatProg.icon+' '+compatProg.name;
+      // Always put FM slot first in array
+      const orderedSlots = nvS.type==='fm' ? [nvS.id, cs.id] : [cs.id, nvS.id];
+      results.push({pkgId,label,slots:orderedSlots,isNV:true,fullDay:true});
+    });
+  });
+  // Regular programs: a single reg program must fill a FULL day (hel, or fm+em both available)
+  // We return full-day options only — either a HEL slot, or a FM+EM pair from same program
+  regProgIds.forEach(pid=>{
+    const prog=DB.programs.find(p=>p.id===pid);
+    if(!prog) return;
+    const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+    // Option 1: HEL slot
+    const hel=avail.find(s=>s.type==='hel');
+    if(hel){results.push({pkgId:pid,label:prog.icon+' '+prog.name+' (heldag)',slots:[hel.id],isNV:false,fullDay:true});return;}
+    // Option 2: FM + EM pair
+    const fm=avail.find(s=>s.type==='fm');
+    const em=avail.find(s=>s.type==='em');
+    if(fm&&em){results.push({pkgId:pid,label:prog.icon+' '+prog.name+': FM + EM',slots:[fm.id,em.id],isNV:false,fullDay:true});return;}
+    // No full day available — skip (no loose halfdays)
+  });
+  return results;
+}
+
+function buildCombos(){
+  try {
+  const nv=DB.programs.find(p=>p.isNV);
+  const nvPkgIds=bookingState.programs.filter(id=>id.startsWith('nv-')&&id.length>'nv-'.length);
+  const regProgIds=bookingState.programs.filter(id=>!id.startsWith('nv-')&&DB.programs.find(p=>p.id===id));
+  const days=bookingState.days;
+  // Extract compat program IDs from NV packages
+  const nvCompatIds=nvPkgIds.map(id=>id.replace('nv-',''));
+  // All programs that need half-slots (reg progs + NV compat progs)
+  const halfProgIds=[...new Set([...regProgIds,...nvCompatIds])];
+  const allDates=[...new Set(DB.slots.filter(s=>isDateBookable(s.date)).map(s=>s.date))].sort();
+
+  // Helper: find available half-slots for a program on a date (fm, em, or half of hel)
+  function halfSlotsForProg(date,pid){
+    const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+    const results=[];
+    avail.forEach(s=>{
+      const prog=DB.programs.find(p=>p.id===pid);
+      if(!prog) return;
+      if(s.type==='fm'||s.type==='em') results.push({slotId:s.id,type:s.type,label:prog.icon+' '+prog.name+' '+s.type.toUpperCase(),spots:s.capacity-s.booked});
+      if(s.type==='hel'){
+        results.push({slotId:s.id,type:'fm',label:prog.icon+' '+prog.name+' FM',spots:s.capacity-s.booked});
+        results.push({slotId:s.id,type:'em',label:prog.icon+' '+prog.name+' EM',spots:s.capacity-s.booked});
+      }
+      // Note: 'hel' type as full-day is handled by getFullDay() helper, not here
+    });
+    return results;
+  }
+
+  // Helper: find NV slot + paired compat slot on a date
+  function nvPairForDate(date, compatId){
+    if(!nv) return null;
+    const nvSlots=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+    for(const nvS of nvSlots){
+      const nvType=nvS.type; // fm or em
+      const compatType=nvType==='fm'?'em':'fm';
+      const cs=DB.slots.find(s=>s.programId===compatId&&s.date===date&&(s.type===compatType||s.type==='hel')&&s.booked<s.capacity);
+      if(cs){
+        const cp=DB.programs.find(p=>p.id===compatId);
+        const nvHalf=nvType.toUpperCase(), compatHalf=compatType.toUpperCase();
+        const label='🔬 NV-'+cp.name+': '+nvHalf+' NV + '+compatHalf+' '+cp.icon+' '+cp.name;
+        const orderedSlots=nvType==='fm'?[nvS.id,cs.id]:[cs.id,nvS.id];
+        return {nvSlotId:nvS.id,compatSlotId:cs.id,nvType,compatType,label,slots:orderedSlots,
+                usedTypes:{fm:nvType==='fm'?nvS.id:cs.id, em:nvType==='em'?nvS.id:cs.id},
+                spots:Math.min(nvS.capacity-nvS.booked, cs.capacity-cs.booked)};
+      }
+    }
+    return null;
+  }
+
+  // Build combos for 1 day
+  if(days===1){
+    const combos=[];
+    // 1 day = 2 half-slots
+    // If NV selected: 1 NV pair (uses both slots) + 0 extra half-progs
+    // If no NV: fill with reg progs (need full day = hel or fm+em)
+    if(nvPkgIds.length>0){
+      // Try each NV-pkg as the paired one for this day
+      allDates.forEach(date=>{
+        nvPkgIds.forEach(nvPkgId=>{
+          const compatId=nvPkgId.replace('nv-','');
+          const pair=nvPairForDate(date,compatId);
+          if(!pair) return;
+          combos.push({date,date2:null,label:pair.label,slots:pair.slots,minSpots:pair.spots,isNV:true});
+        });
+      });
+    } else {
+      // Regular: need a full day
+      allDates.forEach(date=>{
+        const prog=regProgIds.length>0?DB.programs.find(p=>p.id===regProgIds[0]):null;
+        if(!prog) return;
+        const pid=regProgIds[0];
+        const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+        const hel=avail.find(s=>s.type==='hel');
+        if(hel){combos.push({date,date2:null,label:prog.icon+' '+prog.name+' (heldag)',slots:[hel.id],minSpots:hel.capacity-hel.booked,isNV:false});return;}
+        const fm=avail.find(s=>s.type==='fm'),em=avail.find(s=>s.type==='em');
+        if(fm&&em)combos.push({date,date2:null,label:prog.icon+' '+prog.name+': FM + EM',slots:[fm.id,em.id],minSpots:Math.min(fm.capacity-fm.booked,em.capacity-em.booked),isNV:false});
+      });
+    }
+    return combos;
+  }
+
+  // Build combos for 2 days
+  // Structure: 4 half-slots total
+  // If NV selected: 1 NV pair on one day + remaining compat progs fill the other day's half-slots
+  // If no NV: each day filled with reg progs (hel or fm+em)
+  const combos=[];
+  for(let i=0;i<allDates.length-1;i++){
+    const d1=allDates[i],d2=allDates[i+1];
+    if(nextDay(d1)!==d2) continue;
+    if(bookingState.overnight){
+      if(!availableRoomsOnNight(prevDay(d1)).length) continue;
+      if(!availableRoomsOnNight(d1).length) continue;
+    }
+
+    if(nvPkgIds.length>0){
+      // Try each NV-pkg as the one paired with NV
+      for(const nvPkgId of nvPkgIds){
+        const pairedCompatId=nvPkgId.replace('nv-','');
+        // Remaining compat progs (unpaired) need half-slots
+        const remainingCompatIds=nvCompatIds.filter(id=>id!==pairedCompatId);
+        const allHalfProgs=[...remainingCompatIds,...regProgIds]; // need half-slots on day2
+
+        // Try NV pair on day1, remaining on day2
+        for(const nvDay of [d1,d2]){
+          const otherDay=nvDay===d1?d2:d1;
+          const pair=nvPairForDate(nvDay,pairedCompatId);
+          if(!pair) continue;
+
+          // Schedule remaining half progs on otherDay
+          // otherDay has 2 half-slots (fm + em)
+          if(allHalfProgs.length>2) continue; // can't fit more than 2 half-slots
+          
+          const usedOnOtherDay=new Set();
+          const otherPicks=[];
+          let ok=true;
+          for(const pid of allHalfProgs){
+            const halfSlots=halfSlotsForProg(otherDay,pid).filter(h=>!usedOnOtherDay.has(h.type));
+            // Prefer fm then em
+            const pick=halfSlots.find(h=>h.type==='fm')||halfSlots.find(h=>h.type==='em');
+            if(!pick){ok=false;break;}
+            usedOnOtherDay.add(pick.type);
+            otherPicks.push(pick);
+          }
+          if(!ok) continue;
+
+          const day1Picks=nvDay===d1?[pair]:otherPicks;
+          const day2Picks=nvDay===d2?[pair]:otherPicks;
+          const allSlotIds=[...pair.slots,...otherPicks.map(p=>p.slotId)].filter(Boolean);
+          const allSpots=[pair.spots,...otherPicks.map(p=>p.spots)].filter(n=>n>0);
+          const minSpots=allSpots.length?Math.min(...allSpots):0;
+          const otherLabel=otherPicks.length>0?otherPicks.map(p=>p.label).join(' + '):'(fri halvdag)';
+          const label1=nvDay===d1?pair.label:otherLabel;
+          const label2=nvDay===d2?pair.label:otherLabel;
+          combos.push({date:d1,date2:d2,label:label1,label2,slots:allSlotIds,minSpots,isNV:true});
+        }
+      }
+    } else {
+      // No NV: each reg prog gets a full day or the two days share half-slots
+      if(regProgIds.length===1){
+        // Same prog both days
+        const pid=regProgIds[0],prog=DB.programs.find(p=>p.id===pid);
+        if(!prog) continue;
+        const getFullDay=(date)=>{
+          const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+          const hel=avail.find(s=>s.type==='hel');
+          if(hel) return {slots:[hel.id],label:prog.icon+' '+prog.name+' (heldag)',spots:hel.capacity-hel.booked};
+          const fm=avail.find(s=>s.type==='fm'),em=avail.find(s=>s.type==='em');
+          if(fm&&em) return {slots:[fm.id,em.id],label:prog.icon+' '+prog.name+': FM + EM',spots:Math.min(fm.capacity-fm.booked,em.capacity-em.booked)};
+          return null;
+        };
+        const day1=getFullDay(d1),day2=getFullDay(d2);
+        if(day1&&day2){
+          const allSlotIds=[...day1.slots,...day2.slots];
+          const minSpots=Math.min(day1.spots,day2.spots);
+          combos.push({date:d1,date2:d2,label:day1.label,label2:day2.label,slots:allSlotIds,minSpots,isNV:false});
+        }
+      } else if(regProgIds.length>=2){
+        // Different progs on different days — try all splits
+        for(const [p1id,p2id] of [[regProgIds[0],regProgIds[1]],[regProgIds[1],regProgIds[0]]]){
+          const p1=DB.programs.find(p=>p.id===p1id),p2=DB.programs.find(p=>p.id===p2id);
+          if(!p1||!p2) continue;
+          const getFullDay=(date,pid,prog)=>{
+            const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+            const hel=avail.find(s=>s.type==='hel');
+            if(hel) return {slots:[hel.id],label:prog.icon+' '+prog.name+' (heldag)',spots:hel.capacity-hel.booked};
+            const fm=avail.find(s=>s.type==='fm'),em=avail.find(s=>s.type==='em');
+            if(fm&&em) return {slots:[fm.id,em.id],label:prog.icon+' '+prog.name+': FM + EM',spots:Math.min(fm.capacity-fm.booked,em.capacity-em.booked)};
+            return null;
+          };
+          const day1=getFullDay(d1,p1id,p1),day2=getFullDay(d2,p2id,p2);
+          if(day1&&day2){
+            const allSlotIds=[...day1.slots,...day2.slots];
+            combos.push({date:d1,date2:d2,label:day1.label,label2:day2.label,slots:allSlotIds,minSpots:Math.min(day1.spots,day2.spots),isNV:false});
+          }
+        }
+      }
+    }
+  }
+  // Deduplicate
+  const seen=new Set();
+  return combos.filter(c=>{const k=c.slots.slice().sort().join();if(seen.has(k))return false;seen.add(k);return true;});
+  } catch(err) {
+    console.error('buildCombos error:', err.message, err.stack);
+    return [];
+  }
+}
+
+function bStep3(b){
+  const combos=buildCombos();
+  window._combos=combos;
+  const days=bookingState.days;
+  b.innerHTML='<div class="step-card">'+
+    '<h2>Lediga tider</h2>'+
+    '<p class="step-desc">'+(days===1?'Välj ett tillfälle nedan.':'Välj ett par av sammanhängande dagar nedan.')+'</p>'+
+    (combos.length===0?'<div class="info-box amber">😕 Inga lediga tider matchar dina val just nu. Prova att ändra program eller kontakta skolan.</div>':'')+
+    combos.map((c,i)=>{
+      const sel=bookingState.selectedCombo===i;
+      const d2str=c.date2?' – '+fmtDate(c.date2):'';
+      const overnight=bookingState.overnight?('<br>🛏️ '+overnightStayLabel([c])):''; // c has .date and .date2
+      return '<div class="slot-card '+(sel?'selected':'')+'" onclick="selectCombo('+i+')">'+
+        '<div class="sl-header"><span class="sl-date">'+fmtDate(c.date)+d2str+'</span><span class="sl-spots">'+c.minSpots+' platser kvar</span></div>'+
+        (days===2?'<div style="font-size:.78rem;color:var(--ink2);margin-top:4px;"><strong>Dag 1:</strong> '+c.label+'</div>'+
+          '<div style="font-size:.78rem;color:var(--ink2);margin-top:2px;"><strong>Dag 2:</strong> '+c.label2+'</div>':
+          '<div class="sl-combo">'+c.label+'</div>')+
+        overnight+
+        '</div>';
+    }).join('')+
+    '<button class="btn btn-primary btn-full mt-8" onclick="bNext3()">Fortsätt →</button>'+
+    '<button class="btn btn-ghost btn-full mt-8" onclick="bookingState.step=2;renderBStep()">← Tillbaka</button>'+
+    '</div>';
+}
+function selectCombo(i){
+  bookingState.selectedCombo=i;
+  bookingState.slots=[window._combos[i]];
+  bStep3(document.getElementById('bk-body'));
+}
+function toggleSlot(i){selectCombo(i);}
+function bNext3(){
+  if(bookingState.selectedCombo===undefined||bookingState.selectedCombo===null){toast('Välj ett tillfälle','e');return;}
+  bookingState.step=4;renderBStep();
+}
+
+function bStep4(b){
+  const fs=bookingState;
+  b.innerHTML=`<div class="step-card">
+    <h2>Dina uppgifter</h2><p class="step-desc">Bekräftelse skickas till eleven och vårdnadshavare.</p>
+    <div class="form-group"><label>Elevens namn *</label><input type="text" id="f-name" value="${fs.studentName||''}" placeholder="För- och efternamn"></div>
+    <div class="form-group"><label>Elevens e-post *</label><input type="email" id="f-email" value="${fs.studentEmail||''}" placeholder="elev@mail.se"></div>
+    <div class="form-group"><label>Vårdnadshavares e-post *</label><input type="email" id="f-guard" value="${fs.guardianEmail||''}" placeholder="foralder@mail.se"></div>
+    <div class="form-group"><label>Telefon *</label><input type="tel" id="f-phone" value="${fs.phone||''}" placeholder="070-XXXXXXX"></div>
+    <div class="form-group"><label>Nuvarande skola *</label><input type="text" id="f-school" value="${fs.school||''}" placeholder="T.ex. Virestad skola"></div>
+    <div class="form-group"><label>Hemkommun *</label><input type="text" id="f-muni" value="${fs.municipality||''}" placeholder="T.ex. Älmhult"></div>
+    <div class="form-group"><label>Årskurs *</label><select id="f-grade">
+      <option value="">Välj...</option>
+      ${['8','9','Har gått ut grundskolan'].map(g=>`<option ${fs.grade===g?'selected':''}>${g}</option>`).join('')}
+    </select></div>
+    <div class="form-group"><label>Specialkost</label><select id="f-food">
+      <option value="">Ingen special</option>
+      ${['Vegetarisk','Vegan','Glutenfri','Laktosfri','Halal','Nötallergi','Annan allergi'].map(f=>`<option ${fs.specialFood===f?'selected':''}>${f}</option>`).join('')}
+    </select></div>
+    <div class="form-group"><label>Allergier, funktionsvariationer eller annat vi bör känna till</label>
+      <textarea id="f-other" placeholder="Frivilligt...">${fs.otherInfo||''}</textarea></div>
+    <button class="btn btn-primary btn-full" onclick="bNext4()">Fortsätt →</button>
+    <button class="btn btn-ghost btn-full mt-8" onclick="bookingState.step=3;renderBStep()">← Tillbaka</button>
+  </div>`;
+}
+function bNext4(){
+  const n=document.getElementById('f-name').value.trim(),e=document.getElementById('f-email').value.trim(),g=document.getElementById('f-guard').value.trim(),p=document.getElementById('f-phone').value.trim(),sc=document.getElementById('f-school').value.trim(),mu=(document.getElementById('f-muni')||{value:''}).value.trim(),gr=document.getElementById('f-grade').value;
+  if(!n||!e||!g||!p||!sc||!mu||!gr){toast('Fyll i alla obligatoriska fält (*)','e');return;}
+  Object.assign(bookingState,{studentName:n,studentEmail:e,guardianEmail:g,phone:p,school:sc,municipality:mu,grade:gr,specialFood:(document.getElementById('f-food')||{value:''}).value.trim(),otherInfo:document.getElementById('f-other').value});
+  bookingState.step=5;renderBStep();
+}
+
+function bStep5(b){
+  const s=bookingState;
+  b.innerHTML=`<div class="step-card">
+    <h2>Bekräfta bokning</h2><p class="step-desc">Kontrollera att allt stämmer.</p>
+    <div class="mb-8">
+      <div class="sum-line"><span class="sl">Namn</span><span class="sv">${s.studentName}</span></div>
+      <div class="sum-line"><span class="sl">Elevens e-post</span><span class="sv">${s.studentEmail}</span></div>
+      <div class="sum-line"><span class="sl">Vård.hav. e-post</span><span class="sv">${s.guardianEmail}</span></div>
+      <div class="sum-line"><span class="sl">Telefon</span><span class="sv">${s.phone}</span></div>
+      <div class="sum-line"><span class="sl">Skola / Åk</span><span class="sv">${s.school}, åk ${s.grade}</span></div>
+      ${s.specialFood?`<div class="sum-line"><span class="sl">Specialkost</span><span class="sv">${s.specialFood}</span></div>`:''}
+      ${s.otherInfo?`<div class="sum-line"><span class="sl">Övrigt</span><span class="sv">${s.otherInfo}</span></div>`:''}
+    </div>
+    ${(()=>{
+      const combo=s.slots[0]; // single combo object
+      if(!combo) return '';
+      const days=bookingState.days;
+      let html='';
+      if(days===2&&combo.date2){
+        html+='<div class="info-box" style="margin-bottom:8px;">📅 <strong>Dag 1: '+fmtDate(combo.date)+'</strong><br>'+combo.label+'</div>';
+        html+='<div class="info-box" style="margin-bottom:8px;">📅 <strong>Dag 2: '+fmtDate(combo.date2)+'</strong><br>'+(combo.label2||combo.label)+'</div>';
+      } else {
+        html+='<div class="info-box" style="margin-bottom:8px;">📅 <strong>'+fmtDate(combo.date)+'</strong><br>'+combo.label+'</div>';
+      }
+      if(s.overnight) html+='<div class="info-box" style="margin-bottom:8px;">🛏️ '+overnightStayLabel(s.slots)+'</div>';
+      return html;
+    })()}
+    <button class="btn btn-primary btn-full" style="font-size:1rem;padding:14px;" onclick="confirmBooking()">✅ Slutför bokning</button>
+    <button class="btn btn-ghost btn-full mt-8" onclick="bookingState.step=4;renderBStep()">← Tillbaka</button>
+  </div>`;
+}
+
+function buildConfirmationEmail(booking){
+  // Collect all slot details
+  const slotDetails = booking.slots.map(sid=>{
+    const sl=DB.slots.find(s=>s.id===sid);
+    const prog=sl?DB.programs.find(p=>p.id===sl.programId):null;
+    return sl&&prog?{date:sl.date,type:sl.type,prog:prog.name,icon:prog.icon,emailText:prog.emailText}:null;
+  }).filter(Boolean);
+  // Group by date, sort FM before EM
+  const byDate={};
+  slotDetails.forEach(s=>{
+    if(!byDate[s.date]) byDate[s.date]=[];
+    byDate[s.date].push(s);
+  });
+  Object.values(byDate).forEach(arr=>arr.sort((a,b)=>a.type==='fm'?-1:1));
+  const scheduleLines=Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0])).map(([date,slots])=>{
+    const dayLabel=slots.map(s=>s.icon+' '+(s.type==='hel'?s.prog+' (heldag)':s.prog+' ('+(s.type==='fm'?'förmiddag':'eftermiddag')+')')).join(' + ');
+    return fmtDate(date)+': '+dayLabel;
+  }).join('\n');
+  // Program-specific texts
+  const progTexts=[...new Set(slotDetails.map(s=>s.prog))].map(name=>{
+    const prog=DB.programs.find(p=>p.name===name);
+    return prog&&prog.emailText?'--- '+prog.name+' ---\n'+prog.emailText:'';
+  }).filter(Boolean).join('\n\n');
+  return {scheduleLines,progTexts};
+}
+
+function computeBCC(booking){
+  const bcc=[];
+  // Admin always
+  (DB.settings.adminEmails||[]).forEach(function(em){bcc.push({label:'Admin',email:em});});
+  // Staff for each booked program
+  const bookedProgIds=[...new Set(booking.slots.map(sid=>{
+    const sl=DB.slots.find(s=>s.id===sid); return sl?sl.programId:null;
+  }).filter(Boolean))];
+  bookedProgIds.forEach(pid=>{
+    DB.users.filter(u=>u.role==='personal'&&u.program===pid&&u.email).forEach(u=>{
+      bcc.push({label:u.name+' ('+DB.programs.find(p=>p.id===pid)?.name+')',email:u.email});
+    });
+  });
+  // Internat if overnight
+  if(booking.overnight&&DB.settings.internatEmail){
+    bcc.push({label:'Internatpersonal',email:DB.settings.internatEmail});
+    // Also internat users
+    DB.users.filter(u=>u.role==='internat'&&u.email).forEach(u=>bcc.push({label:u.name+' (internat)',email:u.email}));
+  }
+  // Kitchen if special food
+  if(booking.specialFood&&DB.settings.kitchenEmail){
+    bcc.push({label:'Köket (specialkost: '+booking.specialFood+')',email:DB.settings.kitchenEmail});
+  }
+  return bcc;
+}
+
+function simulateSendEmail(booking){
+  const {scheduleLines,progTexts}=buildConfirmationEmail(booking);
+  const bcc=computeBCC(booking);
+  var bkSlots2=booking.overnight?booking.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?{date:s.date}:null;}).filter(Boolean):[];
+  var internatText2=booking.overnight&&DB.settings.internatEmailText?'\n\n--- Internat ---\n'+DB.settings.internatEmailText:'';
+  var overnightLine=booking.overnight?'\n🛏️ '+overnightStayLabel(bkSlots2)+internatText2:'';
+  const specialLine=booking.specialFood?'\n🍽️ Specialkost: '+booking.specialFood:'';
+  const otherLine=booking.otherInfo?'\n ℹ️ Övrigt: '+booking.otherInfo:'';
+
+  const studentInfo=
+    'Namn: '+booking.studentName+'\n'+
+    'Skola: '+booking.school+(booking.municipality?' ('+booking.municipality+')':'')+'\n'+
+    'Årskurs: '+booking.grade+'\n'+
+    'Telefon: '+booking.phone+'\n'+
+    'E-post: '+booking.studentEmail+'\n'+
+    'Vårdnadshavare: '+booking.guardianEmail+
+    (booking.specialFood?'\nSpecialkost: '+booking.specialFood:'')+
+    (booking.otherInfo?'\nÖvrigt: '+booking.otherInfo:'');
+
+  const emailPreview=
+    'TILL: '+booking.studentEmail+' & '+booking.guardianEmail+'\n'+
+    (bcc.length?'BCC: '+bcc.map(b=>b.label+' <'+b.email+'>').join(', ')+'\n':'')+
+    'FRÅN: '+DB.settings.senderEmail+'\n'+
+    '\n--- SCHEMA ---\n'+scheduleLines+
+    '\n\n--- ELEVINFORMATION ---\n'+studentInfo+
+    '\n\n--- ALLMÄN INFO ---\n'+DB.settings.adminEmailText+
+    overnightLine+
+    (progTexts?'\n\n'+progTexts:'')+
+    '\n\n--- DIN BOKNINGSKOD ---\n'+booking.code+
+    '\n\nAvboka via: https://ingelstad.nu/boka/avboka?kod='+booking.code;
+
+  showModal('<div class="modal-handle"></div><h3>📧 E-post simulerad</h3>'+
+    '<p class="modal-sub">I den riktiga appen skickas detta via SMTP. Här är en förhandsvisning:</p>'+
+    '<div style="background:#f7faf8;border-radius:9px;padding:14px;font-size:.78rem;font-family:monospace;white-space:pre-wrap;max-height:320px;overflow-y:auto;line-height:1.6;color:var(--ink);">'+emailPreview+'</div>'+
+    '<div class="modal-footer"><button class="btn btn-primary btn-full" onclick="closeModal()">Stäng</button></div>');
+}
+
+function confirmBooking(){
+  const code=Math.random().toString(36).substring(2,6).toUpperCase();
+  const id='IGY-'+(DB.bookings.length+1).toString().padStart(3,'0');
+  const allSlots=bookingState.slots.flatMap(c=>c.slots);
+  allSlots.forEach(sid=>{const s=DB.slots.find(x=>x.id===sid);if(s)s.booked=Math.min(s.booked+1,s.capacity);});
+  if(bookingState.overnight){
+    // Get correct night dates using same logic as getOvernightNightsForBooking
+    var allSlotDates=[...new Set(bookingState.slots.flatMap(function(combo){
+      return combo.slots.map(function(sid){
+        var s=DB.slots.find(function(x){return x.id===sid;});
+        return s?s.date:null;
+      });
+    }).filter(Boolean))].sort();
+    var day1b=allSlotDates[0];
+    var nights2=allSlotDates.length===1?[prevDay(day1b)]:[prevDay(day1b),day1b];
+    nights2.forEach(function(ov){
+      var o=DB.overnight.find(function(x){return x.date===ov;});
+      if(o)o.booked++;else DB.overnight.push({date:ov,booked:1});
+      var room=assignRoom(ov);
+      if(room) DB.roomBookings.push({bookingId:id,room:room,date:ov});
+    });
+  }
+  DB.bookings.push({id,studentName:bookingState.studentName,studentEmail:bookingState.studentEmail,guardianEmail:bookingState.guardianEmail,phone:bookingState.phone,school:bookingState.school,municipality:bookingState.municipality,grade:bookingState.grade,days:bookingState.days,overnight:bookingState.overnight,slots:allSlots,specialFood:bookingState.specialFood,otherInfo:bookingState.otherInfo,code,createdAt:new Date().toISOString().slice(0,10)});
+  bookingState.code=code;bookingState.bookingId=id;
+  // Simulate sending email
+  const newBooking=DB.bookings[DB.bookings.length-1];
+  setTimeout(()=>simulateSendEmail(newBooking),400);
+  bookingState.step=6;renderBStep();
+}
+
+function bSuccess(b){
+  b.innerHTML=`<div class="success-wrap">
+    <div class="sicon">🎉</div>
+    <h2>Bokning bekräftad!</h2>
+    <p>Välkommen, ${bookingState.studentName}! Bekräftelse har skickats till ${bookingState.studentEmail} och ${bookingState.guardianEmail}.</p>
+    <div class="bk-ref"><p>Din bokningskod</p><strong>${bookingState.code}</strong></div>
+    <div class="info-box" style="text-align:left;margin-bottom:16px;">
+      <strong>📧 Ditt bekräftelsemejl innehåller:</strong><br>
+      • Bokningskod och alla detaljer<br>
+      • Avbokningslänk (alltid giltig)<br>
+      • Påminnelse skickas ett par dagar innan<br><br>
+      <em style="font-size:.82rem;">${DB.settings.adminEmailText.split('\n')[0]}</em>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="showLogin()">← Tillbaka till startsidan</button>
+  </div>`;
+}
+
+// UTILS
+function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');return`${parseInt(day)} ${['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'][parseInt(m)-1]} ${y}`;}
+function prevDay(d){const dt=new Date(d);dt.setDate(dt.getDate()-1);return dt.toISOString().slice(0,10);}
+function showModal(html){const el=document.createElement('div');el.className='modal-overlay';el.id='modal-ov';el.innerHTML=`<div class="modal">${html}</div>`;el.addEventListener('click',e=>{if(e.target===el)closeModal();});document.getElementById('modal-ct').appendChild(el);}
+function closeModal(){const el=document.getElementById('modal-ov');if(el)el.remove();}
+let _tt;
+function toast(msg,type='s'){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';document.body.appendChild(t);}t.textContent=msg;t.style.cssText=`position:fixed;bottom:68px;left:50%;transform:translateX(-50%);background:${type==='e'?'#dc2626':'#2d5a3d'};color:#fff;padding:10px 20px;border-radius:20px;font-size:.85rem;font-weight:700;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap;max-width:90vw;text-align:center;`;clearTimeout(_tt);_tt=setTimeout(()=>t.remove(),2800);}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('screen-login').style.display!=='none')doLogin();});
+// Start on booking flow
+showBooking();
+</script>
+</body>
+</html>

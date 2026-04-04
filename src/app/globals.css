@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forest: #2d5a3d;
+  --forest-dark: #1e3d2a;
+  --forest-mid: #3d7a54;
+  --forest-light: #e8f4ed;
+  --forest-pale: #f4faf6;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --sky: #0369a1;
+  --sky-light: #e0f2fe;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --ink: #1a2e1e;
+  --ink2: #4a6552;
+  --muted: #7a9485;
+  --border: #c8ddd0;
+  --bg: #f7faf8;
+  --card: #fff;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 2px 12px rgba(45,90,61,.08);
+  --shadow-lg: 0 8px 40px rgba(45,90,61,.16);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+  margin: 0;
+  padding: 0;
+}
