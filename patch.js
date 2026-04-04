@@ -1,7 +1,6 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const oldFn = "function doLogin(){\n  const u=document.getElementById('login-user').value.trim();\n  const p=document.getElementById('login-pass').value;\n  const user=DB.users.find(x=>x.id===u&&x.pass===p);\n  if(!user){const e=document.getElementById('login-error');e.textContent='Fel anv\u00e4ndarnamn eller l\u00f6senord';e.classList.remove('hidden');return;}\n  loginAs(user);\n}";
-const newFn = "function doLogin(){\n  const u=document.getElementById('login-user').value.trim();\n  const p=document.getElementById('login-pass').value;\n  const errEl=document.getElementById('login-error');\n  errEl.classList.add('hidden');\n  fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})})\n    .then(r=>r.json())\n    .then(data=>{\n      if(data.error){errEl.textContent=data.error;errEl.classList.remove('hidden');return;}\n      const usr=DB.users.find(x=>x.id==='admin')||DB.users[0];\n      const u2=Object.assign({},usr,{id:data.user.id,name:data.user.name,role:data.user.role,program:data.user.program_id,email:data.user.email});\n      loginAs(u2);\n    })\n    .catch(()=>{errEl.textContent='Inloggningsfel, f\u00f6rs\u00f6k igen';errEl.classList.remove('hidden');});\n}";
-c=c.replace(oldFn,newFn);
+const old = "\n    <hr class=\"divider\">\n    <div class=\"demo-section\">\n      <p>Testinloggningar</p>\n      <button class=\"demo-btn\" onclick=\"quickLogin('admin')\">🔑 <strong>Admin</strong> <span>— full kontroll</span></button>\n      <button class=\"demo-btn\" onclick=\"quickLogin('djurvard')\">🐾 <strong>Personal Djurvård</strong></button>\n      <button class=\"demo-btn\" onclick=\"quickLogin('na')\">🔬 <strong>Personal NV</strong></button>\n      <button class=\"demo-btn\" onclick=\"quickLogin('internat')\">🛏️ <strong>Internatansvarig</strong></button>\n    </div>\n    <hr class=\"divider\">";
+c=c.replace(old,"");
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("/api/auth/login"));
+console.log("Done:", !c.includes("quickLogin('admin')"));
