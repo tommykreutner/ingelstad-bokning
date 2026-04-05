@@ -2244,7 +2244,7 @@ function bStep5(b){
       if(s.overnight) html+='<div class="info-box" style="margin-bottom:8px;">🛏️ '+overnightStayLabel(s.slots)+'</div>';
       return html;
     })()}
-    <button class="btn btn-primary btn-full" style="font-size:1rem;padding:14px;" onclick="confirmBooking()">✅ Slutför bokning</button>
+    <button class="btn btn-primary btn-full" style="font-size:1rem;padding:14px;" onclick="if(this.disabled)return;this.disabled=true;this.textContent='Sparar...';confirmBooking().finally(()=>{this.disabled=false;this.textContent='✅ Slutför bokning';})">✅ Slutför bokning</button>
     <button class="btn btn-ghost btn-full mt-8" onclick="bookingState.step=4;renderBStep()">← Tillbaka</button>
   </div>`;
 }
