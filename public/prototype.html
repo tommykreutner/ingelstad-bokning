@@ -1110,7 +1110,10 @@ function saveInternatEmail(){
 }
 function saveInternatMailText(){
   var el=document.getElementById('ia-emailtext');
-  if(el){DB.settings.internatEmailText=el.value;toast('Mailtext sparad!');}
+  if(!el) return;
+  var txt=el.value;
+  fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({internat_email_text:txt})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.internatEmailText=txt;toast('Mailtext sparad!');}).catch(()=>toast('Fel vid sparande','e'));
 }
 function renderProgAdmin(){
   var mp=currentUser.program;
