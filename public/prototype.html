@@ -1140,7 +1140,8 @@ function saveProgEmail(){
   currentUser.email=email;
   var u=DB.users.find(function(x){return x.id===currentUser.id;});
   if(u) u.email=email;
-  toast('E-postadress sparad!');
+  fetch('/api/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentUser.id,email:email,role:currentUser.role,programId:currentUser.program})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}toast('E-postadress sparad!');}).catch(()=>toast('Fel vid sparande','e'));
 }
 function saveProgMailText(){
   var mp=currentUser.program;
