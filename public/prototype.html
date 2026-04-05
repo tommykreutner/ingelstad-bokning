@@ -923,7 +923,7 @@ function renderBookings(activeDate){
         +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
         +'</div>'
         +'<div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;">'
-        +b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var pr=s?DB.programs.find(function(p){return p.id===s.programId;}):null;return s?'<span class="chip">'+(pr?pr.icon+' '+pr.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span></span>':''}).join('')
+        +b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var pr=s?DB.programs.find(function(p){return p.id===s.programId;}):null;return s?'<span class="chip">'+(pr?pr.icon+' '+pr.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;font-weight:400;">'+fmtDateLong(s.date)+'</span></span>':''}).join('')
         +'</div></div>';
     });
   }
@@ -2406,6 +2406,7 @@ function bSuccess(b){
 
 // UTILS
 function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');return`${parseInt(day)} ${['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'][parseInt(m)-1]} ${y}`;}
+function fmtDateLong(d){if(!d)return'';const days=['söndagen','måndagen','tisdagen','onsdagen','torsdagen','fredagen','lördagen'];const dt=new Date(d);const dayName=days[dt.getDay()];const[y,m,day]=d.split('-');return`${dayName} ${parseInt(day)} ${['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'][parseInt(m)-1]} ${y}`;}
 function prevDay(d){const dt=new Date(d);dt.setDate(dt.getDate()-1);return dt.toISOString().slice(0,10);}
 function showModal(html){const el=document.createElement('div');el.className='modal-overlay';el.id='modal-ov';el.innerHTML=`<div class="modal">${html}</div>`;el.addEventListener('click',e=>{if(e.target===el)closeModal();});document.getElementById('modal-ct').appendChild(el);}
 function closeModal(){const el=document.getElementById('modal-ov');if(el)el.remove();}
