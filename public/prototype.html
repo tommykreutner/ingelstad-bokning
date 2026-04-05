@@ -1899,11 +1899,49 @@ function buildCombos(){
   const nvCompatIds=nvPkgIds.map(id=>id.replace('nv-',''));
   // All programs that need half-slots (reg progs + NV compat progs)
   const halfProgIds=[...new Set([...regProgIds,...nvCompatIds])];
-  const allDates=[...new Set(DB.slots.filter(s=>isDateBookable(s.date)).map(s=>s.date))].sort();
+  // Generate all candidate dates: from slots + next 90 days for open programs
+  const slotDates=DB.slots.filter(s=>isDateBookable(s.date)).map(s=>s.date);
+  const hasOpenProg=halfProgIds.some(pid=>{const p=DB.programs.find(x=>x.id===pid);return p&&p.slotMode==='open';});
+  const extraDates=[];
+  if(hasOpenProg){
+    const today=new Date();today.setDate(today.getDate()+7);
+    for(let i=0;i<90;i++){
+      const d=new Date(today);d.setDate(today.getDate()+i);
+      const ds=d.toISOString().slice(0,10);
+      if(isDateBookable(ds)) extraDates.push(ds);
+    }
+  }
+  const allDates=[...new Set([...slotDates,...extraDates])].sort();
+
+  // Helper: check if a date is available for a program (respects slotMode)
+  function isDateAvailForProg(date,pid){
+    const prog=DB.programs.find(p=>p.id===pid);
+    if(!prog) return false;
+    if(!isDateBookable(date)) return false;
+    const hasSlot=DB.slots.some(s=>s.programId===pid&&s.date===date);
+    if(prog.slotMode==='open') return !hasSlot; // open: slot means CLOSED
+    return hasSlot; // closed: slot means OPEN
+  }
+
+  // Helper: get actual slot for closed-mode program, or virtual slot for open-mode
+  function getSlotsForProg(date,pid){
+    const prog=DB.programs.find(p=>p.id===pid);
+    if(!prog) return [];
+    if(!isDateBookable(date)) return [];
+    if(prog.slotMode==='open'){
+      const hasSlot=DB.slots.some(s=>s.programId===pid&&s.date===date);
+      if(hasSlot) return []; // closed day
+      // Open program, no slot = available. Return virtual slots.
+      return [{id:'virtual-'+pid+'-'+date+'-fm',programId:pid,date,type:'fm',capacity:prog.defaultCapacity,booked:0,virtual:true},
+              {id:'virtual-'+pid+'-'+date+'-em',programId:pid,date,type:'em',capacity:prog.defaultCapacity,booked:0,virtual:true},
+              {id:'virtual-'+pid+'-'+date+'-hel',programId:pid,date,type:'hel',capacity:prog.defaultCapacity,booked:0,virtual:true}];
+    }
+    return DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity);
+  }
 
   // Helper: find available half-slots for a program on a date (fm, em, or half of hel)
   function halfSlotsForProg(date,pid){
-    const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+    const avail=getSlotsForProg(date,pid).filter(s=>s.booked<s.capacity||s.virtual);
     const results=[];
     avail.forEach(s=>{
       const prog=DB.programs.find(p=>p.id===pid);
@@ -1965,7 +2003,7 @@ function buildCombos(){
         for(const pid of regProgIds.slice(0,2)){
           const prog=DB.programs.find(p=>p.id===pid);
           if(!prog){ok=false;break;}
-          const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+          const avail=getSlotsForProg(date,pid);
           // Try FM first, then EM, then HEL (as either)
           let pick=null;
           for(const t of['fm','em']){
