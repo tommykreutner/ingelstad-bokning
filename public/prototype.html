@@ -1637,17 +1637,25 @@ function saveBlock(){
   }
 }
 function saveEmail(){
-  DB.settings.senderEmail=document.getElementById('se-mail').value;
-  DB.settings.adminEmails=document.getElementById('se-admin').value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
-  DB.settings.internatEmail=document.getElementById('se-internat').value;
-  DB.settings.kitchenEmail=document.getElementById('se-kitchen').value;
-  DB.settings.smtpHost=document.getElementById('se-host').value;
-  DB.settings.smtpPort=document.getElementById('se-port').value;
-  DB.settings.smtpUser=document.getElementById('se-user').value;
+  const senderEmail=document.getElementById('se-mail').value;
+  const adminEmails=document.getElementById('se-admin').value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  const internatEmail=document.getElementById('se-internat').value;
+  const kitchenEmail=document.getElementById('se-kitchen').value;
+  const smtpHost=document.getElementById('se-host').value;
+  const smtpPort=document.getElementById('se-port').value;
+  const smtpUser=document.getElementById('se-user').value;
   const pass=document.getElementById('se-pass').value;
-  if(pass) DB.settings.smtpPass=pass;
-  DB.settings.adminEmailText=document.getElementById('se-text').value;
-  toast('E-postinställningar sparade!');
+  const adminEmailText=document.getElementById('se-text').value;
+  const updates={sender_email:senderEmail,admin_emails:adminEmails,internat_email:internatEmail,kitchen_email:kitchenEmail,smtp_host:smtpHost,smtp_port:smtpPort,smtp_user:smtpUser,admin_email_text:adminEmailText};
+  if(pass) updates.smtp_pass=pass;
+  fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.error){toast(data.error,'e');return;}
+      DB.settings.senderEmail=senderEmail;DB.settings.adminEmails=adminEmails;DB.settings.internatEmail=internatEmail;DB.settings.kitchenEmail=kitchenEmail;DB.settings.smtpHost=smtpHost;DB.settings.smtpPort=smtpPort;DB.settings.smtpUser=smtpUser;DB.settings.adminEmailText=adminEmailText;if(pass)DB.settings.smtpPass=pass;
+      toast('E-postinställningar sparade!');
+    })
+    .catch(()=>toast('Fel vid sparande','e'));
 }
 function addProgModal(){showModal(`<div class="modal-handle"></div><h3>Nytt program</h3>
   <div class="form-group"><label>Namn</label><input type="text" id="np-n" placeholder="Programmets namn"></div>
