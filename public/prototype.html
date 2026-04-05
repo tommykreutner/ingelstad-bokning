@@ -1955,8 +1955,44 @@ function buildCombos(){
           combos.push({date,date2:null,label:pair.label,slots:pair.slots,minSpots:pair.spots,isNV:true});
         });
       });
+    } else if(regProgIds.length>=2){
+      // 2+ regular programs on 1 day: each gets a half-slot (FM or EM)
+      // A HEL slot can serve as either FM or EM
+      allDates.forEach(date=>{
+        const usedTypes=new Set();
+        const picks=[];
+        let ok=true;
+        for(const pid of regProgIds.slice(0,2)){
+          const prog=DB.programs.find(p=>p.id===pid);
+          if(!prog){ok=false;break;}
+          const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+          // Try FM first, then EM, then HEL (as either)
+          let pick=null;
+          for(const t of['fm','em']){
+            if(usedTypes.has(t)) continue;
+            const s=avail.find(s=>s.type===t);
+            if(s){pick={slotId:s.id,type:t,label:prog.icon+' '+prog.name+' '+t.toUpperCase(),spots:s.capacity-s.booked};break;}
+          }
+          if(!pick){
+            const hel=avail.find(s=>s.type==='hel');
+            if(hel){
+              const t=usedTypes.has('fm')?'em':'fm';
+              pick={slotId:hel.id,type:t,label:prog.icon+' '+prog.name+' '+t.toUpperCase(),spots:hel.capacity-hel.booked};
+            }
+          }
+          if(!pick){ok=false;break;}
+          usedTypes.add(pick.type);
+          picks.push(pick);
+        }
+        if(ok&&picks.length>=2){
+          const label=picks.map(p=>p.label).join(' + ');
+          const slots=picks.map(p=>p.slotId);
+          const minSpots=Math.min(...picks.map(p=>p.spots));
+          combos.push({date,date2:null,label,slots,minSpots,isNV:false});
+        }
+      });
     } else {
-      // Regular: need a full day
+      // 1 regular program: need a full day
       allDates.forEach(date=>{
         const prog=regProgIds.length>0?DB.programs.find(p=>p.id===regProgIds[0]):null;
         if(!prog) return;
