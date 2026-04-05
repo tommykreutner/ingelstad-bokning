@@ -1105,7 +1105,8 @@ function saveInternatEmail(){
   var u=DB.users.find(function(x){return x.id===currentUser.id;});
   if(u) u.email=email;
   DB.settings.internatEmail=email;
-  toast('E-postadress sparad!');
+  fetch('/api/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentUser.id,email:email,role:currentUser.role,programId:currentUser.program})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}toast('E-postadress sparad!');}).catch(()=>toast('Fel vid sparande','e'));
 }
 function saveInternatMailText(){
   var el=document.getElementById('ia-emailtext');
@@ -1146,7 +1147,10 @@ function saveProgEmail(){
 function saveProgMailText(){
   var mp=currentUser.program;
   var prog=DB.programs.find(function(p){return p.id===mp;});
-  if(prog){prog.emailText=(document.getElementById('pa-emailtext')||{value:''}).value;toast('Mailtext sparad!');}
+  if(!prog) return;
+  var et=(document.getElementById('pa-emailtext')||{value:''}).value;
+  fetch('/api/programs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:mp,email_text:et})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}prog.emailText=et;toast('Mailtext sparad!');}).catch(()=>toast('Fel vid sparande','e'));
 }
 function saveProgEmailText(progId){
   const prog=DB.programs.find(p=>p.id===progId);
