@@ -2338,31 +2338,46 @@ function simulateSendEmail(booking){
     '<div class="modal-footer"><button class="btn btn-primary btn-full" onclick="closeModal()">Stäng</button></div>');
 }
 
-function confirmBooking(){
-  const code=Math.random().toString(36).substring(2,6).toUpperCase();
-  const id='IGY-'+(DB.bookings.length+1).toString().padStart(3,'0');
-  const allSlots=bookingState.slots.flatMap(c=>c.slots);
-  allSlots.forEach(sid=>{const s=DB.slots.find(x=>x.id===sid);if(s)s.booked=Math.min(s.booked+1,s.capacity);});
-  if(bookingState.overnight){
-    // Get correct night dates using same logic as getOvernightNightsForBooking
-    var allSlotDates=[...new Set(bookingState.slots.flatMap(function(combo){
-      return combo.slots.map(function(sid){
-        var s=DB.slots.find(function(x){return x.id===sid;});
-        return s?s.date:null;
-      });
-    }).filter(Boolean))].sort();
-    var day1b=allSlotDates[0];
-    var nights2=allSlotDates.length===1?[prevDay(day1b)]:[prevDay(day1b),day1b];
-    nights2.forEach(function(ov){
-      var o=DB.overnight.find(function(x){return x.date===ov;});
-      if(o)o.booked++;else DB.overnight.push({date:ov,booked:1});
-      var room=assignRoom(ov);
-      if(room) DB.roomBookings.push({bookingId:id,room:room,date:ov});
-    });
+async function confirmBooking(){
+  const allSlotIds=bookingState.slots.flatMap(c=>c.slots);
+  // Separate virtual and real slot IDs
+  const virtualSlots=allSlotIds.filter(id=>id.startsWith('virtual-'));
+  const realSlotIds=allSlotIds.filter(id=>!id.startsWith('virtual-'));
+  // Create real slots for virtual ones
+  const createdSlotIds=[...realSlotIds];
+  for(const vid of virtualSlots){
+    const parts=vid.split('-'); // virtual-pid-date-type
+    const type=parts[parts.length-1];
+    const date=parts[parts.length-2];
+    const pid=parts.slice(1,parts.length-2).join('-');
+    const prog=DB.programs.find(p=>p.id===pid);
+    const resp=await fetch('/api/slots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slots:[{programId:pid,date,type,capacity:prog?prog.defaultCapacity:10}]})});
+    const data=await resp.json();
+    if(data.slots&&data.slots[0]){
+      const ns=data.slots[0];
+      DB.slots.push({id:ns.id,programId:ns.program_id,date:ns.date,type:ns.type,capacity:ns.capacity,booked:ns.booked});
+      createdSlotIds.push(ns.id);
+    }
   }
-  DB.bookings.push({id,studentName:bookingState.studentName,studentEmail:bookingState.studentEmail,guardianEmail:bookingState.guardianEmail,phone:bookingState.phone,school:bookingState.school,municipality:bookingState.municipality,grade:bookingState.grade,days:bookingState.days,overnight:bookingState.overnight,slots:allSlots,specialFood:bookingState.specialFood,otherInfo:bookingState.otherInfo,code,createdAt:new Date().toISOString().slice(0,10)});
-  bookingState.code=code;bookingState.bookingId=id;
-  // Simulate sending email
+  // Get slot dates for overnight
+  const allSlotDates=[...new Set(createdSlotIds.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?s.date:null;}).filter(Boolean))].sort();
+  const day1b=allSlotDates[0];
+  const nights=bookingState.overnight?(allSlotDates.length===1?[prevDay(day1b)]:[prevDay(day1b),day1b]):[];
+  // Save booking via API
+  const resp=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    studentName:bookingState.studentName,studentEmail:bookingState.studentEmail,
+    guardianEmail:bookingState.guardianEmail,phone:bookingState.phone,
+    school:bookingState.school,municipality:bookingState.municipality,
+    grade:bookingState.grade,days:bookingState.days,overnight:bookingState.overnight,
+    specialFood:bookingState.specialFood,otherInfo:bookingState.otherInfo,
+    slotIds:createdSlotIds,slotDates:allSlotDates,nights
+  })});
+  const data=await resp.json();
+  if(data.error){toast(data.error,'e');return;}
+  // Update local DB
+  createdSlotIds.forEach(sid=>{const s=DB.slots.find(x=>x.id===sid);if(s)s.booked=Math.min(s.booked+1,s.capacity);});
+  DB.bookings.push({id:data.id,studentName:bookingState.studentName,studentEmail:bookingState.studentEmail,guardianEmail:bookingState.guardianEmail,phone:bookingState.phone,school:bookingState.school,municipality:bookingState.municipality,grade:bookingState.grade,days:bookingState.days,overnight:bookingState.overnight,slots:createdSlotIds,specialFood:bookingState.specialFood,otherInfo:bookingState.otherInfo,code:data.code,createdAt:new Date().toISOString().slice(0,10)});
+  bookingState.code=data.code;bookingState.bookingId=data.id;
   const newBooking=DB.bookings[DB.bookings.length-1];
   setTimeout(()=>simulateSendEmail(newBooking),400);
   bookingState.step=6;renderBStep();
