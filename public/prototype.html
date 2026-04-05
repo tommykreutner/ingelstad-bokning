@@ -2346,10 +2346,14 @@ async function confirmBooking(){
   // Create real slots for virtual ones
   const createdSlotIds=[...realSlotIds];
   for(const vid of virtualSlots){
-    const parts=vid.split('-'); // virtual-pid-date-type
-    const type=parts[parts.length-1];
-    const date=parts[parts.length-2];
-    const pid=parts.slice(1,parts.length-2).join('-');
+    // Format: virtual-{pid}-{YYYY-MM-DD}-{type}
+    const withoutPrefix=vid.slice('virtual-'.length); // e.g. djurvard-2026-04-22-em
+    const typeMatch=withoutPrefix.match(/-(fm|em|hel)$/);
+    const type=typeMatch?typeMatch[1]:'hel';
+    const withoutType=withoutPrefix.slice(0,withoutPrefix.lastIndexOf('-'+type));
+    const dateMatch=withoutType.match(/(\d{4}-\d{2}-\d{2})$/);
+    const date=dateMatch?dateMatch[1]:'';
+    const pid=withoutType.slice(0,withoutType.lastIndexOf('-'+date));
     const prog=DB.programs.find(p=>p.id===pid);
     const resp=await fetch('/api/slots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slots:[{programId:pid,date,type,capacity:prog?prog.defaultCapacity:10}]})});
     const data=await resp.json();
