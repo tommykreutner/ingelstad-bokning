@@ -2026,7 +2026,10 @@ function buildCombos(){
           const label=picks.map(p=>p.label).join(' + ');
           const slots=picks.map(p=>p.slotId);
           const minSpots=Math.min(...picks.map(p=>p.spots));
-          combos.push({date,date2:null,label,slots,minSpots,isNV:false});
+          // typeOverride: maps slotId to actual type used (for HEL slots used as FM/EM)
+          const typeOverride={};
+          picks.forEach(p=>{typeOverride[p.slotId]=p.type;});
+          combos.push({date,date2:null,label,slots,minSpots,isNV:false,typeOverride});
         }
       });
     } else {
@@ -2340,10 +2343,16 @@ function simulateSendEmail(booking){
 
 async function confirmBooking(){
   const allSlotIds=bookingState.slots.flatMap(c=>c.slots);
+  // Build typeOverride map from all combos
+  const typeOverrideMap={};
+  bookingState.slots.forEach(combo=>{
+    if(combo.typeOverride) Object.assign(typeOverrideMap,combo.typeOverride);
+  });
   // Separate virtual and real slot IDs
   const virtualSlots=allSlotIds.filter(id=>id.startsWith('virtual-'));
-  const realSlotIds=allSlotIds.filter(id=>!id.startsWith('virtual-'));
-  // Create real slots for virtual ones
+  // Real slots that need to be split (HEL used as FM/EM)
+  const helSplitSlots=allSlotIds.filter(id=>!id.startsWith('virtual-')&&typeOverrideMap[id]&&DB.slots.find(s=>s.id===id&&s.type==='hel'));
+  const realSlotIds=allSlotIds.filter(id=>!id.startsWith('virtual-')&&!helSplitSlots.includes(id));
   const createdSlotIds=[...realSlotIds];
   for(const vid of virtualSlots){
     // Format: virtual-{pid}-{YYYY-MM-DD}-{type}
