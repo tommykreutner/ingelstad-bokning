@@ -1501,6 +1501,22 @@ function renderAdmin(){
       const isOpen=DB.settings.openTerms.length>0;
       return '<div class="card" style="margin-bottom:16px;border-left:4px solid '+(isOpen?'var(--forest)':'#dc2626')+';background:'+(isOpen?'#f0fdf4':'#fef2f2')+';">'+'<div class="flex-between"><div><p class="fw-6" style="color:'+(isOpen?'var(--forest)':'#dc2626')+';">'+( isOpen?'✅ Bokning är öppen':'🔴 Bokning är stängd')+'</p><p class="text-sm text-muted">'+(isOpen?'Elever kan boka prova-på-dagar.':'Inga nya bokningar tas emot. Personal kan fortfarande logga in.')+'</p></div><button class="btn '+(isOpen?'btn-danger':'btn-primary')+'" onclick="toggleBookingOpen()">'+( isOpen?'Stäng bokning':'Öppna bokning')+'</button></div></div>';
     })()}
+    ${(()=>{
+      const now=new Date();
+      const y=now.getFullYear(),m=now.getMonth()+1;
+      const yy=String(m>=8?y:y-1).slice(2);
+      const yy2=String(m>=8?y+1:y).slice(2);
+      const ht='HT'+yy, vt='VT'+yy2;
+      const htChecked=DB.settings.openTerms.includes(ht);
+      const vtChecked=DB.settings.openTerms.includes(vt);
+      return '<div class="sec-title">Terminer</div>'
+        +'<div class="card" style="margin-bottom:16px;">'
+        +'<p class="text-sm text-muted" style="margin-bottom:12px;">Kryssa i de terminer som ska vara öppna för bokning. Avkryssning stänger terminen omedelbart.</p>'
+        +'<label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;"><input type="checkbox" class="term-check" value="'+ht+'" '+(htChecked?'checked':'')+'> <span><strong>'+ht+'</strong> (aug–jan '+yy2+')</span></label>'
+        +'<label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;"><input type="checkbox" class="term-check" value="'+vt+'" '+(vtChecked?'checked':'')+'> <span><strong>'+vt+'</strong> (jan–jun '+yy2+')</span></label>'
+        +'<button class="btn btn-primary btn-sm" onclick="saveTermSettings()">Spara terminsinställningar</button>'
+        +'</div>';
+    })()}
     <div class="sec-title">Program <button class="btn btn-secondary btn-sm" onclick="addProgModal()">+ Nytt</button></div>
     ${DB.programs.map(prog=>`<div class="card" style="margin-bottom:10px;">
       <div class="flex-between mb-8">
@@ -1657,14 +1673,28 @@ function saveBlock(){
 function toggleBookingOpen(){
   const isOpen=DB.settings.openTerms.length>0;
   if(isOpen){
-    if(!confirm('Stäng bokningen? Elever kan inte boka nya tider.')) return;
     fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({open_terms:[]})})
       .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[];renderAdmin();renderDashboard();toast('Bokning stängd!');});
   } else {
-    const term=DB.settings.termHistory.length?DB.settings.termHistory[0]:'VT'+String(new Date().getFullYear()).slice(2);
-    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({open_terms:[term]})})
-      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[term];renderAdmin();renderDashboard();toast('Bokning öppnad!');});
+    // Open with currently checked terms
+    const checked=Array.from(document.querySelectorAll('.term-check:checked')).map(el=>el.value);
+    const terms=checked.length?checked:getActiveTerms();
+    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({open_terms:terms})})
+      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=terms;renderAdmin();renderDashboard();toast('Bokning öppnad!');});
   }
+}
+function getActiveTerms(){
+  const now=new Date();
+  const y=now.getFullYear(),m=now.getMonth()+1;
+  const yy=String(y).slice(2);
+  const yy2=String(y+1).slice(2);
+  if(m>=8) return ['HT'+yy];
+  return ['VT'+yy];
+}
+function saveTermSettings(){
+  const checked=Array.from(document.querySelectorAll('.term-check:checked')).map(el=>el.value);
+  fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({open_terms:checked})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=checked;renderAdmin();renderDashboard();toast('Terminsinställningar sparade!');}).catch(()=>toast('Fel','e'));
 }
 function toggleBookingOpen(){
   const isOpen=DB.settings.openTerms.length>0;
@@ -1780,7 +1810,12 @@ function renderProg(){
     return`<div class="ps ${cls}"><span class="sn">${n<bookingState.step?'✓':n}</span>${l}</div>`;
   }).join('');
 }
-function renderBStep(){renderProg();const b=document.getElementById('bk-body');const s=bookingState.step;if(s===1)bStep1(b);else if(s===2)bStep2(b);else if(s===3)bStep3(b);else if(s===4)bStep4(b);else if(s===5)bStep5(b);else if(s===6)bSuccess(b);}
+function renderBStep(){renderProg();const b=document.getElementById('bk-body');const s=bookingState.step;
+  if(s!==6&&DB.settings.openTerms.length===0){
+    b.innerHTML='<div class="step-card" style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;margin-bottom:16px;">🔒</div><h2 style="color:#dc2626;">Bokningen är tillfälligt stängd</h2><p class="step-desc">Vi öppnar snart för nya bokningar. Följ vår hemsida för mer information.</p></div>';
+    return;
+  }
+  if(s===1)bStep1(b);else if(s===2)bStep2(b);else if(s===3)bStep3(b);else if(s===4)bStep4(b);else if(s===5)bStep5(b);else if(s===6)bSuccess(b);}
 
 function bStep1(b){
   b.innerHTML=`<div class="step-card">
