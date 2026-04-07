@@ -1,9 +1,7 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:b.slot_ids||[],specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));";
-const newCode = "if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));";
-const count = (c.match(/slot_ids\|\|\[\]/g)||[]).length;
-console.log('Occurrences to replace:', count);
-c=c.split(old).join(newCode);
+const old = "      return '<div class=\"table-wrap\"><table><thead><tr><th>Elev</th><th>Program</th><th>Dagar</th><th>Övernattning</th></tr></thead><tbody>'\r\n        +bks.slice(0,5).map(b=>{\r\n          const progs=[...new Set(b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?DB.programs.find(p=>p.id===s.programId)?.icon+' '+DB.programs.find(p=>p.id===s.programId)?.name:'';}))].join(', ');\r\n          return '<tr><td><strong>'+b.studentName+'</strong><br><span class=\"td-m text-sm\">'+b.school+'</span></td><td class=\"td-m text-sm\">'+progs+'</td><td>'+b.days+'</td><td>'+(b.overnight?'✅':'—')+'</td></tr>';\r\n        }).join('')\r\n        +'</tbody></table></div>';";
+const newCode = "      return '<p class=\"text-sm text-muted\">Se <strong>Bokningar</strong>-fliken för detaljer.</p>';";
+c=c.replace(old,newCode);
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("booking_slots||[]"));
+console.log("Done:", c.includes("Bokningar-fliken"));

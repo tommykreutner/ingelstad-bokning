@@ -809,9 +809,16 @@ function renderDashboard(){
             +(nextNight?'<div class="stat-card" style="grid-column:1/-1;border-left:4px solid var(--forest);"><div class="stat-label">Nästa bokade natt</div><div class="stat-val" style="font-size:1.3rem;">'+fmtDate(nextNight)+'</div><div class="stat-sub">'+nextRooms.length+' av '+DB.settings.overnightCapacity+' rum belagda</div></div>':'');
         }
 
-        return '<div class="stat-card"><div class="stat-label">Bokningar</div><div class="stat-val">'+bks.length+'</div><div class="stat-sub">totalt</div></div>'
-          +'<div class="stat-card"><div class="stat-label">Övernattning</div><div class="stat-val">'+ovUsed+'/'+DB.settings.overnightCapacity+'</div><div class="stat-sub">rum belagda</div></div>'
-          +'<div class="stat-card"><div class="stat-label">Program</div><div class="stat-val">'+DB.programs.filter(p=>!p.hidden).length+'</div><div class="stat-sub">aktiva</div></div>';
+        const today2=new Date().toISOString().slice(0,10);
+        const termEnd2=DB.settings.openTerms.length?termDateRange(DB.settings.openTerms[0]).end:'9999-12-31';
+        const futureBks=DB.bookings.filter(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date>=today2&&s.date<=termEnd2;}));
+        const currentTerm=DB.settings.openTerms.length?DB.settings.openTerms[0]:'—';
+        const bookingOpen=DB.settings.openTerms.length>0;
+        return '<div class="stat-card"><div class="stat-label">Framtida bokningar</div><div class="stat-val">'+futureBks.length+'</div><div class="stat-sub">resterande denna termin</div></div>'
+          +'<div class="stat-card"><div class="stat-label">Personal</div><div class="stat-val">'+DB.users.length+'</div><div class="stat-sub">registrerade användare</div></div>'
+          +'<div class="stat-card"><div class="stat-label">Program</div><div class="stat-val">'+DB.programs.filter(p=>!p.hidden).length+'</div><div class="stat-sub">aktiva</div></div>'
+          +'<div class="stat-card"><div class="stat-label">Termin</div><div class="stat-val" style="font-size:1.2rem;">'+currentTerm+'</div><div class="stat-sub">aktuell</div></div>'
+          +'<div class="stat-card" style="grid-column:1/-1;border-left:4px solid '+(bookingOpen?'var(--forest)':'#dc2626')+';"><div class="stat-label">Bokning</div><div class="stat-val" style="font-size:1.2rem;color:'+(bookingOpen?'var(--forest)':'#dc2626')+';">'+(bookingOpen?'✅ Öppen':'🔴 Stängd')+'</div><div class="stat-sub">'+(bookingOpen?'Elever kan boka tider':'Inga nya bokningar tas emot')+'</div></div>';
       })()}
     </div>
     <div class="sec-title">${currentUser.role==='personal'?'Kommande dagar':currentUser.role==='internat'?'Kommande gäster':'Senaste bokningar'}</div>
@@ -846,12 +853,7 @@ function renderDashboard(){
           +'</tbody></table></div>';
       }
 
-      return '<div class="table-wrap"><table><thead><tr><th>Elev</th><th>Program</th><th>Dagar</th><th>Övernattning</th></tr></thead><tbody>'
-        +bks.slice(0,5).map(b=>{
-          const progs=[...new Set(b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?DB.programs.find(p=>p.id===s.programId)?.icon+' '+DB.programs.find(p=>p.id===s.programId)?.name:'';}))].join(', ');
-          return '<tr><td><strong>'+b.studentName+'</strong><br><span class="td-m text-sm">'+b.school+'</span></td><td class="td-m text-sm">'+progs+'</td><td>'+b.days+'</td><td>'+(b.overnight?'✅':'—')+'</td></tr>';
-        }).join('')
-        +'</tbody></table></div>';
+      return '<p class="text-sm text-muted">Se <strong>Bokningar</strong>-fliken för detaljer.</p>';
     })()}
   `;
 }
