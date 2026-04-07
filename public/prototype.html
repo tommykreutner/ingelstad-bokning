@@ -584,7 +584,18 @@ function loginAs(user){
   document.getElementById('screen-app').style.display='flex';
   document.getElementById('topbar-user').textContent=user.name;
   document.getElementById('topbar-role').textContent={admin:'Admin',personal:'Personal',internat:'Internat'}[user.role]||'';
-  renderNav();showPage('dashboard');
+  renderNav();
+  // Refresh data from DB before showing dashboard
+  Promise.all([
+    fetch('/api/slots').then(r=>r.json()),
+    fetch('/api/bookings').then(r=>r.json()),
+    fetch('/api/staff').then(r=>r.json()),
+  ]).then(([slotsRes,bookingsRes,staffRes])=>{
+    if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
+    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:b.slot_ids||[],specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));
+    if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
+    showPage('dashboard');
+  }).catch(()=>showPage('dashboard'));
 }
 function doLogout(){currentUser=null;document.getElementById('screen-app').style.display='none';showBooking();}
 function showLogin(){document.getElementById('screen-booking').style.display='none';document.getElementById('screen-login').style.display='flex';}
