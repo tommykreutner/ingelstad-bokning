@@ -651,11 +651,12 @@ function autoCloseOldTerms(){
 }
 function isDateBookable(dateStr){
   if(!DB.settings.openTerms.includes(getTermId(dateStr))) return false;
-  // Compare date strings directly to avoid timezone issues
   var todayStr=new Date().toISOString().slice(0,10);
   var todayDate=new Date(todayStr), slotDate=new Date(dateStr);
   if((slotDate-todayDate)/(1000*60*60*24)<7) return false;
   if(DB.settings.blockedDates.includes(dateStr)) return false;
+  var day=new Date(dateStr).getDay();
+  if(day===0||day===6) return false;
   return true;
 }
 function isDateInOpenTerm(dateStr){
