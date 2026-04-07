@@ -2354,6 +2354,32 @@ async function confirmBooking(){
   const helSplitSlots=allSlotIds.filter(id=>!id.startsWith('virtual-')&&typeOverrideMap[id]&&DB.slots.find(s=>s.id===id&&s.type==='hel'));
   const realSlotIds=allSlotIds.filter(id=>!id.startsWith('virtual-')&&!helSplitSlots.includes(id));
   const createdSlotIds=[...realSlotIds];
+  // Handle HEL slots used as FM/EM: create FM+EM slots, book only the needed half
+  for(const sid of helSplitSlots){
+    const origSlot=DB.slots.find(s=>s.id===sid);
+    if(!origSlot) continue;
+    const usedType=typeOverrideMap[sid];
+    const pid=origSlot.programId;
+    const date=origSlot.date;
+    const prog=DB.programs.find(p=>p.id===pid);
+    const cap=origSlot.capacity;
+    const fmResp=await fetch('/api/slots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slots:[{programId:pid,date,type:'fm',capacity:cap}]})});
+    const fmData=await fmResp.json();
+    const emResp=await fetch('/api/slots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slots:[{programId:pid,date,type:'em',capacity:cap}]})});
+    const emData=await emResp.json();
+    await fetch('/api/slots?id='+sid,{method:'DELETE'});
+    DB.slots=DB.slots.filter(s=>s.id!==sid);
+    if(fmData.slots&&fmData.slots[0]){
+      const ns=fmData.slots[0];
+      DB.slots.push({id:ns.id,programId:ns.program_id,date:ns.date,type:'fm',capacity:ns.capacity,booked:0});
+      if(usedType==='fm') createdSlotIds.push(ns.id);
+    }
+    if(emData.slots&&emData.slots[0]){
+      const ns=emData.slots[0];
+      DB.slots.push({id:ns.id,programId:ns.program_id,date:ns.date,type:'em',capacity:ns.capacity,booked:0});
+      if(usedType==='em') createdSlotIds.push(ns.id);
+    }
+  }
   for(const vid of virtualSlots){
     // Format: virtual-{pid}-{YYYY-MM-DD}-{type}
     const withoutPrefix=vid.slice('virtual-'.length); // e.g. djurvard-2026-04-22-em
