@@ -1,7 +1,7 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "      return '<div class=\"table-wrap\"><table><thead><tr><th>Elev</th><th>Program</th><th>Dagar</th><th>Övernattning</th></tr></thead><tbody>'\r\n        +bks.slice(0,5).map(b=>{\r\n          const progs=[...new Set(b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?DB.programs.find(p=>p.id===s.programId)?.icon+' '+DB.programs.find(p=>p.id===s.programId)?.name:'';}))].join(', ');\r\n          return '<tr><td><strong>'+b.studentName+'</strong><br><span class=\"td-m text-sm\">'+b.school+'</span></td><td class=\"td-m text-sm\">'+progs+'</td><td>'+b.days+'</td><td>'+(b.overnight?'✅':'—')+'</td></tr>';\r\n        }).join('')\r\n        +'</tbody></table></div>';";
-const newCode = "      return '<p class=\"text-sm text-muted\">Se <strong>Bokningar</strong>-fliken för detaljer.</p>';";
-c=c.replace(old,newCode);
+const old = "function saveEmail(){";
+const newFn = "function toggleBookingOpen(){\r\n  const isOpen=DB.settings.openTerms.length>0;\r\n  if(isOpen){\r\n    if(!confirm('Är du säker på att du vill stänga bokningen? Inga nya bokningar kommer att kunna göras.')) return;\r\n    const updates={open_terms:[]};\r\n    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)})\r\n      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[];renderAdmin();renderDashboard();toast('Bokning stängd!');}).catch(()=>toast('Fel','e'));\r\n  } else {\r\n    const term=prompt('Ange termin att öppna (t.ex. VT26):',getTermId(new Date().toISOString().slice(0,10)));\r\n    if(!term) return;\r\n    const updates={open_terms:[term]};\r\n    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)})\r\n      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[term];renderAdmin();renderDashboard();toast('Bokning öppnad för '+term+'!');}).catch(()=>toast('Fel','e'));\r\n  }\r\n}\r\nfunction saveEmail(){";
+c=c.replace(old,newFn);
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("Bokningar-fliken"));
+console.log("Done:", c.includes("toggleBookingOpen"));

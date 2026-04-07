@@ -1496,6 +1496,10 @@ function renderAdmin(){
   document.getElementById('page-admin').innerHTML=`
     <div class="page-header"><h1>⚙️ Inställningar</h1><p>Systemadministration</p></div>
     
+    ${(()=>{
+      const isOpen=DB.settings.openTerms.length>0;
+      return '<div class="card" style="margin-bottom:16px;border-left:4px solid '+(isOpen?'var(--forest)':'#dc2626')+';background:'+(isOpen?'#f0fdf4':'#fef2f2')+';">'+'<div class="flex-between"><div><p class="fw-6" style="color:'+(isOpen?'var(--forest)':'#dc2626')+';">'+( isOpen?'✅ Bokning är öppen':'🔴 Bokning är stängd')+'</p><p class="text-sm text-muted">'+(isOpen?'Elever kan boka prova-på-dagar.':'Inga nya bokningar tas emot. Personal kan fortfarande logga in.')+'</p></div><button class="btn '+(isOpen?'btn-danger':'btn-primary')+'" onclick="toggleBookingOpen()">'+( isOpen?'Stäng bokning':'Öppna bokning')+'</button></div></div>';
+    })()}
     <div class="sec-title">Program <button class="btn btn-secondary btn-sm" onclick="addProgModal()">+ Nytt</button></div>
     ${DB.programs.map(prog=>`<div class="card" style="margin-bottom:10px;">
       <div class="flex-between mb-8">
@@ -1647,6 +1651,33 @@ function saveBlock(){
     if(!d){toast('Välj ett datum','e');return;}
     if(!DB.settings.blockedDates.includes(d))DB.settings.blockedDates.push(d);
     closeModal();renderAdmin();toast('Datum blockerat');
+  }
+}
+function toggleBookingOpen(){
+  const isOpen=DB.settings.openTerms.length>0;
+  if(isOpen){
+    if(!confirm('Stäng bokningen? Elever kan inte boka nya tider.')) return;
+    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({open_terms:[]})})
+      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[];renderAdmin();renderDashboard();toast('Bokning stängd!');});
+  } else {
+    const term=DB.settings.termHistory.length?DB.settings.termHistory[0]:'VT'+String(new Date().getFullYear()).slice(2);
+    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({open_terms:[term]})})
+      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[term];renderAdmin();renderDashboard();toast('Bokning öppnad!');});
+  }
+}
+function toggleBookingOpen(){
+  const isOpen=DB.settings.openTerms.length>0;
+  if(isOpen){
+    if(!confirm('Är du säker på att du vill stänga bokningen? Inga nya bokningar kommer att kunna göras.')) return;
+    const updates={open_terms:[]};
+    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)})
+      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[];renderAdmin();renderDashboard();toast('Bokning stängd!');}).catch(()=>toast('Fel','e'));
+  } else {
+    const term=prompt('Ange termin att öppna (t.ex. VT26):',getTermId(new Date().toISOString().slice(0,10)));
+    if(!term) return;
+    const updates={open_terms:[term]};
+    fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)})
+      .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.openTerms=[term];renderAdmin();renderDashboard();toast('Bokning öppnad för '+term+'!');}).catch(()=>toast('Fel','e'));
   }
 }
 function saveEmail(){
