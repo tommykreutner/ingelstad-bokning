@@ -226,7 +226,7 @@ tr:last-child td{border-bottom:none;}
   <div class="bk-header">
     <div class="bk-logo">🌲</div>
     <div style="flex:1;"><h1 style="font-size:1.05rem;color:#fff;">Prova-på-dagar</h1><p style="font-size:.72rem;opacity:.65;color:#fff;">Ingelstadgymnasiet</p></div>
-    <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none;" onclick="showLogin()">← Tillbaka</button>
+    <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none;" onclick="showBooking()">← Tillbaka</button>
   </div>
   <div class="bk-progress" id="bk-progress"></div>
   <div class="bk-body" id="bk-body"></div>
@@ -592,7 +592,7 @@ function loginAs(user){
     fetch('/api/staff').then(r=>r.json()),
   ]).then(([slotsRes,bookingsRes,staffRes])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
-    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:b.slot_ids||[],specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));
+    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
@@ -2472,7 +2472,7 @@ async function initDB(){
     if(Array.isArray(progs)) DB.programs=progs.map(p=>({id:p.id,name:p.name,icon:p.icon||'🎓',isNV:p.is_nv,hidden:p.hidden,slotMode:p.slot_mode,defaultCapacity:p.default_capacity,emailText:p.email_text||'',nvCompatible:p.nv_compatible||[],description:p.description||''}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
-    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:b.slot_ids||[],specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));
+    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));
     if(settingsRes && !settingsRes.error) DB.settings=Object.assign(DB.settings,{schoolName:settingsRes.school_name,senderEmail:settingsRes.sender_email,adminEmails:settingsRes.admin_emails||[],kitchenEmail:settingsRes.kitchen_email,internatEmail:settingsRes.internat_email,internatEmailText:settingsRes.internat_email_text,adminEmailText:settingsRes.admin_email_text,overnightCapacity:settingsRes.overnight_capacity||3,smtpHost:settingsRes.smtp_host,smtpPort:settingsRes.smtp_port,smtpUser:settingsRes.smtp_user,smtpPass:settingsRes.smtp_pass,openTerms:settingsRes.open_terms||[],blockedDates:(settingsRes.blocked_dates||[]).map(d=>d.slice(0,10))});
   } catch(e) { console.error('initDB error:', e); }
 }
