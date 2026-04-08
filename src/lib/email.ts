@@ -101,7 +101,7 @@ export async function sendBookingConfirmation(booking: {
 }
 
 export async function sendCancellationEmail(booking: {
-  id: string; student_name: string; student_email: string; guardian_email: string; code: string
+  id: string; student_name: string; student_email: string; guardian_email: string; guardian_phone?: string; code: string
 }) {
   const settings = await getSettings()
   if (!settings) return
@@ -117,3 +117,4 @@ export async function sendCancellationEmail(booking: {
     console.error('Kunde inte skicka avbokningsmail:', err)
   }
 }
+
