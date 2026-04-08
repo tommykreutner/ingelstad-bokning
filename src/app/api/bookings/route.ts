@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const {
-      studentName, studentEmail, guardianEmail, phone,
+      studentName, studentEmail, guardianEmail, phone, guardianPhone,
       school, municipality, grade, days, overnight,
       specialFood, otherInfo, slotIds, slotDates,
     } = body
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     // Insert booking
     const { error: bookingError } = await supabaseAdmin.from('bookings').insert({
-      id, student_name: studentName, student_email: studentEmail,
+      id, student_name: studentName, student_email: studentEmail, guardian_phone: guardianPhone,
       guardian_email: guardianEmail, phone, school, municipality, grade,
       days, overnight: overnight || false,
       special_food: specialFood || null, other_info: otherInfo || null, code,
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     // Send confirmation email
     await sendBookingConfirmation({
-      id, student_name: studentName, student_email: studentEmail,
+      id, student_name: studentName, student_email: studentEmail, guardian_phone: guardianPhone,
       guardian_email: guardianEmail, phone, school, municipality, grade,
       overnight: overnight || false, special_food: specialFood, other_info: otherInfo,
       code, slots: slotDetails, room_bookings: roomBookings,
@@ -142,3 +142,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(filtered)
 }
+

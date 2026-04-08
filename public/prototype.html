@@ -2303,10 +2303,11 @@ function bStep4(b){
   const fs=bookingState;
   b.innerHTML=`<div class="step-card">
     <h2>Dina uppgifter</h2><p class="step-desc">Bekräftelse skickas till eleven och vårdnadshavare.</p>
-    <div class="form-group"><label>Elevens namn *</label><input type="text" id="f-name" value="${fs.studentName||''}" placeholder="För- och efternamn"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div class="form-group"><label>Förnamn *</label><input type="text" id="f-fname" value="${fs.firstName||''}" placeholder="Förnamn"></div><div class="form-group"><label>Efternamn *</label><input type="text" id="f-lname" value="${fs.lastName||''}" placeholder="Efternamn"></div></div>
     <div class="form-group"><label>Elevens e-post *</label><input type="email" id="f-email" value="${fs.studentEmail||''}" placeholder="elev@mail.se"></div>
+    <div class="form-group"><label>Elevens telefon *</label><input type="tel" id="f-phone" value="${fs.phone||''}" placeholder="070-XXXXXXX"></div>
     <div class="form-group"><label>Vårdnadshavares e-post *</label><input type="email" id="f-guard" value="${fs.guardianEmail||''}" placeholder="foralder@mail.se"></div>
-    <div class="form-group"><label>Telefon *</label><input type="tel" id="f-phone" value="${fs.phone||''}" placeholder="070-XXXXXXX"></div>
+    <div class="form-group"><label>Vårdnadshavares telefon *</label><input type="tel" id="f-gphone" value="${fs.guardianPhone||''}" placeholder="070-XXXXXXX"></div>
     <div class="form-group"><label>Nuvarande skola *</label><input type="text" id="f-school" value="${fs.school||''}" placeholder="T.ex. Virestad skola"></div>
     <div class="form-group"><label>Hemkommun *</label><input type="text" id="f-muni" value="${fs.municipality||''}" placeholder="T.ex. Älmhult"></div>
     <div class="form-group"><label>Årskurs *</label><select id="f-grade">
@@ -2324,9 +2325,24 @@ function bStep4(b){
   </div>`;
 }
 function bNext4(){
-  const n=document.getElementById('f-name').value.trim(),e=document.getElementById('f-email').value.trim(),g=document.getElementById('f-guard').value.trim(),p=document.getElementById('f-phone').value.trim(),sc=document.getElementById('f-school').value.trim(),mu=(document.getElementById('f-muni')||{value:''}).value.trim(),gr=document.getElementById('f-grade').value;
-  if(!n||!e||!g||!p||!sc||!mu||!gr){toast('Fyll i alla obligatoriska fält (*)','e');return;}
-  Object.assign(bookingState,{studentName:n,studentEmail:e,guardianEmail:g,phone:p,school:sc,municipality:mu,grade:gr,specialFood:(document.getElementById('f-food')||{value:''}).value.trim(),otherInfo:document.getElementById('f-other').value});
+  const fn=document.getElementById('f-fname').value.trim();
+  const ln=document.getElementById('f-lname').value.trim();
+  const e=document.getElementById('f-email').value.trim();
+  const g=document.getElementById('f-guard').value.trim();
+  const p=document.getElementById('f-phone').value.trim();
+  const gp=document.getElementById('f-gphone').value.trim();
+  const sc=document.getElementById('f-school').value.trim();
+  const mu=(document.getElementById('f-muni')||{value:''}).value.trim();
+  const gr=document.getElementById('f-grade').value;
+  if(!fn||!ln||!e||!g||!p||!gp||!sc||!mu||!gr){toast('Fyll i alla obligatoriska fält (*)','e');return;}
+  const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!emailRe.test(e)){toast('Ange en giltig e-postadress för eleven','e');return;}
+  if(!emailRe.test(g)){toast('Ange en giltig e-postadress för vårdnadshavare','e');return;}
+  const phoneRe=/^[+\d][\d\s\-]{6,}$/;
+  if(!phoneRe.test(p)){toast('Ange ett giltigt telefonnummer för eleven','e');return;}
+  if(!phoneRe.test(gp)){toast('Ange ett giltigt telefonnummer för vårdnadshavare','e');return;}
+  const fullName=fn+' '+ln;
+  Object.assign(bookingState,{firstName:fn,lastName:ln,studentName:fullName,studentEmail:e,guardianEmail:g,phone:p,guardianPhone:gp,school:sc,municipality:mu,grade:gr,specialFood:(document.getElementById('f-food')||{value:''}).value.trim(),otherInfo:document.getElementById('f-other').value});
   bookingState.step=5;renderBStep();
 }
 
@@ -2515,7 +2531,7 @@ async function confirmBooking(){
   // Save booking via API
   const resp=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
     studentName:bookingState.studentName,studentEmail:bookingState.studentEmail,
-    guardianEmail:bookingState.guardianEmail,phone:bookingState.phone,
+    guardianEmail:bookingState.guardianEmail,phone:bookingState.phone,guardianPhone:bookingState.guardianPhone||'',
     school:bookingState.school,municipality:bookingState.municipality,
     grade:bookingState.grade,days:bookingState.days,overnight:bookingState.overnight,
     specialFood:bookingState.specialFood,otherInfo:bookingState.otherInfo,
