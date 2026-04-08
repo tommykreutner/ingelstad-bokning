@@ -2043,15 +2043,20 @@ function buildCombos(){
     for(const nvS of nvSlots){
       const nvType=nvS.type; // fm or em
       const compatType=nvType==='fm'?'em':'fm';
-      const cs=DB.slots.find(s=>s.programId===compatId&&s.date===date&&(s.type===compatType||s.type==='hel')&&s.booked<s.capacity);
+      const compatAvail=getSlotsForProg(date,compatId);
+      const cs=compatAvail.find(s=>s.type===compatType)||compatAvail.find(s=>s.type==='hel');
       if(cs){
         const cp=DB.programs.find(p=>p.id===compatId);
         const nvHalf=nvType.toUpperCase(), compatHalf=compatType.toUpperCase();
         const label='🔬 NV-'+cp.name+': '+nvHalf+' NV + '+compatHalf+' '+cp.icon+' '+cp.name;
-        const orderedSlots=nvType==='fm'?[nvS.id,cs.id]:[cs.id,nvS.id];
-        return {nvSlotId:nvS.id,compatSlotId:cs.id,nvType,compatType,label,slots:orderedSlots,
-                usedTypes:{fm:nvType==='fm'?nvS.id:cs.id, em:nvType==='em'?nvS.id:cs.id},
-                spots:Math.min(nvS.capacity-nvS.booked, cs.capacity-cs.booked)};
+        const csId=cs.virtual?'virtual-'+compatId+'-'+date+'-'+compatType:cs.id;
+        const orderedSlots=nvType==='fm'?[nvS.id,csId]:[csId,nvS.id];
+        const typeOverride={};
+        if(cs.type==='hel') typeOverride[csId]=compatType;
+        const compatSpots=cs.virtual?cs.capacity:(cs.capacity-cs.booked);
+        return {nvSlotId:nvS.id,compatSlotId:csId,nvType,compatType,label,slots:orderedSlots,typeOverride,
+                usedTypes:{fm:nvType==='fm'?nvS.id:csId, em:nvType==='em'?nvS.id:csId},
+                spots:Math.min(nvS.capacity-nvS.booked, compatSpots)};
       }
     }
     return null;
