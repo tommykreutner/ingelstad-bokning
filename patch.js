@@ -1,7 +1,6 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "    '\\n\\n--- DIN BOKNINGSKOD ---\\n'+booking.code+\r\n    ';";
-const newCode = "    '\\n\\n--- DIN BOKNINGSKOD ---\\n'+booking.code;";
-c=c.replace(old,newCode);
+c=c.split("&&isDateInOpenTerm(d)").join("&&isDateInAnyTerm(d)");
+c=c.split("&&isDateInOpenTerm(date)").join("&&isDateInAnyTerm(date)");
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("booking.code;"));
+console.log("Done:", c.includes("isDateInAnyTerm"));

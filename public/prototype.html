@@ -662,6 +662,11 @@ function isDateBookable(dateStr){
 function isDateInOpenTerm(dateStr){
   return DB.settings.openTerms.includes(getTermId(dateStr));
 }
+function isDateInAnyTerm(dateStr){
+  const tid=getTermId(dateStr);
+  const allTerms=[...DB.settings.openTerms,...(DB.settings.termHistory||[]),...currentAndNextTerms()];
+  return allTerms.includes(tid);
+}
 function renderTermRows(){
   autoCloseOldTerms();
   var available=currentAndNextTerms();
@@ -1246,7 +1251,7 @@ function saveSlot(pid){
     while(cur<=end){
       if(cur.getDay()===wday){
         const d=cur.toISOString().slice(0,10);
-        if(!DB.settings.blockedDates.includes(d)&&isDateInOpenTerm(d)) slots.push({programId:pid,date:d,type,capacity:cap});
+        if(!DB.settings.blockedDates.includes(d)&&isDateInAnyTerm(d)) slots.push({programId:pid,date:d,type,capacity:cap});
       }
       cur.setDate(cur.getDate()+1);
     }
@@ -1258,7 +1263,7 @@ function saveSlot(pid){
     let cur=new Date(from),end=new Date(to);
     while(cur<=end){
       const d=cur.toISOString().slice(0,10);
-      if(!DB.settings.blockedDates.includes(d)&&isDateInOpenTerm(d)) slots.push({programId:pid,date:d,type,capacity:cap});
+      if(!DB.settings.blockedDates.includes(d)&&isDateInAnyTerm(d)) slots.push({programId:pid,date:d,type,capacity:cap});
       cur.setDate(cur.getDate()+1);
     }
   } else {
