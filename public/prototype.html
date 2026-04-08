@@ -2249,10 +2249,10 @@ function bStep3(b){
     (combos.length===0?'<div class="info-box amber">😕 Inga lediga tider matchar dina val just nu. Prova att ändra program eller kontakta skolan.</div>':'')+
     combos.map((c,i)=>{
       const sel=bookingState.selectedCombo===i;
-      const d2str=c.date2?' – '+fmtDate(c.date2):'';
+      const d2str=c.date2?' – '+fmtDateLong(c.date2):'';
       const overnight=bookingState.overnight?('<br>🛏️ '+overnightStayLabel([c])):''; // c has .date and .date2
       return '<div class="slot-card '+(sel?'selected':'')+'" onclick="selectCombo('+i+')">'+
-        '<div class="sl-header"><span class="sl-date">'+fmtDate(c.date)+d2str+'</span><span class="sl-spots">'+c.minSpots+' platser kvar</span></div>'+
+        '<div class="sl-header"><span class="sl-date">'+fmtDateLong(c.date)+d2str+'</span><span class="sl-spots">'+c.minSpots+' platser kvar</span></div>'+
         (days===2?'<div style="font-size:.78rem;color:var(--ink2);margin-top:4px;"><strong>Dag 1:</strong> '+c.label+'</div>'+
           '<div style="font-size:.78rem;color:var(--ink2);margin-top:2px;"><strong>Dag 2:</strong> '+c.label2+'</div>':
           '<div class="sl-combo">'+c.label+'</div>')+
