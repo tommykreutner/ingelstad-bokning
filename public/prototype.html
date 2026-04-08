@@ -2446,7 +2446,8 @@ function simulateSendEmail(booking){
     'Årskurs: '+booking.grade+'\n'+
     'Telefon: '+booking.phone+'\n'+
     'E-post: '+booking.studentEmail+'\n'+
-    'Vårdnadshavare: '+booking.guardianEmail+
+    'Vårdnadshavare e-post: '+booking.guardianEmail+'\n'+
+    'Vårdnadshavare telefon: '+(booking.guardianPhone||'—')+
     (booking.specialFood?'\nSpecialkost: '+booking.specialFood:'')+
     (booking.otherInfo?'\nÖvrigt: '+booking.otherInfo:'');
 
@@ -2460,7 +2461,7 @@ function simulateSendEmail(booking){
     overnightLine+
     (progTexts?'\n\n'+progTexts:'')+
     '\n\n--- DIN BOKNINGSKOD ---\n'+booking.code+
-    '\n\nAvboka via: https://ingelstad.nu/boka/avboka?kod='+booking.code;
+    ';
 
   showModal('<div class="modal-handle"></div><h3>📧 E-post simulerad</h3>'+
     '<p class="modal-sub">I den riktiga appen skickas detta via SMTP. Här är en förhandsvisning:</p>'+
@@ -2557,10 +2558,9 @@ function bSuccess(b){
     <div class="bk-ref"><p>Din bokningskod</p><strong>${bookingState.code}</strong></div>
     <div class="info-box" style="text-align:left;margin-bottom:16px;">
       <strong>📧 Ditt bekräftelsemejl innehåller:</strong><br>
-      • Bokningskod och alla detaljer<br>
-      • Avbokningslänk (alltid giltig)<br>
-      • Påminnelse skickas ett par dagar innan<br><br>
-      <em style="font-size:.82rem;">${DB.settings.adminEmailText.split('\n')[0]}</em>
+      • Alla bokningsdetaljer<br>
+      • Information om avbokning<br><br>
+      <em style="font-size:.82rem;">Spara mailet — det innehåller all information du behöver.</em>
     </div>
     <button class="btn btn-primary btn-full" onclick="showLogin()">← Tillbaka till startsidan</button>
   </div>`;
