@@ -2353,8 +2353,9 @@ function bStep5(b){
     <div class="mb-8">
       <div class="sum-line"><span class="sl">Namn</span><span class="sv">${s.studentName}</span></div>
       <div class="sum-line"><span class="sl">Elevens e-post</span><span class="sv">${s.studentEmail}</span></div>
+      <div class="sum-line"><span class="sl">Elevens telefon</span><span class="sv">${s.phone}</span></div>
       <div class="sum-line"><span class="sl">Vård.hav. e-post</span><span class="sv">${s.guardianEmail}</span></div>
-      <div class="sum-line"><span class="sl">Telefon</span><span class="sv">${s.phone}</span></div>
+      <div class="sum-line"><span class="sl">Vård.hav. telefon</span><span class="sv">${s.guardianPhone||''}</span></div>
       <div class="sum-line"><span class="sl">Skola / Åk</span><span class="sv">${s.school}, åk ${s.grade}</span></div>
       ${s.specialFood?`<div class="sum-line"><span class="sl">Specialkost</span><span class="sv">${s.specialFood}</span></div>`:''}
       ${s.otherInfo?`<div class="sum-line"><span class="sl">Övrigt</span><span class="sv">${s.otherInfo}</span></div>`:''}
