@@ -1512,8 +1512,8 @@ function renderAdmin(){
       return '<div class="sec-title">Terminer</div>'
         +'<div class="card" style="margin-bottom:16px;">'
         +'<p class="text-sm text-muted" style="margin-bottom:12px;">Kryssa i de terminer som ska vara öppna för bokning. Avkryssning stänger terminen omedelbart.</p>'
-        +'<label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;"><input type="checkbox" class="term-check" value="'+ht+'" '+(htChecked?'checked':'')+'> <span><strong>'+ht+'</strong> (aug–jan '+yy2+')</span></label>'
-        +'<label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;"><input type="checkbox" class="term-check" value="'+vt+'" '+(vtChecked?'checked':'')+'> <span><strong>'+vt+'</strong> (jan–jun '+yy2+')</span></label>'
+        +'<label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;"><input type="checkbox" class="term-check" value="'+ht+'" '+(htChecked?'checked':'')+'> <span><strong>'+ht+'</strong> (aug–dec 20'+yy+')</span></label>'
+        +'<label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;"><input type="checkbox" class="term-check" value="'+vt+'" '+(vtChecked?'checked':'')+'> <span><strong>'+vt+'</strong> (jan–jun 20'+yy2+')</span></label>'
         +'<button class="btn btn-primary btn-sm" onclick="saveTermSettings()">Spara terminsinställningar</button>'
         +'</div>';
     })()}
