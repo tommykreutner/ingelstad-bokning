@@ -41,8 +41,7 @@ function overnightLabel(slotDates: string[]): string {
 }
 
 export async function sendBookingConfirmation(booking: {
-  id: string; student_name: string; student_email: string; guardian_email: string
-  phone: string; school: string; municipality?: string; grade: string
+  id: string; student_name: string; student_email: string; guardian_email: string; guardian_phone?: string;  phone: string; school: string; municipality?: string; grade: string
   overnight: boolean; special_food?: string; other_info?: string; code: string
   slots: Array<{ date: string; type: string; program_name: string; program_icon: string; program_email_text: string }>
   room_bookings?: Array<{ room: number; date: string }>
@@ -117,4 +116,5 @@ export async function sendCancellationEmail(booking: {
     console.error('Kunde inte skicka avbokningsmail:', err)
   }
 }
+
 
