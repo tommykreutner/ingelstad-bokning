@@ -2460,8 +2460,7 @@ function simulateSendEmail(booking){
     '\n\n--- ALLMÄN INFO ---\n'+DB.settings.adminEmailText+
     overnightLine+
     (progTexts?'\n\n'+progTexts:'')+
-    '\n\n--- DIN BOKNINGSKOD ---\n'+booking.code+
-    ';
+    '\n\n--- DIN BOKNINGSKOD ---\n'+booking.code;
 
   showModal('<div class="modal-handle"></div><h3>📧 E-post simulerad</h3>'+
     '<p class="modal-sub">I den riktiga appen skickas detta via SMTP. Här är en förhandsvisning:</p>'+
