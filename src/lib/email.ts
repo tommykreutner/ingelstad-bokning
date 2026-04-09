@@ -118,3 +118,19 @@ export async function sendCancellationEmail(booking: {
 }
 
 
+
+export async function sendAdminNotification({ to, subject, body }: { to: string[], subject: string, body: string }) {
+  const settings = await getSettings()
+  if (!settings) return
+  try {
+    const t = await createTransporter()
+    await t.sendMail({
+      from: `${settings.school_name || 'Ingelstadgymnasiet'} <${settings.smtp_user}>`,
+      to: to.join(', '),
+      subject,
+      text: body,
+    })
+  } catch (err) {
+    console.error('Kunde inte skicka adminnotifiering:', err)
+  }
+}
