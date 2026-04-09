@@ -1662,6 +1662,9 @@ async function notifyAdminAboutAffectedBookings(dates,context){
 function confirmBlockWithBookings(dates,context,onConfirm){
   const affected=getBookingsOnDates(dates);
   if(!affected.length){onConfirm();return;}
+  window._blockConfirmCb=onConfirm;
+  window._blockConfirmDates=dates;
+  window._blockConfirmContext=context;
   const list=affected.map(a=>'<div style="padding:8px;border-bottom:1px solid var(--border)">'
     +'<strong>'+fmtDate(a.date)+'</strong> — '+a.studentName+' ('+a.programs+')<br>'
     +'📱 '+a.phone+' | ✉️ '+a.studentEmail+'</div>').join('');
@@ -1672,8 +1675,14 @@ function confirmBlockWithBookings(dates,context,onConfirm){
     +'<label style="display:flex;align-items:center;gap:8px;margin:12px 0;"><input type="checkbox" id="block-confirm-cb"> Jag är medveten och kommer att kontakta berörda elever</label>'
     +'<div class="modal-footer">'
     +'<button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>'
-    +'<button class="btn btn-danger" onclick="if(!document.getElementById(\"block-confirm-cb\").checked){toast(\"Kryssa i bekräftelsen\",\"e\");return;}notifyAdminAboutAffectedBookings('+JSON.stringify(dates)+',\"'+context+'\");closeModal();('+onConfirm.toString()+')();">Stäng ändå</button>'
+    +'<button class="btn btn-danger" onclick="doConfirmBlock()">Stäng ändå</button>'
     +'</div>');
+}
+function doConfirmBlock(){
+  if(!document.getElementById('block-confirm-cb').checked){toast('Kryssa i bekräftelsen','e');return;}
+  notifyAdminAboutAffectedBookings(window._blockConfirmDates,window._blockConfirmContext);
+  closeModal();
+  window._blockConfirmCb();
 }
 function saveBlock(){
   const isWeekday=document.getElementById('block-weekday-wrap').style.display!=='none';
