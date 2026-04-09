@@ -2285,7 +2285,7 @@ function buildCombos(){
         const pid=regProgIds[0],prog=DB.programs.find(p=>p.id===pid);
         if(!prog) continue;
         const getFullDay=(date)=>{
-          const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+          const avail=getSlotsForProg(date,pid);
           const hel=avail.find(s=>s.type==='hel');
           if(hel) return {slots:[hel.id],label:prog.icon+' '+prog.name+' (heldag)',spots:hel.capacity-hel.booked};
           const fm=avail.find(s=>s.type==='fm'),em=avail.find(s=>s.type==='em');
@@ -2304,9 +2304,9 @@ function buildCombos(){
           const p1=DB.programs.find(p=>p.id===p1id),p2=DB.programs.find(p=>p.id===p2id);
           if(!p1||!p2) continue;
           const getFullDay=(date,pid,prog)=>{
-            const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+            const avail=getSlotsForProg(date,pid);
             const hel=avail.find(s=>s.type==='hel');
-            if(hel) return {slots:[hel.id],label:prog.icon+' '+prog.name+' (heldag)',spots:hel.capacity-hel.booked};
+            if(hel) return {slots:[hel.id],label:prog.icon+' '+prog.name+' (heldag)',spots:hel.capacity-hel.booked,typeOverride:{[hel.id]:'hel'}};
             const fm=avail.find(s=>s.type==='fm'),em=avail.find(s=>s.type==='em');
             if(fm&&em) return {slots:[fm.id,em.id],label:prog.icon+' '+prog.name+': FM + EM',spots:Math.min(fm.capacity-fm.booked,em.capacity-em.booked)};
             return null;
