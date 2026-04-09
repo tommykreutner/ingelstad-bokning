@@ -1638,6 +1638,43 @@ function removeBlockedPeriod(from,to){
   while(cur<=end){const d=cur.toISOString().slice(0,10);DB.settings.blockedDates=DB.settings.blockedDates.filter(x=>x!==d);cur.setDate(cur.getDate()+1);}
   renderAdmin();toast('Period frigjord');
 }
+function getBookingsOnDates(dates){
+  const affected=[];
+  dates.forEach(d=>{
+    DB.bookings.forEach(b=>{
+      if(b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date===d;})){
+        if(!affected.find(x=>x.bookingId===b.id&&x.date===d)){
+          const progs=[...new Set(b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date===d?DB.programs.find(p=>p.id===s.programId)?.name:null;}).filter(Boolean))].join(', ');
+          affected.push({bookingId:b.id,date:d,studentName:b.studentName,phone:b.phone,studentEmail:b.studentEmail,guardianEmail:b.guardianEmail,guardianPhone:b.guardianPhone||'',programs:progs});
+        }
+      }
+    });
+  });
+  return affected;
+}
+async function notifyAdminAboutAffectedBookings(dates,context){
+  const affected=getBookingsOnDates(dates);
+  if(!affected.length) return;
+  const body='Följande bokningar påverkas av att '+context+' stängs:\n\n'+
+    affected.map(a=>fmtDate(a.date)+': '+a.studentName+' ('+a.programs+')\nTelefon: '+a.phone+'\nElev: '+a.studentEmail+'\nVårdnadshavare: '+a.guardianEmail+(a.guardianPhone?'\nVård.tel: '+a.guardianPhone:'')).join('\n\n');
+  await fetch('/api/settings/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject:'Berörda bokningar: '+context,body})}).catch(()=>{});
+}
+function confirmBlockWithBookings(dates,context,onConfirm){
+  const affected=getBookingsOnDates(dates);
+  if(!affected.length){onConfirm();return;}
+  const list=affected.map(a=>'<div style="padding:8px;border-bottom:1px solid var(--border)">'
+    +'<strong>'+fmtDate(a.date)+'</strong> — '+a.studentName+' ('+a.programs+')<br>'
+    +'📱 '+a.phone+' | ✉️ '+a.studentEmail+'</div>').join('');
+  showModal('<div class="modal-handle"></div>'
+    +'<h3>⚠️ Aktiva bokningar finns!</h3>'
+    +'<p class="modal-sub">Följande elever är bokade på de datum du vill stänga. Du måste kontakta dem manuellt.</p>'
+    +'<div style="max-height:250px;overflow-y:auto;margin:12px 0;">'+list+'</div>'
+    +'<label style="display:flex;align-items:center;gap:8px;margin:12px 0;"><input type="checkbox" id="block-confirm-cb"> Jag är medveten och kommer att kontakta berörda elever</label>'
+    +'<div class="modal-footer">'
+    +'<button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>'
+    +'<button class="btn btn-danger" onclick="if(!document.getElementById(\"block-confirm-cb\").checked){toast(\"Kryssa i bekräftelsen\",\"e\");return;}notifyAdminAboutAffectedBookings('+JSON.stringify(dates)+',\"'+context+'\");closeModal();('+onConfirm.toString()+')();">Stäng ändå</button>'
+    +'</div>');
+}
 function saveBlock(){
   const isWeekday=document.getElementById('block-weekday-wrap').style.display!=='none';
   const isPeriod=!isWeekday&&document.getElementById('block-period-wrap').style.display!=='none';
@@ -1647,32 +1684,46 @@ function saveBlock(){
     const from=document.getElementById('bd-wfrom').value;
     const to=document.getElementById('bd-wto').value;
     if(!from||!to){toast('Ange både från och till','e');return;}
-    let cur=new Date(from),end=new Date(to),added=0;
+    const datesToBlock1=[];
+    let cur=new Date(from),end=new Date(to);
     while(cur<=end){
       if(cur.getDay()===wday){
         const d=cur.toISOString().slice(0,10);
-        if(!DB.settings.blockedDates.includes(d)){DB.settings.blockedDates.push(d);added++;}
+        if(!DB.settings.blockedDates.includes(d)) datesToBlock1.push(d);
       }
       cur.setDate(cur.getDate()+1);
     }
-    closeModal();renderAdmin();toast(added+' '+wdayNames[wday]+'ar blockerade');
+    confirmBlockWithBookings(datesToBlock1,wdayNames[wday]+'ar',()=>{
+      datesToBlock1.forEach(d=>DB.settings.blockedDates.push(d));
+      fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocked_dates:DB.settings.blockedDates})});
+      closeModal();renderAdmin();toast(datesToBlock1.length+' '+wdayNames[wday]+'ar blockerade');
+    });
   } else if(isPeriod){
     const from=document.getElementById('bd-from').value;
     const to=document.getElementById('bd-to').value;
     if(!from||!to){toast('Ange både från och till-datum','e');return;}
     if(from>to){toast('Från-datum måste vara före till-datum','e');return;}
-    let cur=new Date(from),end=new Date(to),added=0;
+    const datesToBlock2=[];
+    let cur=new Date(from),end=new Date(to);
     while(cur<=end){
       const d=cur.toISOString().slice(0,10);
-      if(!DB.settings.blockedDates.includes(d)){DB.settings.blockedDates.push(d);added++;}
+      if(!DB.settings.blockedDates.includes(d)) datesToBlock2.push(d);
       cur.setDate(cur.getDate()+1);
     }
-    closeModal();renderAdmin();toast(added+' datum blockerade');
+    confirmBlockWithBookings(datesToBlock2,'perioden '+from+' – '+to,()=>{
+      datesToBlock2.forEach(d=>DB.settings.blockedDates.push(d));
+      fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocked_dates:DB.settings.blockedDates})});
+      closeModal();renderAdmin();toast(datesToBlock2.length+' datum blockerade');
+    });
   } else {
     const d=document.getElementById('bd-single').value;
     if(!d){toast('Välj ett datum','e');return;}
-    if(!DB.settings.blockedDates.includes(d))DB.settings.blockedDates.push(d);
-    closeModal();renderAdmin();toast('Datum blockerat');
+    if(DB.settings.blockedDates.includes(d)){toast('Redan blockerat','e');return;}
+    confirmBlockWithBookings([d],fmtDate(d),()=>{
+      DB.settings.blockedDates.push(d);
+      fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocked_dates:DB.settings.blockedDates})});
+      closeModal();renderAdmin();toast('Datum blockerat');
+    });
   }
 }
 function toggleBookingOpen(){
