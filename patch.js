@@ -1,7 +1,6 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "        const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));\r\n        const hel=avail.find(s=>s.type==='hel');";
-const newCode = "        const avail=getSlotsForProg(date,pid);\r\n        const hel=avail.find(s=>s.type==='hel');";
-c=c.replace(old,newCode);
+c=c.split("' kl 15:50 (2 nätter)'").join("' (2 nätter)'");
+c=c.split("' kl 15:50'").join("'");
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("getSlotsForProg(date,pid);\r\n        const hel=avail.find"));
+console.log("Done:", !c.includes("kl 15:50"));

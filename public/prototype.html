@@ -1335,9 +1335,9 @@ function overnightStayLabel(slots) {
   var day2=slotDates.length>1?slotDates[slotDates.length-1]:null;
   var arrivalNight=prevDay(day1);
   if(day2&&day2!==day1){
-    return 'Ankomst '+fmtDate(arrivalNight)+' kväll, avresa '+fmtDate(day2)+' kl 15:50 (2 nätter)';
+    return 'Ankomst '+fmtDate(arrivalNight)+' kväll, avresa '+fmtDate(day2)+' (2 nätter)';
   }
-  return 'Ankomst '+fmtDate(arrivalNight)+' kväll, avresa '+fmtDate(day1)+' kl 15:50';
+  return 'Ankomst '+fmtDate(arrivalNight)+' kväll, avresa '+fmtDate(day1)+';
 }
 function nightLabel(date) {
   // "Ankomst [dag före], avresa [date]"
