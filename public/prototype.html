@@ -2213,7 +2213,7 @@ function buildCombos(){
         const prog=regProgIds.length>0?DB.programs.find(p=>p.id===regProgIds[0]):null;
         if(!prog) return;
         const pid=regProgIds[0];
-        const avail=DB.slots.filter(s=>s.programId===pid&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+        const avail=getSlotsForProg(date,pid);
         const hel=avail.find(s=>s.type==='hel');
         if(hel){combos.push({date,date2:null,label:prog.icon+' '+prog.name+' (heldag)',slots:[hel.id],minSpots:hel.capacity-hel.booked,isNV:false});return;}
         const fm=avail.find(s=>s.type==='fm'),em=avail.find(s=>s.type==='em');
