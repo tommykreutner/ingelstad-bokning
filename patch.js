@@ -1,7 +1,7 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "function saveBlock(){";
-const newFn = "function doConfirmBlock(){\r\n  if(!document.getElementById('block-confirm-cb').checked){toast('Kryssa i bekräftelsen','e');return;}\r\n  notifyAdminAboutAffectedBookings(window._blockConfirmDates,window._blockConfirmContext);\r\n  closeModal();\r\n  window._blockConfirmCb();\r\n}\r\nfunction saveBlock(){";
-c=c.replace(old,newFn);
+const old = "  if(!slots.length){toast('Inga giltiga datum','e');return;}\r\n  fetch('/api/slots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slots})})\r\n    .then(r=>r.json())\r\n    .then(data=>{\r\n      if(data.error){toast(data.error,'e');return;}\r\n      (data.slots||[data]).forEach(s=>DB.slots.push({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));\r\n      closeModal();renderSlots();toast(slots.length+' tid(er) sparade!');\r\n    })\r\n    .catch(()=>toast('Fel vid sparande','e'));\r\n}";
+const newCode = "  if(!slots.length){toast('Inga giltiga datum','e');return;}\r\n  const prog=DB.programs.find(p=>p.id===pid);\r\n  const doSaveSlots=()=>{\r\n    fetch('/api/slots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slots})})\r\n      .then(r=>r.json())\r\n      .then(data=>{\r\n        if(data.error){toast(data.error,'e');return;}\r\n        (data.slots||[data]).forEach(s=>DB.slots.push({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));\r\n        closeModal();renderSlots();toast(slots.length+' tid(er) sparade!');\r\n      })\r\n      .catch(()=>toast('Fel vid sparande','e'));\r\n  };\r\n  // For open-mode programs, slots = closed days — check for bookings\r\n  if(prog&&prog.slotMode==='open'){\r\n    const dates=slots.map(s=>s.date);\r\n    confirmBlockWithBookings(dates,prog.name,doSaveSlots);\r\n  } else {\r\n    doSaveSlots();\r\n  }\r\n}";
+c=c.replace(old,newCode);
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("doConfirmBlock"));
+console.log("Done:", c.includes("slotMode==='open'"));
