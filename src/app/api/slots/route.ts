@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 
@@ -13,8 +13,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getSession()
-  if (!session) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const body = await req.json()
   const slots = body.slots || [{ programId: body.programId, date: body.date, type: body.type, capacity: body.capacity }]
   const inserts = slots.map((s: any) => ({ program_id: s.programId, date: s.date, type: s.type, capacity: s.capacity || 10, booked: 0 }))
@@ -45,3 +43,4 @@ export async function DELETE(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
+
