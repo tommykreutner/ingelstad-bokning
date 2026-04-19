@@ -134,3 +134,4 @@ export async function sendAdminNotification({ to, subject, body }: { to: string[
     console.error('Kunde inte skicka adminnotifiering:', err)
   }
 }
+
