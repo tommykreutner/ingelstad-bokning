@@ -76,8 +76,6 @@ export async function sendBookingConfirmation(booking: {
     '\n--- ALLMÄN INFO ---', settings.admin_email_text || '',
     booking.overnight && settings.internat_email_text ? `\n--- INTERNAT ---\n${settings.internat_email_text}` : '',
     progTexts ? `\n${progTexts}` : '',
-    '\n--- DIN BOKNINGSKOD ---', booking.code,
-    `\nAvboka din bokning: ${cancelUrl}`,
   ].filter(s => s !== '').join('\n').trim()
 
   const bcc = [...(settings.admin_emails || []),
@@ -134,4 +132,5 @@ export async function sendAdminNotification({ to, subject, body }: { to: string[
     console.error('Kunde inte skicka adminnotifiering:', err)
   }
 }
+
 
