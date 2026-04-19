@@ -7,7 +7,7 @@ const nextConfig = {
         source: '/(.*)',
         headers: [
           { key: 'X-Frame-Options', value: 'ALLOWALL' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://ingelstad.nu https://*.ingelstad.nu" },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://ingelstad.nu https://*.ingelstad.nu https://kreutner.se https://*.kreutner.se" },
         ],
       },
     ]
@@ -15,3 +15,4 @@ const nextConfig = {
 }
 
 module.exports = nextConfig
+
