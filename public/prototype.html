@@ -592,8 +592,10 @@ function loginAs(user){
     fetch('/api/staff').then(r=>r.json()),
   ]).then(([slotsRes,bookingsRes,staffRes])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
-    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));
+    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
+    // Build roomBookings from bookings
+    DB.roomBookings=DB.bookings.flatMap(b=>b.roomBookings||[]);
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
 }
@@ -2299,23 +2301,76 @@ function buildCombos(){
           combos.push({date:d1,date2:d2,label:day1.label,label2:day2.label,slots:allSlotIds,minSpots,isNV:false});
         }
       } else if(regProgIds.length>=2){
-        // Different progs on different days — try all splits
-        for(const [p1id,p2id] of [[regProgIds[0],regProgIds[1]],[regProgIds[1],regProgIds[0]]]){
-          const p1=DB.programs.find(p=>p.id===p1id),p2=DB.programs.find(p=>p.id===p2id);
-          if(!p1||!p2) continue;
-          const getFullDay=(date,pid,prog)=>{
-            const avail=getSlotsForProg(date,pid);
-            const hel=avail.find(s=>s.type==='hel');
-            if(hel) return {slots:[hel.id],label:prog.icon+' '+prog.name+' (heldag)',spots:hel.capacity-hel.booked,typeOverride:{[hel.id]:'hel'}};
-            const fm=avail.find(s=>s.type==='fm'),em=avail.find(s=>s.type==='em');
-            if(fm&&em) return {slots:[fm.id,em.id],label:prog.icon+' '+prog.name+': FM + EM',spots:Math.min(fm.capacity-fm.booked,em.capacity-em.booked)};
-            return null;
-          };
-          const day1=getFullDay(d1,p1id,p1),day2=getFullDay(d2,p2id,p2);
-          if(day1&&day2){
-            const allSlotIds=[...day1.slots,...day2.slots];
-            combos.push({date:d1,date2:d2,label:day1.label,label2:day2.label,slots:allSlotIds,minSpots:Math.min(day1.spots,day2.spots),isNV:false});
+        // Distribute N programs across 4 half-slots (d1-FM, d1-EM, d2-FM, d2-EM)
+        // Each program gets 1 half-slot (FM or EM) or 2 (full day)
+        // Generate all valid assignments
+        const slots4=['d1fm','d1em','d2fm','d2em'];
+        const getHalfSlot=(date,pid,type)=>{
+          const avail=getSlotsForProg(date,pid);
+          const s=avail.find(x=>x.type===type)||avail.find(x=>x.type==='hel');
+          if(!s) return null;
+          const prog=DB.programs.find(p=>p.id===pid);
+          const isHel=s.type==='hel';
+          const sid=isHel?'virtual-hel-'+pid+'-'+date+'-'+type:s.id;
+          return {slotId:s.id,virtualId:sid,type,isHel,spots:isHel?s.capacity:s.capacity-s.booked,label:prog.icon+' '+prog.name+' '+type.toUpperCase(),prog};
+        };
+        // Try all permutations of programs into half-slots
+        // For 2 progs: each gets 2 half-slots (one full day each) OR split across days
+        // For 3 progs: one gets full day, two get half-days
+        // For 4 progs: each gets one half-slot
+        const tryAssignment=(assignment)=>{
+          // assignment: [{pid,type,date}, ...] for each half-slot used
+          const usedD1=new Set(),usedD2=new Set();
+          const picks=[];
+          const typeOverride={};
+          let minSpots=999;
+          for(const a of assignment){
+            const hs=getHalfSlot(a.date,a.pid,a.type);
+            if(!hs) return null;
+            const dayUsed=a.date===d1?usedD1:usedD2;
+            if(dayUsed.has(a.type)) return null;
+            dayUsed.add(a.type);
+            picks.push(hs);
+            if(hs.isHel) typeOverride[hs.slotId]=a.type;
+            minSpots=Math.min(minSpots,hs.spots);
           }
+          if(minSpots<=0) return null;
+          const allSlotIds=[...new Set(picks.map(p=>p.slotId))];
+          const d1picks=picks.filter(p=>p.date===d1||assignment.find(a=>a.pid===p.prog.id&&a.date===d1));
+          const d2picks=picks.filter(p=>assignment.find(a=>a.pid===p.prog.id&&a.date===d2));
+          const label1=[...new Set(assignment.filter(a=>a.date===d1).map(a=>picks.find(p=>p.prog.id===a.pid&&p.type===a.type)?.label||''))].filter(Boolean).join(' + ');
+          const label2=[...new Set(assignment.filter(a=>a.date===d2).map(a=>picks.find(p=>p.prog.id===a.pid&&p.type===a.type)?.label||''))].filter(Boolean).join(' + ');
+          return {date:d1,date2:d2,label:label1,label2,slots:allSlotIds,minSpots,isNV:false,typeOverride};
+        };
+        const progs=regProgIds.slice(0,4);
+        const assignments=[];
+        if(progs.length===2){
+          // Each prog gets a full day — try both orderings
+          assignments.push([{pid:progs[0],date:d1,type:'fm'},{pid:progs[0],date:d1,type:'em'},{pid:progs[1],date:d2,type:'fm'},{pid:progs[1],date:d2,type:'em'}]);
+          assignments.push([{pid:progs[1],date:d1,type:'fm'},{pid:progs[1],date:d1,type:'em'},{pid:progs[0],date:d2,type:'fm'},{pid:progs[0],date:d2,type:'em'}]);
+          // Also try split: prog0 FM d1 + prog1 EM d1, prog0 FM d2 + prog1 EM d2 etc
+          assignments.push([{pid:progs[0],date:d1,type:'fm'},{pid:progs[1],date:d1,type:'em'},{pid:progs[0],date:d2,type:'fm'},{pid:progs[1],date:d2,type:'em'}]);
+          assignments.push([{pid:progs[0],date:d1,type:'fm'},{pid:progs[1],date:d1,type:'em'},{pid:progs[1],date:d2,type:'fm'},{pid:progs[0],date:d2,type:'em'}]);
+        } else if(progs.length===3){
+          // One gets full day, two get half-days — try all combinations
+          for(const fullProg of progs){
+            const halfProgs=progs.filter(p=>p!==fullProg);
+            for(const fullDay of [d1,d2]){
+              const halfDay=fullDay===d1?d2:d1;
+              for(const [h1,h2] of [[halfProgs[0],halfProgs[1]],[halfProgs[1],halfProgs[0]]]){
+                assignments.push([{pid:fullProg,date:fullDay,type:'fm'},{pid:fullProg,date:fullDay,type:'em'},{pid:h1,date:halfDay,type:'fm'},{pid:h2,date:halfDay,type:'em'}]);
+              }
+            }
+          }
+        } else if(progs.length>=4){
+          // Each prog gets one half-slot
+          const p=progs.slice(0,4);
+          assignments.push([{pid:p[0],date:d1,type:'fm'},{pid:p[1],date:d1,type:'em'},{pid:p[2],date:d2,type:'fm'},{pid:p[3],date:d2,type:'em'}]);
+          assignments.push([{pid:p[0],date:d1,type:'fm'},{pid:p[1],date:d1,type:'em'},{pid:p[3],date:d2,type:'fm'},{pid:p[2],date:d2,type:'em'}]);
+        }
+        for(const assignment of assignments){
+          const combo=tryAssignment(assignment);
+          if(combo) combos.push(combo);
         }
       }
     }

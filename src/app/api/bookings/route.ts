@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabaseAdmin
     .from('bookings')
-    .select(`*, booking_slots(slot_id, slots(date, type, program_id, programs(name, icon)))`)
+    .select(`*, booking_slots(slot_id, slots(date, type, program_id, programs(name, icon))), room_bookings(room, date)`)
     .eq('cancelled', false)
     .order('created_at', { ascending: false })
 
@@ -142,4 +142,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(filtered)
 }
+
 
