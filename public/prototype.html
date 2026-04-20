@@ -1902,7 +1902,7 @@ function renderProg(){
     return`<div class="ps ${cls}"><span class="sn">${n<bookingState.step?'✓':n}</span>${l}</div>`;
   }).join('');
 }
-function renderBStep(){renderProg();const b=document.getElementById('bk-body');const s=bookingState.step;
+function renderBStep(){renderProg();const b=document.getElementById('bk-body');window.scrollTo(0,0);const s=bookingState.step;
   if(s!==6&&DB.settings.openTerms.length===0){
     b.innerHTML='<div class="step-card" style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;margin-bottom:16px;">🔒</div><h2 style="color:#dc2626;">Bokningen är tillfälligt stängd</h2><p class="step-desc">Vi öppnar snart för nya bokningar. Följ vår hemsida för mer information.</p></div>';
     return;
@@ -2391,7 +2391,7 @@ function bStep3(b){
   b.innerHTML='<div class="step-card">'+
     '<h2>Lediga tider</h2>'+
     '<p class="step-desc">'+(days===1?'Välj ett tillfälle nedan.':'Välj ett par av sammanhängande dagar nedan.')+'</p>'+
-    (combos.length===0?'<div class="info-box amber">😕 Inga lediga tider matchar dina val just nu. Prova att ändra program eller kontakta skolan.</div>':'')+
+    (combos.length===0?'<div class="info-box amber">😕 Inga lediga tider matchar dina val just nu. Prova att ändra program eller kontakta skolan.</div>':'<button class="btn btn-primary btn-full mb-8" onclick="bNext3()">Fortsätt →</button>')+
     combos.map((c,i)=>{
       const sel=bookingState.selectedCombo===i;
       const d2str=c.date2?' – '+fmtDateLong(c.date2):'';
