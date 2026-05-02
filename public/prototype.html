@@ -583,7 +583,7 @@ function loginAs(user){
   document.getElementById('screen-login').style.display='none';
   document.getElementById('screen-app').style.display='flex';
   document.getElementById('topbar-user').textContent=user.name;
-  document.getElementById('topbar-role').textContent={admin:'Admin',personal:'Personal',internat:'Internat'}[user.role]||'';
+  document.getElementById('topbar-role').textContent={admin:'Admin',personal:'Personal',internat:'Internat',kok:'Köket'}[user.role]||'';
   renderNav();
   // Refresh data from DB before showing dashboard
   Promise.all([
@@ -612,6 +612,8 @@ function navItems(){
   if(r==='personal') items.push({id:'progadmin',icon:'⚙️',label:'Admin'});
   if(r==='admin'||r==='internat') items.push({id:'overnight',icon:'🛏️',label:'Internat'});
   if(r==='internat') items.push({id:'internatadmin',icon:'⚙️',label:'Admin'});
+  if(r==='kok') items.push({id:'bookings',icon:'📋',label:'Bokningar'});
+  if(r==='kok') items.push({id:'kokadmin',icon:'⚙️',label:'Inställningar'});
   if(r==='admin') items.push({id:'admin',icon:'⚙️',label:'Admin'});
   return items;
 }
@@ -817,6 +819,13 @@ function renderDashboard(){
             +(nextNight?'<div class="stat-card" style="grid-column:1/-1;border-left:4px solid var(--forest);"><div class="stat-label">Nästa bokade natt</div><div class="stat-val" style="font-size:1.3rem;">'+fmtDate(nextNight)+'</div><div class="stat-sub">'+nextRooms.length+' av '+DB.settings.overnightCapacity+' rum belagda</div></div>':'');
         }
 
+        if(currentUser.role==='kok'){
+          const specialBks=DB.bookings.filter(b=>b.specialFood&&b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date>=today&&s.date<=termEnd;}));
+          const allFutureBks=DB.bookings.filter(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date>=today&&s.date<=termEnd;}));
+          return '<div class="stat-card"><div class="stat-label">Kommande elever</div><div class="stat-val">'+allFutureBks.length+'</div><div class="stat-sub">denna termin</div></div>'
+            +'<div class="stat-card" style="border-left:4px solid #f59e0b;"><div class="stat-label">Specialkost</div><div class="stat-val">'+specialBks.length+'</div><div class="stat-sub">kräver anpassning</div></div>';
+        }
+
         const today2=new Date().toISOString().slice(0,10);
         const termEnd2=DB.settings.openTerms.length?termDateRange(DB.settings.openTerms[0]).end:'9999-12-31';
         const futureBks=DB.bookings.filter(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date>=today2&&s.date<=termEnd2;}));
@@ -833,6 +842,23 @@ function renderDashboard(){
     ${(()=>{
       const today=new Date().toISOString().slice(0,10);
       const termEnd=DB.settings.openTerms.length?termDateRange(DB.settings.openTerms[0]).end:'9999-12-31';
+
+      if(currentUser.role==='kok'){
+        const specialBks=DB.bookings.filter(b=>b.specialFood&&b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date>=today&&s.date<=termEnd;})).sort((a,b)=>{
+          const da=a.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?s.date:'';}).filter(Boolean).sort()[0]||'';
+          const db2=b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?s.date:'';}).filter(Boolean).sort()[0]||'';
+          return da.localeCompare(db2);
+        });
+        const allBks=DB.bookings.filter(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.date>=today&&s.date<=termEnd;}));
+        if(!allBks.length) return '<div class="card text-muted text-sm">Inga kommande bokningar.</div>';
+        return '<div class="table-wrap"><table><thead><tr><th>Datum</th><th>Elev</th><th>Specialkost</th></tr></thead><tbody>'
+          +allBks.map(b=>{
+            const date=b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s?s.date:'';}).filter(Boolean).sort()[0]||'';
+            const special=b.specialFood?'<span style="background:#fef3c7;padding:2px 8px;border-radius:12px;font-size:.8rem;">'+b.specialFood+'</span>':'—';
+            return '<tr'+(b.specialFood?' style="background:#fffbeb;"':'')+'><td>'+fmtDate(date)+'</td><td><strong>'+b.studentName+'</strong><br><span class="text-sm td-m">'+b.school+'</span></td><td>'+special+'</td></tr>';
+          }).join('')
+          +'</tbody></table></div>';
+      }
 
       if(currentUser.role==='personal'){
         // NV-program: slots are internal, not meaningful to show directly
@@ -1927,7 +1953,7 @@ function addUserModal(){showModal(`<div class="modal-handle"></div><h3>Ny använ
   <div class="form-group"><label>E-postadress</label><input type="email" id="nu-e" placeholder="namn@ingelstad.nu"></div>
   <div class="form-group"><label>Lösenord</label><input type="password" id="nu-p"></div>
   <div class="form-group"><label>Roll</label><select id="nu-r" onchange="document.getElementById('nu-pw').style.display=this.value==='personal'?'block':'none'">
-    <option value="personal">Personal</option><option value="internat">Internatansvarig</option><option value="admin">Admin</option></select></div>
+    <option value="personal">Personal</option><option value="internat">Internatansvarig</option><option value="kok">Köket</option><option value="admin">Admin</option></select></div>
   <div class="form-group" id="nu-pw"><label>Program</label><select id="nu-prog">
     ${DB.programs.map(p=>`<option value="${p.id}">${p.icon} ${p.name}</option>`).join('')}</select></div>
   <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveNewUser()">Spara</button></div>`);}
