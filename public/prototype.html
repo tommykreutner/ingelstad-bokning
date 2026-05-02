@@ -1818,10 +1818,20 @@ function addProgModal(){showModal(`<div class="modal-handle"></div><h3>Nytt prog
 function saveNewProg(){
   const name=document.getElementById('np-n').value.trim();
   if(!name){toast('Ange namn','e');return;}
-  const id=name.toLowerCase().replace(/\s+/g,'').replace(/[åä]/g,'a').replace(/ö/g,'o');
-  const slotModeVal=document.getElementById('np-mode').value;
-  DB.programs.push({id,name,icon:document.getElementById('np-i').value||'🎓',isNV:document.getElementById('np-nv').checked,slotMode:slotModeVal,defaultCapacity:parseInt(document.getElementById('np-c').value)||10,emailText:document.getElementById('np-e').value,nvCompatible:[],description:''});
-  closeModal();renderAdmin();toast('Program skapat!');
+  const id=name.toLowerCase().replace(/\s+/g,'').replace(/[åä]/g,'a').replace(/ö/g,'o').replace(/[^a-z0-9]/g,'');
+  const icon=document.getElementById('np-i').value||'🎓';
+  const isNV=document.getElementById('np-nv').checked;
+  const slotMode=document.getElementById('np-mode').value;
+  const defaultCapacity=parseInt(document.getElementById('np-c').value)||10;
+  const emailText=document.getElementById('np-e').value;
+  fetch('/api/programs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,name,icon,isNV,slotMode,defaultCapacity,emailText,nvCompatible:[],description:''})})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.error){toast(data.error,'e');return;}
+      DB.programs.push({id:data.id,name:data.name,icon:data.icon||'🎓',isNV:data.is_nv,hidden:data.hidden,slotMode:data.slot_mode,defaultCapacity:data.default_capacity,emailText:data.email_text||'',nvCompatible:data.nv_compatible||[],description:data.description||''});
+      closeModal();renderAdmin();toast('Program skapat!');
+    })
+    .catch(()=>toast('Fel vid skapande','e'));
 }
 function editProgModal(id){
   const p=DB.programs.find(x=>x.id===id);

@@ -17,7 +17,7 @@ function prevDay(dateStr: string): string {
   return d.toISOString().slice(0, 10)
 }
 
-async function assignRoom(date: string, capacity: number): Promise<number | null> {
+async function assignRoom(date: string, capacity: number, existingRooms: Array<{room: number, date: string}> = []): Promise<number | null> {
   const prev = prevDay(date)
   const { data: bookedTonight } = await supabaseAdmin
     .from('room_bookings').select('room').eq('date', date)
@@ -25,6 +25,10 @@ async function assignRoom(date: string, capacity: number): Promise<number | null
     .from('room_bookings').select('room').eq('date', prev)
   const { data: closedTonight } = await supabaseAdmin
     .from('closed_rooms').select('room').eq('date', date)
+
+  // Check if this booking already has a room assigned for a previous night
+  const myRoom = existingRooms.find(r => r.date === prev)?.room
+  if (myRoom) return myRoom // Keep same room for consecutive nights
 
   const usedTonight = new Set(bookedTonight?.map((r: any) => r.room) || [])
   const usedLastNight = new Set(bookedLastNight?.map((r: any) => r.room) || [])
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
       const day1 = dates[0]
       const nights = dates.length > 1 ? [prevDay(day1), day1] : [prevDay(day1)]
       for (const night of nights) {
-        const room = await assignRoom(night, capacity)
+        const room = await assignRoom(night, capacity, roomBookings)
         if (room) {
           await supabaseAdmin.from('room_bookings').insert({ booking_id: id, room, date: night })
           // Also update overnight count
