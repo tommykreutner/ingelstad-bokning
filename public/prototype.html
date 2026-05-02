@@ -1836,16 +1836,30 @@ function saveNewProg(){
 function editProgModal(id){
   const p=DB.programs.find(x=>x.id===id);
   showModal(`<div class="modal-handle"></div><h3>Redigera ${p.name}</h3>
+    <div class="form-group"><label>Namn</label><input type="text" id="ep-name" value="${p.name}"></div>
+    <div class="form-group"><label>Ikon</label><input type="text" id="ep-icon" value="${p.icon||'🎓'}" placeholder="Emoji"></div>
+    <div class="form-group"><label>Beskrivning (visas i programlistan)</label><input type="text" id="ep-desc" value="${p.description||''}"></div>
     <div class="form-group"><label>Standardläge</label><select id="ep-sm"><option value="closed" ${p.slotMode==='closed'?'selected':''}>Stängt (öppna tider manuellt)</option><option value="open" ${p.slotMode==='open'?'selected':''}>Öppet (stäng dagar manuellt)</option></select></div>
     <div class="form-group"><label>Standardplatser</label><input type="number" id="ep-c" value="${p.defaultCapacity}" min="1"></div>
     <div class="form-group"><label>Text i bokningsmail</label><textarea id="ep-e" rows="4">${p.emailText}</textarea></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveEditProg('${id}')">Spara</button></div>`);
+    <div class="form-group"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="ep-hidden" ${p.hidden?'checked':''}> Dölj program (visas inte för elever)</label></div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-danger btn-sm" onclick="deleteProgConfirm('${id}')">🗑 Radera</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>
+        <button class="btn btn-primary" onclick="saveEditProg('${id}')">Spara</button>
+      </div>
+    </div>`);
 }
 function saveEditProg(id){
   const p=DB.programs.find(x=>x.id===id);
   const sm=document.getElementById('ep-sm').value;
   const cap=parseInt(document.getElementById('ep-c').value)||p.defaultCapacity;
   const et=document.getElementById('ep-e').value;
+  const name=document.getElementById('ep-name')?.value.trim()||p.name;
+  const icon=document.getElementById('ep-icon')?.value.trim()||p.icon;
+  const desc=document.getElementById('ep-desc')?.value.trim()||p.description||'';
+  const hidden=document.getElementById('ep-hidden')?.checked||false;
   const modeChanged=sm!==p.slotMode;
   if(modeChanged){
     if(DB.settings.openTerms.length>0){toast('Stäng bokningen innan du ändrar programläge.','e');return;}
@@ -1856,16 +1870,52 @@ function saveEditProg(id){
       if(!confirm('Alla '+progSlots.length+' inlagda tider för '+p.name+' kommer att raderas. Fortsätta?')) return;
       Promise.all(progSlots.map(s=>fetch('/api/slots?id='+s.id,{method:'DELETE'}))).then(()=>{
         DB.slots=DB.slots.filter(s=>s.programId!==id);
-        doSaveProgram(id,p,sm,cap,et);
+        doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden);
       });
       return;
     }
   }
-  doSaveProgram(id,p,sm,cap,et);
+  doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden);
 }
-function doSaveProgram(id,p,sm,cap,et){
-  fetch('/api/programs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,slot_mode:sm,default_capacity:cap,email_text:et})})
-    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}p.slotMode=sm;p.defaultCapacity=cap;p.emailText=et;closeModal();renderAdmin();toast('Sparat!');}).catch(()=>toast('Fel vid sparande','e'));
+function deleteProgConfirm(id){
+  const p=DB.programs.find(x=>x.id===id);
+  if(!p) return;
+  const hasBookings=DB.bookings.some(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.programId===id;}));
+  const hasSlots=DB.slots.filter(s=>s.programId===id).length;
+  if(hasBookings){
+    toast('Det finns aktiva bokningar på '+p.name+'. Kan inte radera.','e');
+    return;
+  }
+  showModal('<div class="modal-handle"></div><h3>⚠️ Radera '+p.name+'?</h3>'
+    +'<p class="modal-sub" style="color:#dc2626;">Detta går inte att ångra! Programmet och alla dess tider raderas permanent.</p>'
+    +(hasSlots?'<p class="text-sm">'+hasSlots+' inlagda tider kommer att raderas.</p>':'')
+    +'<div class="form-group" style="margin-top:16px;"><label>Skriv programnamnet för att bekräfta:</label><input type="text" id="delete-prog-confirm" placeholder="'+p.name+'"></div>'
+    +'<div class="modal-footer">'
+    +'<button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>'
+    +'<button class="btn btn-danger" onclick="doDeleteProg(\"'+id+'\",\"'+p.name+'\")">Radera permanent</button>'
+    +'</div>');
+}
+function doDeleteProg(id,name){
+  const typed=document.getElementById('delete-prog-confirm')?.value.trim();
+  if(typed!==name){toast('Namnet stämmer inte','e');return;}
+  const progSlots=DB.slots.filter(s=>s.programId===id);
+  Promise.all(progSlots.map(s=>fetch('/api/slots?id='+s.id,{method:'DELETE'})))
+    .then(()=>fetch('/api/programs?id='+id,{method:'DELETE'}))
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.error){toast(data.error,'e');return;}
+      DB.slots=DB.slots.filter(s=>s.programId!==id);
+      DB.programs=DB.programs.filter(p=>p.id!==id);
+      closeModal();renderAdmin();toast('Program raderat!');
+    }).catch(()=>toast('Fel vid radering','e'));
+}
+function doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden){
+  fetch('/api/programs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,slot_mode:sm,default_capacity:cap,email_text:et,name,icon,description:desc,hidden})})
+    .then(r=>r.json()).then(data=>{
+      if(data.error){toast(data.error,'e');return;}
+      p.slotMode=sm;p.defaultCapacity=cap;p.emailText=et;p.name=name;p.icon=icon;p.description=desc;p.hidden=hidden;
+      closeModal();renderAdmin();toast('Sparat!');
+    }).catch(()=>toast('Fel vid sparande','e'));
 }
 function addUserModal(){showModal(`<div class="modal-handle"></div><h3>Ny användare</h3>
   <div class="form-group"><label>Namn</label><input type="text" id="nu-n"></div>
