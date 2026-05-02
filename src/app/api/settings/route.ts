@@ -10,7 +10,7 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   const session = await getSession()
-  if (!session || session.role !== 'admin') {
+  if (!session) {
     return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   }
   const updates = await req.json()

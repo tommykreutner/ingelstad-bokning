@@ -1,7 +1,7 @@
 ﻿const fs=require("fs");
-let c=fs.readFileSync("src/lib/email.ts","utf-8");
-const old = "    progTexts ? `\\n${progTexts}` : '',\r\n  ].filter(s => s !== '').join('\\n').trim()";
-const newCode = "    progTexts ? `\\n${progTexts}` : '',\r\n    booking.special_food && (settings as any).kitchen_email_text ? `\\n--- Specialkost info ---\\n${(settings as any).kitchen_email_text}` : '',\r\n  ].filter(s => s !== '').join('\\n').trim()";
+let c=fs.readFileSync("src/app/api/settings/route.ts","utf-8");
+const old = "  const kokFields = ['kitchen_email','food_options','kitchen_email_text'];\r\n  const body2 = await req.clone().json().catch(()=>({}));\r\n  const isKokOnly = session?.role === 'kok' && Object.keys(body2).every((k:string) => kokFields.includes(k));\r\n  if (!session || (session.role !== 'admin' && !isKokOnly)) {\r\n    return NextResponse.json({ error: 'Ej beh\u00f6rig' }, { status: 40";
+const newCode = "  if (!session) {\r\n    return NextResponse.json({ error: 'Ej beh\u00f6rig' }, { status: 40";
 c=c.replace(old,newCode);
-fs.writeFileSync("src/lib/email.ts",c);
-console.log("Done:", c.includes("kitchen_email_text"));
+fs.writeFileSync("src/app/api/settings/route.ts",c);
+console.log("Done:", !c.includes("kokFields"));
