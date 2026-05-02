@@ -2500,7 +2500,7 @@ function bStep4(b){
     </select></div>
     <div class="form-group"><label>Specialkost</label><select id="f-food">
       <option value="">Ingen special</option>
-      ${['Vegetarisk','Vegan','Glutenfri','Laktosfri','Halal','Nötallergi','Annan allergi'].map(f=>`<option ${fs.specialFood===f?'selected':''}>${f}</option>`).join('')}
+      ${['Vegetarisk','Glutenfri','Laktosfri','Nötallergi','Annan allergi'].map(f=>`<option ${fs.specialFood===f?'selected':''}>${f}</option>`).join('')}
     </select></div>
     <div class="form-group"><label>Allergier, funktionsvariationer eller annat vi bör känna till</label>
       <textarea id="f-other" placeholder="Frivilligt...">${fs.otherInfo||''}</textarea></div>
