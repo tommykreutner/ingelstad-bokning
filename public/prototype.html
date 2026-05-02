@@ -216,6 +216,7 @@ tr:last-child td{border-bottom:none;}
     <div id="page-admin" class="page-view"></div>
     <div id="page-progadmin" class="page-view"></div>
     <div id="page-internatadmin" class="page-view"></div>
+    <div id="page-kokadmin" class="page-view"></div>
     <div id="page-stats" class="page-view"></div>
   </div>
   <div class="bottom-nav" id="bottom-nav"></div>
@@ -623,7 +624,7 @@ function showPage(id){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
   const page=document.getElementById('page-'+id),btn=document.getElementById('bnav-'+id);
   if(page)page.classList.add('active');if(btn)btn.classList.add('active');
-  ({dashboard:renderDashboard,bookings:renderBookings,slots:renderSlots,overnight:renderOvernight,admin:renderAdmin,stats:renderStatsPage,progadmin:renderProgAdmin,internatadmin:renderInternatAdmin})[id]?.();
+  ({dashboard:renderDashboard,bookings:renderBookings,slots:renderSlots,overnight:renderOvernight,admin:renderAdmin,stats:renderStatsPage,progadmin:renderProgAdmin,internatadmin:renderInternatAdmin,kokadmin:renderKokAdmin})[id]?.();
 }
 
 // DASHBOARD
@@ -1087,6 +1088,46 @@ function renderInternatAdmin(){
     +'<div class="flex-between mb-8"><p class="text-sm fw-6">St\u00e4ngda n\u00e4tter</p></div>'
     +closedDisplay()
     +'</div>';
+}
+function renderKokAdmin(){
+  const kitchenEmail=DB.settings.kitchenEmail||'';
+  const foodOptions=(DB.settings.foodOptions||['Vegetarisk','Glutenfri','Laktosfri','Nötallergi','Annan allergi']).join('\n');
+  const foodMsg=DB.settings.kitchenEmailText||'';
+  document.getElementById('page-kokadmin').innerHTML=`
+    <div class="page-header"><h1>🍽️ Kökinställningar</h1><p>Hantera specialkost och kontaktuppgifter</p></div>
+    <div class="sec-title">Kontaktuppgifter</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="form-group"><label>Kökets e-postadress</label><input type="email" id="kok-email" value="${kitchenEmail}" placeholder="kok@skolan.se"></div>
+      <button class="btn btn-primary btn-sm" onclick="saveKokEmail()">Spara e-post</button>
+    </div>
+    <div class="sec-title">Specialkostalternativ</div>
+    <div class="card" style="margin-bottom:16px;">
+      <p class="text-sm text-muted" style="margin-bottom:8px;">Ett alternativ per rad. Dessa visas i bokningsformuläret.</p>
+      <div class="form-group"><textarea id="kok-options" rows="6">${foodOptions}</textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="saveKokOptions()">Spara alternativ</button>
+    </div>
+    <div class="sec-title">Meddelande till elever med specialkost</div>
+    <div class="card">
+      <p class="text-sm text-muted" style="margin-bottom:8px;">Detta meddelande inkluderas i bekräftelsemailet till elever med specialkost.</p>
+      <div class="form-group"><textarea id="kok-msg" rows="4" placeholder="T.ex. Prata med kökspersonalen vid ankomst...">${foodMsg}</textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="saveKokMsg()">Spara meddelande</button>
+    </div>
+  `;
+}
+function saveKokEmail(){
+  const email=document.getElementById('kok-email').value.trim();
+  fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({kitchen_email:email})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.kitchenEmail=email;toast('E-post sparad!');}).catch(()=>toast('Fel','e'));
+}
+function saveKokOptions(){
+  const options=document.getElementById('kok-options').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({food_options:options})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.foodOptions=options;toast('Alternativ sparade!');}).catch(()=>toast('Fel','e'));
+}
+function saveKokMsg(){
+  const msg=document.getElementById('kok-msg').value;
+  fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({kitchen_email_text:msg})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.kitchenEmailText=msg;toast('Meddelande sparat!');}).catch(()=>toast('Fel','e'));
 }
 function setIAType(type){
   ['day','period','weekday'].forEach(function(t){
@@ -2526,7 +2567,7 @@ function bStep4(b){
     </select></div>
     <div class="form-group"><label>Specialkost</label><select id="f-food">
       <option value="">Ingen special</option>
-      ${['Vegetarisk','Glutenfri','Laktosfri','Nötallergi','Annan allergi'].map(f=>`<option ${fs.specialFood===f?'selected':''}>${f}</option>`).join('')}
+      ${(DB.settings.foodOptions||['Vegetarisk','Glutenfri','Laktosfri','Nötallergi','Annan allergi']).map(f=>`<option ${fs.specialFood===f?'selected':''}>${f}</option>`).join('')}
     </select></div>
     <div class="form-group"><label>Allergier, funktionsvariationer eller annat vi bör känna till</label>
       <textarea id="f-other" placeholder="Frivilligt...">${fs.otherInfo||''}</textarea></div>
@@ -2648,6 +2689,7 @@ function simulateSendEmail(booking){
   var internatText2=booking.overnight&&DB.settings.internatEmailText?'\n\n--- Internat ---\n'+DB.settings.internatEmailText:'';
   var overnightLine=booking.overnight?'\n🛏️ '+overnightStayLabel(bkSlots2)+internatText2:'';
   const specialLine=booking.specialFood?'\n🍽️ Specialkost: '+booking.specialFood:'';
+  const kitchenMsgLine=booking.specialFood&&DB.settings.kitchenEmailText?'\n\n--- Specialkost info ---\n'+DB.settings.kitchenEmailText:'';
   const otherLine=booking.otherInfo?'\n ℹ️ Övrigt: '+booking.otherInfo:'';
 
   const studentInfo=
@@ -2670,6 +2712,7 @@ function simulateSendEmail(booking){
     '\n\n--- ALLMÄN INFO ---\n'+DB.settings.adminEmailText+
     overnightLine+
     (progTexts?'\n\n'+progTexts:'')+
+    kitchenMsgLine+
     '\n\n--- DIN BOKNINGSKOD ---\n'+booking.code;
 
   showModal('<div class="modal-handle"></div><h3>📧 E-post simulerad</h3>'+
@@ -2797,7 +2840,7 @@ async function initDB(){
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
     if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at}));
-    if(settingsRes && !settingsRes.error) DB.settings=Object.assign(DB.settings,{schoolName:settingsRes.school_name,senderEmail:settingsRes.sender_email,adminEmails:settingsRes.admin_emails||[],kitchenEmail:settingsRes.kitchen_email,internatEmail:settingsRes.internat_email,internatEmailText:settingsRes.internat_email_text,adminEmailText:settingsRes.admin_email_text,overnightCapacity:settingsRes.overnight_capacity||3,smtpHost:settingsRes.smtp_host,smtpPort:settingsRes.smtp_port,smtpUser:settingsRes.smtp_user,smtpPass:settingsRes.smtp_pass,openTerms:settingsRes.open_terms||[],blockedDates:(settingsRes.blocked_dates||[]).map(d=>d.slice(0,10))});
+    if(settingsRes && !settingsRes.error) DB.settings=Object.assign(DB.settings,{schoolName:settingsRes.school_name,senderEmail:settingsRes.sender_email,adminEmails:settingsRes.admin_emails||[],kitchenEmail:settingsRes.kitchen_email,internatEmail:settingsRes.internat_email,internatEmailText:settingsRes.internat_email_text,adminEmailText:settingsRes.admin_email_text,foodOptions:settingsRes.food_options||['Vegetarisk','Glutenfri','Laktosfri','Nötallergi','Annan allergi'],kitchenEmailText:settingsRes.kitchen_email_text||'',overnightCapacity:settingsRes.overnight_capacity||3,smtpHost:settingsRes.smtp_host,smtpPort:settingsRes.smtp_port,smtpUser:settingsRes.smtp_user,smtpPass:settingsRes.smtp_pass,openTerms:settingsRes.open_terms||[],blockedDates:(settingsRes.blocked_dates||[]).map(d=>d.slice(0,10))});
   } catch(e) { console.error('initDB error:', e); }
 }
 // Start on booking flow

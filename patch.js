@@ -1,7 +1,7 @@
 ﻿const fs=require("fs");
-let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "  if(r==='admin'||r==='internat') items.push({id:'overnight',icon:'🛏️',label:'Internat'});\r\n  if(r==='internat') items.push({id:'internatadmin',icon:'⚙️',label:'Admin'});\r\n  if(r==='admin') items.push({id:'admin',icon:'⚙️',label:'Admin'});";
-const newCode = "  if(r==='admin'||r==='internat') items.push({id:'overnight',icon:'🛏️',label:'Internat'});\r\n  if(r==='internat') items.push({id:'internatadmin',icon:'⚙️',label:'Admin'});\r\n  if(r==='kok') items.push({id:'bookings',icon:'📋',label:'Bokningar'});\r\n  if(r==='kok') items.push({id:'kokadmin',icon:'⚙️',label:'Inställningar'});\r\n  if(r==='admin') items.push({id:'admin',icon:'⚙️',label:'Admin'});";
+let c=fs.readFileSync("src/lib/email.ts","utf-8");
+const old = "    progTexts ? `\\n${progTexts}` : '',\r\n  ].filter(s => s !== '').join('\\n').trim()";
+const newCode = "    progTexts ? `\\n${progTexts}` : '',\r\n    booking.special_food && (settings as any).kitchen_email_text ? `\\n--- Specialkost info ---\\n${(settings as any).kitchen_email_text}` : '',\r\n  ].filter(s => s !== '').join('\\n').trim()";
 c=c.replace(old,newCode);
-fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("r==='kok'"));
+fs.writeFileSync("src/lib/email.ts",c);
+console.log("Done:", c.includes("kitchen_email_text"));

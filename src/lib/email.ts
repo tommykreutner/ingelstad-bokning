@@ -76,6 +76,7 @@ export async function sendBookingConfirmation(booking: {
     '\n--- ALLMÄN INFO ---', settings.admin_email_text || '',
     booking.overnight && settings.internat_email_text ? `\n--- INTERNAT ---\n${settings.internat_email_text}` : '',
     progTexts ? `\n${progTexts}` : '',
+    booking.special_food && (settings as any).kitchen_email_text ? `\n--- Specialkost info ---\n${(settings as any).kitchen_email_text}` : '',
   ].filter(s => s !== '').join('\n').trim()
 
   const bcc = [...(settings.admin_emails || []),
