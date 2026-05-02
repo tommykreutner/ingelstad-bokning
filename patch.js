@@ -1,7 +1,15 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "function doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden){";
-const newFn = "function deleteProgConfirm(id){\n  const p=DB.programs.find(x=>x.id===id);\n  if(!p) return;\n  const hasBookings=DB.bookings.some(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.programId===id;}));\n  const hasSlots=DB.slots.filter(s=>s.programId===id).length;\n  if(hasBookings){\n    toast('Det finns aktiva bokningar på '+p.name+'. Kan inte radera.','e');\n    return;\n  }\n  showModal('<div class=\"modal-handle\"></div><h3>⚠️ Radera '+p.name+'?</h3>'\n    +'<p class=\"modal-sub\" style=\"color:#dc2626;\">Detta går inte att ångra! Programmet och alla dess tider raderas permanent.</p>'\n    +(hasSlots?'<p class=\"text-sm\">'+hasSlots+' inlagda tider kommer att raderas.</p>':'')\n    +'<div class=\"form-group\" style=\"margin-top:16px;\"><label>Skriv programnamnet för att bekräfta:</label><input type=\"text\" id=\"delete-prog-confirm\" placeholder=\"'+p.name+'\"></div>'\n    +'<div class=\"modal-footer\">'\n    +'<button class=\"btn btn-ghost\" onclick=\"closeModal()\">Avbryt</button>'\n    +'<button class=\"btn btn-danger\" onclick=\"doDeleteProg(\\\"'+id+'\\\",\\\"'+p.name+'\\\")\">Radera permanent</button>'\n    +'</div>');\n}\nfunction doDeleteProg(id,name){\n  const typed=document.getElementById('delete-prog-confirm')?.value.trim();\n  if(typed!==name){toast('Namnet stämmer inte','e');return;}\n  const progSlots=DB.slots.filter(s=>s.programId===id);\n  Promise.all(progSlots.map(s=>fetch('/api/slots?id='+s.id,{method:'DELETE'})))\n    .then(()=>fetch('/api/programs?id='+id,{method:'DELETE'}))\n    .then(r=>r.json())\n    .then(data=>{\n      if(data.error){toast(data.error,'e');return;}\n      DB.slots=DB.slots.filter(s=>s.programId!==id);\n      DB.programs=DB.programs.filter(p=>p.id!==id);\n      closeModal();renderAdmin();toast('Program raderat!');\n    }).catch(()=>toast('Fel vid radering','e'));\n}\nfunction doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden){";
-c=c.replace(old,newFn);
+const old = "    +'<button class=\"btn btn-danger\" onclick=\"doDeleteProg(\\\"'+id+'\\\",\\\"'+p.name+'\\\")\">Radera permanent</button>'";
+const newCode = "    +'<button class=\"btn btn-danger\" onclick=\"doDeleteProg()\">Radera permanent</button>'";
+c=c.replace(old,newCode);
+// Also store id and name in global vars
+const old2 = "function deleteProgConfirm(id){\n  const p=DB.programs.find(x=>x.id===id);";
+const newCode2 = "function deleteProgConfirm(id){\n  const p=DB.programs.find(x=>x.id===id);\n  window._deleteProgId=id;\n  window._deleteProgName=p.name;";
+c=c.replace(old2,newCode2);
+// Fix doDeleteProg to use globals
+const old3 = "function doDeleteProg(id,name){\n  const typed=document.getElementById('delete-prog-confirm')?.value.trim();\n  if(typed!==name){toast('Namnet stämmer inte','e');return;}";
+const newCode3 = "function doDeleteProg(){\n  const id=window._deleteProgId;\n  const name=window._deleteProgName;\n  const typed=document.getElementById('delete-prog-confirm')?.value.trim();\n  if(typed!==name){toast('Namnet stämmer inte','e');return;}";
+c=c.replace(old3,newCode3);
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("deleteProgConfirm"));
+console.log("Done:", c.includes("window._deleteProgId"));

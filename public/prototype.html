@@ -1879,6 +1879,8 @@ function saveEditProg(id){
 }
 function deleteProgConfirm(id){
   const p=DB.programs.find(x=>x.id===id);
+  window._deleteProgId=id;
+  window._deleteProgName=p.name;
   if(!p) return;
   const hasBookings=DB.bookings.some(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.programId===id;}));
   const hasSlots=DB.slots.filter(s=>s.programId===id).length;
@@ -1892,10 +1894,12 @@ function deleteProgConfirm(id){
     +'<div class="form-group" style="margin-top:16px;"><label>Skriv programnamnet för att bekräfta:</label><input type="text" id="delete-prog-confirm" placeholder="'+p.name+'"></div>'
     +'<div class="modal-footer">'
     +'<button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>'
-    +'<button class="btn btn-danger" onclick="doDeleteProg(\"'+id+'\",\"'+p.name+'\")">Radera permanent</button>'
+    +'<button class="btn btn-danger" onclick="doDeleteProg()">Radera permanent</button>'
     +'</div>');
 }
-function doDeleteProg(id,name){
+function doDeleteProg(){
+  const id=window._deleteProgId;
+  const name=window._deleteProgName;
   const typed=document.getElementById('delete-prog-confirm')?.value.trim();
   if(typed!==name){toast('Namnet stämmer inte','e');return;}
   const progSlots=DB.slots.filter(s=>s.programId===id);
