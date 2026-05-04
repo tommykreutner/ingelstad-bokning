@@ -2572,6 +2572,10 @@ function bStep4(b){
     </select></div>
     <div class="form-group"><label>Allergier, funktionsvariationer eller annat vi bör känna till</label>
       <textarea id="f-other" placeholder="Frivilligt...">${fs.otherInfo||''}</textarea></div>
+    <div class="card" style="margin-bottom:16px;background:#f0fdf4;border-left:4px solid var(--forest);">
+      <p class="text-sm" style="margin-bottom:12px;"><strong>Hantering av personuppgifter</strong><br><br>Ingelstadgymnasiet är personuppgiftsansvarig för de uppgifter du lämnar i detta formulär (namn, kontaktuppgifter, skola och årskurs). Uppgifterna används för att administrera ditt besök på prova-på-dagen samt för anonym statistik i syfte att förbättra kommande arrangemang. Personuppgifterna raderas när de inte längre behövs för ovanstående ändamål. Du har rätt att begära tillgång till, rättelse eller radering av dina uppgifter genom att kontakta oss på <a href="mailto:info@ingelstad.nu">info@ingelstad.nu</a>.</p>
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;"><input type="checkbox" id="f-gdpr" style="margin-top:3px;flex-shrink:0;"> <span class="text-sm">Jag godkänner att Ingelstadgymnasiet lagrar mina uppgifter enligt ovan.</span></label>
+    </div>
     <button class="btn btn-primary btn-full" onclick="bNext4()">Fortsätt →</button>
     <button class="btn btn-ghost btn-full mt-8" onclick="bookingState.step=3;renderBStep()">← Tillbaka</button>
   </div>`;
@@ -2587,6 +2591,7 @@ function bNext4(){
   const mu=(document.getElementById('f-muni')||{value:''}).value.trim();
   const gr=document.getElementById('f-grade').value;
   if(!fn||!ln||!e||!g||!p||!gp||!sc||!mu||!gr){toast('Fyll i alla obligatoriska fält (*)','e');return;}
+  if(!document.getElementById('f-gdpr')?.checked){toast('Du måste godkänna hanteringen av personuppgifter','e');return;}
   const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if(!emailRe.test(e)){toast('Ange en giltig e-postadress för eleven','e');return;}
   if(!emailRe.test(g)){toast('Ange en giltig e-postadress för vårdnadshavare','e');return;}
