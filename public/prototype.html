@@ -1006,8 +1006,8 @@ function renderSlots(){
           ?'🟢 <strong>Öppen som standard</strong> — alla dagar är tillgängliga. Lägg till tider du <em>inte</em> kan ta emot för att stänga dem.'
           :'🔴 <strong>Stängd som standard</strong> — inga dagar är tillgängliga. Lägg till tider du <em>kan</em> ta emot.'}
       </div>
-      ${DB.slots.filter(s=>s.programId===prog.id).length===0?'<p class="text-sm text-muted">Inga tider inlagda.</p>':''}
-      ${DB.slots.filter(s=>s.programId===prog.id).map(sl=>`
+      ${DB.slots.filter(s=>s.programId===prog.id&&s.date>=new Date().toISOString().slice(0,10)).length===0?'<p class="text-sm text-muted">Inga tider inlagda.</p>':''}
+      ${DB.slots.filter(s=>s.programId===prog.id&&s.date>=new Date().toISOString().slice(0,10)).map(sl=>`
         <div class="slot-row">
           <div style="flex:1;"><strong class="text-sm">${fmtDate(sl.date)}</strong> <span class="tag tag-${sl.type}" style="margin-left:4px;">${sl.type.toUpperCase()}</span></div>
           ${prog.slotMode==='closed'?`<span class="text-sm text-muted">${sl.booked}/${sl.capacity} bokade</span>`:'<span class="text-sm text-muted" style="color:var(--red);">Stängd</span>'}
