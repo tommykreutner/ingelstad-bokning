@@ -1,7 +1,7 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "  if(!fn||!ln||!e||!g||!p||!gp||!sc||!mu||!gr){toast('Fyll i alla obligatoriska fält (*)','e');return;}";
-const newCode = "  if(!fn||!ln||!e||!g||!p||!gp||!sc||!mu||!gr){toast('Fyll i alla obligatoriska fält (*)','e');return;}\n  if(!document.getElementById('f-gdpr')?.checked){toast('Du måste godkänna hanteringen av personuppgifter','e');return;}";
-c=c.replace(old,newCode);
+const old = "function saveNewUser(){\r\n  const n=document.getElementById('nu-n').value.trim(),i=document.getElementById('nu-i').value.trim(),p=document.getElementById('nu-p').value,r=document.getElementById('nu-r').value;\r\n  if(!n||!i||!p){toast('Fyll i alla fält','e');return;}\r\n  if(DB.users.find(u=>u.id===i)){toast('Användarnamnet är taget','e');return;}\r\n  const em=document.getElementById('nu-e').value;\r\n  DB.users.push({id:i,name:n,role:r,program:r==='personal'?document.getElementById('nu-prog').value:null,pass:p,email:em});\r\n  closeModal();renderAdmin();toast('Användare skapad!');\r\n}";
+const newFn = "function saveNewUser(){\r\n  const n=document.getElementById('nu-n').value.trim(),i=document.getElementById('nu-i').value.trim(),p=document.getElementById('nu-p').value,r=document.getElementById('nu-r').value;\r\n  if(!n||!i||!p){toast('Fyll i alla fält','e');return;}\r\n  if(DB.users.find(u=>u.id===i)){toast('Användarnamnet är taget','e');return;}\r\n  const em=document.getElementById('nu-e').value;\r\n  const prog=r==='personal'?document.getElementById('nu-prog').value:null;\r\n  fetch('/api/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:i,name:n,email:em,role:r,programId:prog,password:p})})\r\n    .then(r=>r.json())\r\n    .then(data=>{\r\n      if(data.error){toast(data.error,'e');return;}\r\n      DB.users.push({id:data.id,name:data.name,role:data.role,program:data.program_id,email:data.email,pass:''});\r\n      closeModal();renderAdmin();toast('Användare skapad!');\r\n    })\r\n    .catch(()=>toast('Fel vid skapande','e'));\r\n}";
+c=c.replace(old,newFn);
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("f-gdpr"));
+console.log("Done:", c.includes("fetch('/api/staff'"));
