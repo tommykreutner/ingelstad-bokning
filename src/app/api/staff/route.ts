@@ -33,8 +33,8 @@ export async function PATCH(req: NextRequest) {
   if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   }
-  const { id, email, role, programId, password } = await req.json()
-  const updates: any = { email, role, program_id: programId || null }
+  const { id, name, email, role, programId, password } = await req.json()
+  const updates: any = { email, role, program_id: programId || null, ...(name ? { name } : {}) }
   if (password) updates.password_hash = hashPassword(password)
   const { data, error } = await supabaseAdmin
     .from('staff').update(updates).eq('id', id).select('id, username, name, email, role, program_id').single()
@@ -54,3 +54,5 @@ export async function DELETE(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
+
+

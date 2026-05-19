@@ -79,10 +79,25 @@ export async function sendBookingConfirmation(booking: {
     booking.special_food && (settings as any).kitchen_email_text ? `\n--- Specialkost info ---\n${(settings as any).kitchen_email_text}` : '',
   ].filter(s => s !== '').join('\n').trim()
 
+  // Get staff emails for booked programs
+  const programIds = [...new Set(booking.slots.map((s: any) => s.program_id).filter(Boolean))]
+  const { data: staffData } = await supabaseAdmin
+    .from('staff')
+    .select('email, name, program_id')
+    .eq('role', 'personal')
+    .in('program_id', programIds.length ? programIds : ['__none__'])
+  const staffEmails = (staffData || []).filter((s: any) => s.email).map((s: any) => s.email)
+  // Get internat staff emails
+  const internatEmails = booking.overnight ? await supabaseAdmin
+    .from('staff').select('email').eq('role', 'internat')
+    .then(({data}) => (data||[]).filter((s:any)=>s.email).map((s:any)=>s.email)) : []
+
   const bcc = [...(settings.admin_emails || []),
+    ...staffEmails,
     ...(booking.overnight && settings.internat_email ? [settings.internat_email] : []),
+    ...internatEmails,
     ...(booking.special_food && settings.kitchen_email ? [settings.kitchen_email] : []),
-  ]
+  ].filter(Boolean)
 
   try {
     const t = await createTransporter()

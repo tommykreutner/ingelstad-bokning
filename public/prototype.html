@@ -2016,12 +2016,13 @@ function saveNewUser(){
 function editUserModal(id){
   const u=DB.users.find(x=>x.id===id);
   showModal(`<div class="modal-handle"></div><h3>Redigera ${u.name}</h3>
+    <div class="form-group"><label>Namn</label><input type="text" id="eu-n" value="${u.name||''}"></div>
     <div class="form-group"><label>E-postadress</label><input type="email" id="eu-e" value="${u.email||''}"></div>
   <div class="form-group"><label>Nytt lösenord (tomt = oförändrat)</label><input type="password" id="eu-p"></div>
     ${u.role==='personal'?`<div class="form-group"><label>Program</label><select id="eu-prog">${DB.programs.map(p=>`<option value="${p.id}" ${p.id===u.program?'selected':''}>${p.icon} ${p.name}</option>`).join('')}</select></div>`:''}
     <div class="modal-footer"><button class="btn btn-danger" onclick="deleteUser('${id}')">Ta bort</button><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveEditUser('${id}')">Spara</button></div>`);
 }
-function saveEditUser(id){const u=DB.users.find(x=>x.id===id);const p=document.getElementById('eu-p')?.value;const em=document.getElementById('eu-e').value;const prog=u.role==='personal'?document.getElementById('eu-prog').value:null;const body={id,email:em,role:u.role,programId:prog};if(p)body.password=p;fetch('/api/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}u.email=em;if(prog)u.program=prog;closeModal();renderAdmin();toast('Uppdaterat!');}).catch(()=>toast('Fel vid uppdatering','e'));}
+function saveEditUser(id){const u=DB.users.find(x=>x.id===id);const p=document.getElementById('eu-p')?.value;const em=document.getElementById('eu-e').value;const nm=document.getElementById('eu-n')?.value.trim()||u.name;const prog=u.role==='personal'?document.getElementById('eu-prog').value:null;const body={id,name:nm,email:em,role:u.role,programId:prog};if(p)body.password=p;fetch('/api/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}u.name=nm;u.email=em;if(prog)u.program=prog;closeModal();renderAdmin();toast('Uppdaterat!');}).catch(()=>toast('Fel vid uppdatering','e'));}
 function deleteUser(id){if(id===currentUser.id){toast('Kan inte ta bort dig själv','e');return;}fetch('/api/staff?id='+id,{method:'DELETE'}).then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.users=DB.users.filter(u=>u.id!==id);closeModal();renderAdmin();toast('Borttagen');}).catch(()=>toast('Fel vid borttagning','e'));}
 
 // BOOKING FLOW
@@ -2826,7 +2827,7 @@ function bSuccess(b){
       • Information om avbokning<br><br>
       <em style="font-size:.82rem;">Spara mailet — det innehåller all information du behöver.</em>
     </div>
-    <button class="btn btn-primary btn-full" onclick="showLogin()">← Tillbaka till startsidan</button>
+    <button class="btn btn-primary btn-full" onclick="showBooking()">← Tillbaka till startsidan</button>
   </div>`;
 }
 
