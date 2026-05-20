@@ -1,7 +1,7 @@
 ﻿const fs=require("fs");
-let c=fs.readFileSync("src/lib/email.ts","utf-8");
-const old = "  const bcc = [...(settings.admin_emails || []),\r\n    ...(booking.overnight && settings.internat_email ? [settings.internat_email] : []),\r\n    ...(booking.special_food && settings.kitchen_email ? [settings.kitchen_email] : []),\r\n  ]";
-const newCode = "  // Get staff emails for booked programs\r\n  const programIds = [...new Set(booking.slots.map((s: any) => s.program_id).filter(Boolean))]\r\n  const { data: staffData } = await supabaseAdmin\r\n    .from('staff')\r\n    .select('email, name, program_id')\r\n    .eq('role', 'personal')\r\n    .in('program_id', programIds.length ? programIds : ['__none__'])\r\n  const staffEmails = (staffData || []).filter((s: any) => s.email).map((s: any) => s.email)\r\n  // Get internat staff emails\r\n  const internatEmails = booking.overnight ? await supabaseAdmin\r\n    .from('staff').select('email').eq('role', 'internat')\r\n    .then(({data}) => (data||[]).filter((s:any)=>s.email).map((s:any)=>s.email)) : []\r\n\r\n  const bcc = [...(settings.admin_emails || []),\r\n    ...staffEmails,\r\n    ...(booking.overnight && settings.internat_email ? [settings.internat_email] : []),\r\n    ...internatEmails,\r\n    ...(booking.special_food && settings.kitchen_email ? [settings.kitchen_email] : []),\r\n  ].filter(Boolean)";
+let c=fs.readFileSync("src/app/api/bookings/route.ts","utf-8");
+const old = "      program_email_text: s.programs?.email_text || '',\r\n    }))";
+const newCode = "      program_email_text: s.programs?.email_text || '',\r\n      program_id: s.program_id || '',\r\n    }))";
 c=c.replace(old,newCode);
-fs.writeFileSync("src/lib/email.ts",c);
-console.log("Done:", c.includes("staffEmails"));
+fs.writeFileSync("src/app/api/bookings/route.ts",c);
+console.log("Done:", c.includes("program_id: s.program_id"));

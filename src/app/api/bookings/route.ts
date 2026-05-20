@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
       program_name: s.programs?.name || '',
       program_icon: s.programs?.icon || '',
       program_email_text: s.programs?.email_text || '',
+      program_id: s.program_id || '',
     }))
 
     // Send confirmation email
