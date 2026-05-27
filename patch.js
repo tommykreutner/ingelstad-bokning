@@ -1,7 +1,7 @@
 ﻿const fs=require("fs");
 let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "    (combos.length===0?'<div class=\"info-box amber\">😕 '+diagnoseNoTimes()+'</div>':'<button class=\"btn btn-primary btn-full mb-8\" onclick=\"bNext3()\">Fortsätt →</button>')+";
-const newCode = "    (combos.length===0?'<div class=\"info-box amber\">😕 '+diagnoseNoTimes()+'</div>':'')+";
+const old = "          +'\\ud83d\\udce7 '+b.studentEmail+'<br>\\ud83d\\udcf1 '+b.phone\r\n          +'<br>\\ud83c\\udfe7 '+b.school+(b.municipality?' ('+b.municipality+')':'')+', \\u00e5k '+b.grade\r\n          +(b.overnight?'<br>\\ud83d\\udecf\\ufe0f \\u00d6vernattning bokad':'')\r\n          +(b.specialFood?'<br>\\ud83c\\udf7d\\ufe0f '+b.specialFood:'')\r\n          +(b.otherInfo?'<br>\\u2139\\ufe0f '+b.otherInfo:'')\r\n          +'</div></div>';";
+const newCode = "          +'\\ud83d\\udce7 '+b.studentEmail+'<br>\\ud83d\\udcf1 Elev: '+b.phone\r\n          +(b.guardianEmail?'<br>\\ud83d\\udc68\\u200d\\ud83d\\udc67 '+b.guardianEmail:'')\r\n          +(b.guardianPhone?'<br>\\ud83d\\udcf1 V\\u00e5rdnadshavare: '+b.guardianPhone:'')\r\n          +'<br>\\ud83c\\udfe7 '+b.school+(b.municipality?' ('+b.municipality+')':'')+', \\u00e5k '+b.grade\r\n          +(b.overnight?'<br>\\ud83d\\udecf\\ufe0f \\u00d6vernattning bokad':'')\r\n          +(b.specialFood?'<br>\\ud83c\\udf7d\\ufe0f Specialkost: '+b.specialFood:'')\r\n          +(b.otherInfo?'<br>\\u2139\\ufe0f '+b.otherInfo:'')\r\n          +'<br><div style=\"margin-top:6px;\">'+b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var p=s?DB.programs.find(function(x){return x.id===s.programId;}):null;return s?\'<span class=\"chip\">\'+(p?p.icon+\' \'+p.name:\'\')+\' <span class=\"tag tag-\'+s.type+\'\">\'+s.type.toUpperCase()+\'</span> <span style=\"font-size:.7rem;opacity:.8;\"> · \'+fmtDateLong(s.date)+\'</span></span>\':\'\'}).join(\'\')+\'</div>\'\r\n          +\'</div></div>\';";
 c=c.replace(old,newCode);
 fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", !c.includes("diagnoseNoTimes()+'</div>':'<button"));
+console.log("Done:", c.includes("guardianPhone"));

@@ -947,11 +947,14 @@ function renderBookings(activeDate){
         html+='<div class="card" style="margin-bottom:10px;">'
           +'<strong>'+b.studentName+'</strong>'
           +'<div class="text-sm text-muted" style="line-height:1.85;margin-top:6px;">'
-          +'\ud83d\udce7 '+b.studentEmail+'<br>\ud83d\udcf1 '+b.phone
+          +'\ud83d\udce7 '+b.studentEmail+'<br>\ud83d\udcf1 Elev: '+b.phone
+          +(b.guardianEmail?'<br>\ud83d\udc68\u200d\ud83d\udc67 '+b.guardianEmail:'')
+          +(b.guardianPhone?'<br>\ud83d\udcf1 V\u00e5rdnadshavare: '+b.guardianPhone:'')
           +'<br>\ud83c\udfe7 '+b.school+(b.municipality?' ('+b.municipality+')':'')+', \u00e5k '+b.grade
           +(b.overnight?'<br>\ud83d\udecf\ufe0f \u00d6vernattning bokad':'')
-          +(b.specialFood?'<br>\ud83c\udf7d\ufe0f '+b.specialFood:'')
+          +(b.specialFood?'<br>\ud83c\udf7d\ufe0f Specialkost: '+b.specialFood:'')
           +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
+          +'<br><div style="margin-top:6px;">'+b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var p=s?DB.programs.find(function(x){return x.id===s.programId;}):null;return s?'<span class="chip">'+(p?p.icon+' '+p.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;opacity:.8;"> · '+fmtDateLong(s.date)+'</span></span>':''}).join('')+'</div>'
           +'</div></div>';
       });
     }
