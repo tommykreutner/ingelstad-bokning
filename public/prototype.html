@@ -240,6 +240,7 @@ tr:last-child td{border-bottom:none;}
 
 <script>
 const DB = {
+  attendance:[],
   settings:{schoolName:'Ingelstadgymnasiet',senderEmail:'provapå@ingelstad.nu',adminEmails:['admin@ingelstad.nu','rektor@ingelstad.nu'],kitchenEmail:'koket@ingelstad.nu',internatEmail:'internat@ingelstad.nu',smtpHost:'smtp.ingelstad.nu',smtpPort:'587',smtpUser:'noreply@ingelstad.nu',smtpPass:'',overnightCapacity:3,internatEmailText:'Välkommen till internatet! Incheckning sker i receptionen från kl 17:00. Frukost serveras 07:00–08:00. Ta med sängkläder eller hyr på plats.',adminEmailText:'Välkommen till Ingelstadgymnasiet! Vi ser fram emot ditt besök. Ta med bekräftelsekoden nedan.\n\nParkering finns vid huvudentrén. Check-in sker i receptionen kl 08:00.',blockedDates:['2026-04-27','2026-04-28','2026-04-29','2026-04-30','2026-05-01'],openTerms:['VT26'],termHistory:['HT24','VT24']},
   programs:[
     {id:'na',slotMode:'closed',name:'Naturvetenskap (NV)',icon:'🔬',isNV:true,hidden:true,defaultCapacity:8,emailText:'NV-programmet välkomnar dig! Ta med din vetenskapliga nyfikenhet. Vi ses i labbsalen.',nvCompatible:['djursjuk','hasthallning','lb-lantbruk'],description:'Utforska naturens lagar med experiment och teori.'},
@@ -591,12 +592,15 @@ function loginAs(user){
     fetch('/api/slots').then(r=>r.json()),
     fetch('/api/bookings').then(r=>r.json()),
     fetch('/api/staff').then(r=>r.json()),
-  ]).then(([slotsRes,bookingsRes,staffRes])=>{
+    fetch('/api/attendance').then(r=>r.json()),
+  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
     if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
     // Build roomBookings from bookings
     DB.roomBookings=DB.bookings.flatMap(b=>b.roomBookings||[]);
+    if(Array.isArray(attendanceRes)) DB.attendance=attendanceRes;
+    else DB.attendance=[];
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
 }
@@ -955,6 +959,19 @@ function renderBookings(activeDate){
           +(b.specialFood?'<br>\ud83c\udf7d\ufe0f Specialkost: '+b.specialFood:'')
           +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
           +'<br><div style="margin-top:6px;">'+b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var p=s?DB.programs.find(function(x){return x.id===s.programId;}):null;return s?'<span class="chip">'+(p?p.icon+' '+p.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;opacity:.8;"> · '+fmtDateLong(s.date)+'</span></span>':''}).join('')+'</div>'
+          +(function(){
+            var att=DB.attendance.find(function(a){return a.booking_id===b.id&&a.program_id===mp;});
+            var status=att?att.status:null;
+            var today=new Date().toISOString().slice(0,10);
+            var slotDate=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp?s.date:null;}).filter(Boolean).sort().pop();
+            if(!slotDate||slotDate>=today) return '';
+            return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
+              +'<div class="text-sm" style="font-weight:700;margin-bottom:6px;">Närvaro</div>'
+              +'<div style="display:flex;gap:6px;">'
+              +'<button class="btn btn-sm" style="background:'+(status==='present'?'#16a34a':'#f0fdf4')+';color:'+(status==='present'?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="markAttendance(\''+b.id+'\',\''+mp+'\',\'present\')">✅ Kom</button>'
+              +'<button class="btn btn-sm" style="background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\''+mp+'\',\'absent\')">❌ Kom inte</button>'
+              +'</div></div>';
+          })()
           +'</div></div>';
       });
     }
@@ -979,6 +996,18 @@ function renderBookings(activeDate){
     });
   }
   document.getElementById('page-bookings').innerHTML=html;
+}
+function markAttendance(bookingId,programId,status){
+  fetch('/api/attendance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking_id:bookingId,program_id:programId,status:status})})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.error){toast(data.error,'e');return;}
+      const existing=DB.attendance.findIndex(a=>a.booking_id===bookingId&&a.program_id===programId);
+      if(existing>=0) DB.attendance[existing]=data;
+      else DB.attendance.push(data);
+      renderBookings(document.querySelector('.day-card.selected')?.dataset?.date);
+      toast('Närvaro sparad!');
+    }).catch(()=>toast('Fel vid sparande','e'));
 }
 function exportDayCSV(date){
   var mp=currentUser.program;
