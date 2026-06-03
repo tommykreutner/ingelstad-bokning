@@ -940,6 +940,21 @@ function renderBookings(activeDate){
       html+='</div>';
     }
 
+    // Archive
+    const today2=new Date().toISOString().slice(0,10);
+    var unconfCount=0,archCount=0;
+    mySlots.forEach(function(sl){
+      if(sl.date<today2){
+        var bks=list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp&&s.date===sl.date;});});
+        if(bks.length>0){
+          var allMarked=bks.every(function(b){return DB.attendance.find(function(a){return a.booking_id===b.id&&a.program_id===mp;});});
+          if(allMarked) archCount++;
+          else unconfCount++;
+        }
+      }
+    });
+    if(unconfCount>0) html+='<div class="info-box amber" style="margin-bottom:12px;">⚠️ '+unconfCount+' passerade datum saknar närvaro-bekräftelse.</div>';
+    if(archCount>0) html+='<div style="margin-bottom:12px;"><span class="text-sm text-muted">📁 '+archCount+' bekräftade datum i arkivet</span></div>';
     if(selectedDate){
       html+='<div class="sec-title" style="margin-bottom:10px;">'+fmtDate(selectedDate)
         +' \u2014 '+dateBookings.length+' elev(er)'
