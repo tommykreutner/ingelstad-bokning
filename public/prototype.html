@@ -1455,8 +1455,7 @@ function exportEvalCSV(){
       (row.created_at||'').slice(0,10)
     ].map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(','));
   });
-  var blob=new Blob([lines.join('
-')],{type:'text/csv;charset=utf-8;'});
+  var blob=new Blob([lines.join(String.fromCharCode(10))],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='utvarderingar.csv';a.click();
 }
 function renderKokAdmin(){
