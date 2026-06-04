@@ -78,8 +78,8 @@ button,input,select,textarea{font-family:'Nunito',sans-serif;}
 
 /* BOOKING */
 #screen-booking{display:flex;flex-direction:column;min-height:100vh;}
-.bk-header{background:var(--forest-dark);color:#fff;padding:16px;display:flex;align-items:center;gap:12px;}
-.bk-logo{width:34px;height:34px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.bk-header{background:var(--forest-dark);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;}
+.bk-logo{width:auto;height:auto;background:transparent;border-radius:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding-left:4px;}
 .bk-progress{background:#fff;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .ps{display:flex;align-items:center;gap:6px;padding:11px 10px;font-size:.72rem;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;flex-shrink:0;}
 .ps.active{color:var(--forest);border-bottom-color:var(--forest);font-weight:700;}
@@ -228,8 +228,8 @@ tr:last-child td{border-bottom:none;}
 <!-- BOOKING FLOW -->
 <div id="screen-booking">
   <div class="bk-header">
-    <div class="bk-logo" style="background:transparent;padding:2px;"><img src="/logotype_white.svg" alt="Ingelstadgymnasiet" style="height:28px;display:block;"></div>
-    <div style="flex:1;"><h1 style="font-size:1.05rem;color:#fff;">Prova-på-dagar</h1><p style="font-size:.72rem;opacity:.65;color:#fff;">Ingelstadgymnasiet</p></div>
+    <div class="bk-logo" style="background:transparent;padding:2px;"><img src="/logotype_white.svg" alt="Ingelstadgymnasiet" style="height:32px;display:block;"></div>
+    <div style="flex:1;"><h1 style="font-size:1.05rem;color:#fff;">Prova-på-dagar</h1></div>
     <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none;" onclick="showBooking()">← Tillbaka</button>
   </div>
   <div class="bk-progress" id="bk-progress"></div>
