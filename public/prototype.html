@@ -1272,7 +1272,13 @@ function renderInternatAdmin(){
     +'<div class="card">'
     +'<div class="flex-between mb-8"><p class="text-sm fw-6">St\u00e4ngda n\u00e4tter</p></div>'
     +closedDisplay()
+    +'</div>'
+    +'<div class="card" style="margin-top:16px;">'
+    +'<div class="flex-between mb-8"><p class="text-sm fw-6">Utv\u00e4rderingsfr\u00e5gor \u2014 Internat</p><button class="btn btn-secondary btn-sm" onclick="addEvalQuestion(\'internat\',null)">+ Ny fr\u00e5ga</button></div>'
+    +'<p class="form-hint" style="margin-bottom:12px;">Dessa fr\u00e5gor visas f\u00f6r elever som \u00f6vernattade.</p>'
+    +'<div id="internat-questions-card"><p class="text-sm text-muted">Laddar...</p></div>'
     +'</div>';
+  loadEvalQuestions('internat', null, 'internat-questions-card');
 }
 function renderEvaluations(){
   document.getElementById('page-evaluations').innerHTML='<div class="page-header"><h1>📝 Utvärderingar</h1><p>Svar från elever efter besök</p></div><div style="text-align:center;padding:20px;color:#7a9485;">Laddar...</div>';
