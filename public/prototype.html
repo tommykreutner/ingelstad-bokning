@@ -185,7 +185,9 @@ tr:last-child td{border-bottom:none;}
 <div id="screen-login" style="display:none;min-height:100vh;flex-direction:column;background:linear-gradient(160deg,var(--forest-dark) 0%,var(--forest-mid) 100%);padding:20px;align-items:center;justify-content:center;">
   <div class="login-card">
     <div class="login-logo">
-      <div class="login-logo-icon">🌲</div>
+      <div class="login-logo-icon" style="background:var(--forest);padding:6px;">
+        <img src="/logotype_white.svg" alt="Ingelstadgymnasiet" style="height:26px;display:block;">
+      </div>
       <div>
         <h2 style="font-size:1rem;color:var(--forest);">Ingelstadgymnasiet</h2>
         <p style="font-size:.75rem;color:var(--muted);">Personalinloggning</p>
@@ -204,7 +206,7 @@ tr:last-child td{border-bottom:none;}
 <!-- APP -->
 <div id="screen-app">
   <div class="topbar">
-    <span class="topbar-brand">🌲 Ingelstad <small id="topbar-role"></small></span>
+    <span class="topbar-brand"><img src="/logotype_white.svg" alt="Ingelstadgymnasiet" style="height:28px;vertical-align:middle;margin-right:6px;"><small id="topbar-role" style="font-family:'Nunito',sans-serif;font-size:.7rem;opacity:.5;"></small></span>
     <span id="topbar-user" style="font-size:.78rem;opacity:.6;margin-right:4px;"></span>
     <button class="btn-logout" onclick="doLogout()">Logga ut</button>
   </div>
