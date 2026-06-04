@@ -722,51 +722,132 @@ function getPrevSchoolYear(){
   var d=new Date(),y=d.getFullYear(),m=d.getMonth()+1;
   return m>=8?((y-1)+'/'+(String(y).slice(2))):((y-2)+'/'+(String(y-1).slice(2)));
 }
-function buildStatsList(){
-  var currentSY=getCurrentSchoolYear(),prevSY=getPrevSchoolYear(),rows=[];
+function buildStatsList(forSY){
+  var currentSY=forSY||getCurrentSchoolYear();
+  var prevSY=(function(){
+    var parts=currentSY.split('/');
+    var y=parseInt(parts[0]);
+    return (y-1)+'/'+(String(y).slice(2));
+  })();
+  var rows=[];
   DB.bookings.forEach(function(b){
-    var sy=getSchoolYear(b.createdAt),include=false,note='';
+    var slotDate=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.date:null;}).filter(Boolean).sort()[0];
+    if(!slotDate) return;
+    var sy=getSchoolYear(slotDate),include=false,note='';
     if(sy===currentSY&&(b.grade==='9'||b.grade==='Har gått ut grundskolan')){include=true;note=b.grade==='9'?'Åk 9':'Ut grundskolan';}
-    if(sy===prevSY&&b.grade==='8'){include=true;note='Åk 8 (föreg. låsår)';}
+    if(sy===prevSY&&b.grade==='8'){include=true;note='Åk 8 (föreg. läsår)';}
     if(!include)return;
     var progs=[...new Set(b.slots.map(function(sid){
       var sl=DB.slots.find(function(s){return s.id===sid;});
       return sl?DB.programs.find(function(p){return p.id===sl.programId;})?.name:'';
     }).filter(Boolean))].join(', ');
-    rows.push({name:b.studentName,school:b.school,municipality:b.municipality||'',grade:b.grade,programs:progs,note:note,schoolYear:sy});
+    // Attendance
+    var progIds=[...new Set(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.programId:null;}).filter(Boolean))];
+    var atts=DB.attendance.filter(function(a){return a.booking_id===b.id;});
+    var attendance='pending';
+    if(atts.length>0){
+      var allPresent=progIds.every(function(pid){var a=atts.find(function(x){return x.program_id===pid;});return a&&a.status==='present';});
+      var allAbsent=progIds.every(function(pid){var a=atts.find(function(x){return x.program_id===pid;});return a&&a.status==='absent';});
+      if(allPresent) attendance='present';
+      else if(allAbsent) attendance='absent';
+      else attendance='partial';
+    }
+    rows.push({name:b.studentName,school:b.school,municipality:b.municipality||'',grade:b.grade,programs:progs,note:note,schoolYear:sy,attendance:attendance});
   });
   return rows.sort(function(a,b){return a.municipality.localeCompare(b.municipality)||a.school.localeCompare(b.school);});
 }
+function getAvailableSchoolYears(){
+  var years=new Set();
+  DB.bookings.forEach(function(b){
+    var slotDate=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.date:null;}).filter(Boolean).sort()[0];
+    if(slotDate) years.add(getSchoolYear(slotDate));
+  });
+  years.add(getCurrentSchoolYear());
+  return [...years].sort().reverse();
+}
+var selectedStatsYear=null;
 function renderStatsPage(){
-  var rows=buildStatsList();
-  var cSY=getCurrentSchoolYear(),pSY=getPrevSchoolYear();
-  var html='<div class="page-header"><h1>Statistik</h1><p>Innevarande låsår ('+cSY+'): åk 9 & gymnasie &mdash; Föregående ('+pSY+'): åk 8</p></div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">'
-    +'<button class="btn btn-secondary btn-sm" onclick="exportStatsCSV()">Exportera CSV</button>'
-    +'<button class="btn btn-secondary btn-sm" onclick="exportStatsPDF()">Exportera PDF</button>'
-    +'<button class="btn btn-primary btn-sm" onclick="emailStats()">Skicka till admin-mail</button>'
-    +'</div>';
-  if(!rows.length){html+='<div class="card text-muted text-sm">Inga relevanta bokningar hittades för dessa låsår.</div>';}
+  if(!selectedStatsYear) selectedStatsYear=getCurrentSchoolYear();
+  var rows=buildStatsList(selectedStatsYear);
+  var years=getAvailableSchoolYears();
+  var html='<div class="page-header"><h1>Statistik</h1><p>Antagningsunderlag per läsår</p></div>';
+  html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">';
+  html+='<label class="text-sm" style="font-weight:700;">Läsår:</label>';
+  html+='<select onchange="selectedStatsYear=this.value;renderStatsPage()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;">';
+  years.forEach(function(y){
+    html+='<option value="'+y+'"'+(y===selectedStatsYear?' selected':'')+'>'+y+'</option>';
+  });
+  html+='</select>';
+  html+='<button class="btn btn-secondary btn-sm" onclick="exportStatsCSV()">CSV</button>';
+  html+='<button class="btn btn-secondary btn-sm" onclick="exportStatsPDF()">PDF</button>';
+  html+='<button class="btn btn-secondary btn-sm" onclick="renderBookingHistoryExport()">Bokningshistorik</button>';
+  html+='</div>';
+  if(!rows.length){html+='<div class="card text-muted text-sm">Inga relevanta bokningar hittades för läsåret '+selectedStatsYear+'.</div>';}
   else{
-    html+='<div class="table-wrap"><table><thead><tr><th>Namn</th><th>Skola</th><th>Kommun</th><th>Klass</th><th>Provat på</th><th>Not</th></tr></thead><tbody>'
+    html+='<div class="table-wrap"><table><thead><tr><th>Namn</th><th>Skola</th><th>Kommun</th><th>Klass</th><th>Provat på</th><th>Närvaro</th><th>Not</th></tr></thead><tbody>'
       +rows.map(function(r){
+        var attLabel=r.attendance==='present'?'<span style="color:#16a34a;">✅ Kom</span>':r.attendance==='absent'?'<span style="color:#dc2626;">❌ Kom inte</span>':r.attendance==='partial'?'<span style="color:#f59e0b;">⚡ Delvis</span>':'<span style="color:#9ca3af;">—</span>';
         return '<tr><td><strong>'+r.name+'</strong></td><td>'+r.school+'</td><td>'+r.municipality+'</td>'
           +'<td>Åk '+r.grade+'</td><td class="text-sm td-m">'+r.programs+'</td>'
+          +'<td>'+attLabel+'</td>'
           +'<td><span class="badge badge-personal" style="font-size:.66rem;">'+r.note+'</span></td></tr>';
       }).join('')+'</tbody></table></div>'
       +'<p class="text-sm text-muted" style="margin-top:8px;">'+rows.length+' elever totalt</p>';
   }
   document.getElementById('page-stats').innerHTML=html;
 }
-function exportStatsCSV(){
-  var rows=buildStatsList();
-  var lines=['﻿Namn,Skola,Hemkommun,Klass,Provat på,Not,Låsår'];
-  rows.forEach(function(r){
-    lines.push([r.name,r.school,r.municipality,r.grade,r.programs,r.note,r.schoolYear]
+function renderBookingHistoryExport(){
+  var terms=[...new Set(DB.bookings.map(function(b){
+    var slotDate=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.date:null;}).filter(Boolean).sort()[0];
+    return slotDate?getTermId(slotDate):null;
+  }).filter(Boolean))].sort().reverse();
+  var selected=new Set();
+  var modal='<div class="modal-handle"></div><h3>Exportera bokningshistorik</h3>';
+  modal+='<p class="text-sm text-muted" style="margin-bottom:12px;">Välj en eller flera terminer:</p>';
+  modal+='<div id="hist-terms">';
+  terms.forEach(function(t){
+    modal+='<label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);"><input type="checkbox" value="'+t+'"> <span>'+t+'</span></label>';
+  });
+  modal+='</div>';
+  modal+='<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="doExportHistory()">Exportera CSV</button></div>';
+  showModal(modal);
+}
+function doExportHistory(){
+  var checked=[...document.querySelectorAll('#hist-terms input:checked')].map(function(el){return el.value;});
+  if(!checked.length){toast('Välj minst en termin','e');return;}
+  var attLabel=function(a){return a==='present'?'Kom':a==='absent'?'Kom inte':a==='partial'?'Kom delvis':'Ej bekräftat';};
+  var lines=['\ufeffBoknings-ID,Namn,Skola,Hemkommun,Klass,Program,Datum,Övernattning,Specialkost,Närvaro,Termin'];
+  DB.bookings.forEach(function(b){
+    var slotDate=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.date:null;}).filter(Boolean).sort()[0];
+    if(!slotDate) return;
+    var term=getTermId(slotDate);
+    if(!checked.includes(term)) return;
+    var progs=[...new Set(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?DB.programs.find(function(p){return p.id===s.programId;})?.name:'';}).filter(Boolean))].join(', ');
+    var progIds=[...new Set(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.programId:null;}).filter(Boolean))];
+    var atts=DB.attendance.filter(function(a){return a.booking_id===b.id;});
+    var att='pending';
+    if(atts.length>0){
+      var allP=progIds.every(function(pid){var a=atts.find(function(x){return x.program_id===pid;});return a&&a.status==='present';});
+      var allA=progIds.every(function(pid){var a=atts.find(function(x){return x.program_id===pid;});return a&&a.status==='absent';});
+      if(allP) att='present'; else if(allA) att='absent'; else att='partial';
+    }
+    lines.push([b.id,b.studentName,b.school,b.municipality||'',b.grade,progs,slotDate,b.overnight?'Ja':'Nej',b.specialFood||'',attLabel(att),term]
       .map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(','));
   });
   var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='statistik_provapaa.csv';a.click();
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bokningshistorik.csv';a.click();
+  closeModal();
+}
+function exportStatsCSV(){
+  var rows=buildStatsList(selectedStatsYear);
+  var attLabel=function(a){return a==='present'?'Kom':a==='absent'?'Kom inte':a==='partial'?'Kom delvis':'Ej bekräftat';};
+  var lines=['\ufeffNamn,Skola,Hemkommun,Klass,Provat på,Närvaro,Not,Läsår'];
+  rows.forEach(function(r){
+    lines.push([r.name,r.school,r.municipality,r.grade,r.programs,attLabel(r.attendance),r.note,r.schoolYear]
+      .map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(','));
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='statistik_'+selectedStatsYear.replace('/','_')+'.csv';a.click();
 }
 function exportStatsPDF(){
   var rows=buildStatsList();
