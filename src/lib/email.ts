@@ -46,11 +46,11 @@ function nl2br(text: string): string {
   return makeLink(text).replace(/\n/g, '<br>')
 }
 
-function buildHtmlEmail(sections: Array<{title?: string, content: string, highlight?: boolean}>): string {
+function buildHtmlEmail(sections: Array<{title?: string, content: string, highlight?: boolean, raw?: boolean}>): string {
   const sectionsHtml = sections.map(s => `
     <div style="margin-bottom:20px;">
       ${s.title ? `<div style="font-weight:700;color:#2d5a3d;font-size:13px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #c8ddd0;">${s.title}</div>` : ''}
-      <div style="color:#1a2e1e;line-height:1.7;${s.highlight?'background:#e8f4ed;padding:12px;border-radius:8px;border-left:4px solid #2d5a3d;':''}">${nl2br(s.content)}</div>
+      <div style="color:#1a2e1e;line-height:1.7;${s.highlight?'background:#e8f4ed;padding:12px;border-radius:8px;border-left:4px solid #2d5a3d;':''}">${s.raw ? s.content : nl2br(s.content)}</div>
     </div>
   `).join('')
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f7faf8;font-family:'Helvetica Neue',Arial,sans-serif;">
@@ -196,6 +196,7 @@ export async function sendFollowUpEmail(booking: {
     },
     {
       title: 'Lämna din utvärdering',
+      raw: true,
       content: `<a href="${evalUrl}" style="display:inline-block;background:#2d5a3d;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;">👉 Klicka här för att utvärdera ditt besök</a>\n\nLänken är giltig i 14 dagar.`
     }
   ])
