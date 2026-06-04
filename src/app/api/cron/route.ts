@@ -56,7 +56,7 @@ export async function GET() {
 
     // Skicka uppföljningsmail med boknings-id som kod
     try {
-      await sendFollowUpEmail(booking)
+      await sendFollowUpEmail({...booking, code: booking.id})
       await supabaseAdmin
         .from('bookings')
         .update({ follow_up_sent: true })
