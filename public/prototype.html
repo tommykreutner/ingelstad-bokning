@@ -834,7 +834,7 @@ function doExportHistory(){
     lines.push([b.id,b.studentName,b.school,b.municipality||'',b.grade,progs,slotDate,b.overnight?'Ja':'Nej',b.specialFood||'',attLabel(att),term]
       .map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(','));
   });
-  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var blob=new Blob([lines.join(String.fromCharCode(10))],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bokningshistorik.csv';a.click();
   closeModal();
 }
