@@ -813,7 +813,12 @@ function renderDashboard(){
 
         if(currentUser.role==='personal'){
           const upcoming=bks.filter(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.programId===mp&&s.date>=today&&s.date<=termEnd;}));
-          return '<div class="stat-card" style="grid-column:1/-1;"><div class="stat-label">Kommande bokningar</div><div class="stat-val">'+upcoming.length+'</div><div class="stat-sub">fram till terminens slut</div></div>';
+          const unconfirmed=bks.filter(b=>{
+            const slotDate=b.slots.map(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.programId===mp?s.date:null;}).filter(Boolean).sort().pop();
+            return slotDate&&slotDate<today&&!DB.attendance.find(a=>a.booking_id===b.id&&a.program_id===mp);
+          });
+          return '<div class="stat-card"><div class="stat-label">Kommande bokningar</div><div class="stat-val">'+upcoming.length+'</div><div class="stat-sub">fram till terminens slut</div></div>'
+            +(unconfirmed.length>0?'<div class="stat-card" style="grid-column:1/-1;border-left:4px solid #f59e0b;"><div class="stat-label">⚠️ Obekräftade besök</div><div class="stat-val" style="color:#d97706;">'+unconfirmed.length+'</div><div class="stat-sub">passerade besök utan närvaro-markering</div></div>':'');
         }
 
         if(currentUser.role==='internat'){
