@@ -218,6 +218,7 @@ tr:last-child td{border-bottom:none;}
     <div id="page-internatadmin" class="page-view"></div>
     <div id="page-kokadmin" class="page-view"></div>
     <div id="page-stats" class="page-view"></div>
+    <div id="page-evaluations" class="page-view"></div>
   </div>
   <div class="bottom-nav" id="bottom-nav"></div>
 </div>
@@ -619,6 +620,7 @@ function navItems(){
   if(r==='internat') items.push({id:'internatadmin',icon:'⚙️',label:'Admin'});
   if(r==='kok') items.push({id:'bookings',icon:'📋',label:'Bokningar'});
   if(r==='kok') items.push({id:'kokadmin',icon:'⚙️',label:'Inställningar'});
+  if(r==='admin') items.push({id:'evaluations',icon:'📝',label:'Svar'});
   if(r==='admin') items.push({id:'admin',icon:'⚙️',label:'Admin'});
   return items;
 }
@@ -628,7 +630,7 @@ function showPage(id){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
   const page=document.getElementById('page-'+id),btn=document.getElementById('bnav-'+id);
   if(page)page.classList.add('active');if(btn)btn.classList.add('active');
-  ({dashboard:renderDashboard,bookings:renderBookings,slots:renderSlots,overnight:renderOvernight,admin:renderAdmin,stats:renderStatsPage,progadmin:renderProgAdmin,internatadmin:renderInternatAdmin,kokadmin:renderKokAdmin})[id]?.();
+  ({dashboard:renderDashboard,bookings:renderBookings,slots:renderSlots,overnight:renderOvernight,admin:renderAdmin,stats:renderStatsPage,progadmin:renderProgAdmin,internatadmin:renderInternatAdmin,kokadmin:renderKokAdmin,evaluations:renderEvaluations})[id]?.();
 }
 
 // DASHBOARD
@@ -1148,6 +1150,55 @@ function renderInternatAdmin(){
     +'<div class="flex-between mb-8"><p class="text-sm fw-6">St\u00e4ngda n\u00e4tter</p></div>'
     +closedDisplay()
     +'</div>';
+}
+function renderEvaluations(){
+  document.getElementById('page-evaluations').innerHTML='<div class="page-header"><h1>📝 Utvärderingar</h1><p>Svar från elever efter besök</p></div><div style="text-align:center;padding:20px;color:#7a9485;">Laddar...</div>';
+  fetch('/api/evaluations').then(r=>r.json()).then(data=>{
+    if(!Array.isArray(data)||!data.length){
+      document.getElementById('page-evaluations').innerHTML='<div class="page-header"><h1>📝 Utvärderingar</h1><p>Svar från elever efter besök</p></div><div class="card text-muted text-sm">Inga utvärderingar inlämnade ännu.</div>';
+      return;
+    }
+    var html='<div class="page-header"><h1>📝 Utvärderingar</h1><p>'+data.length+' svar inlämnade</p></div>';
+    // Summary stats
+    var generalScores=data.filter(e=>e.general_score).map(e=>e.general_score);
+    var avgGeneral=generalScores.length?Math.round(generalScores.reduce((a,b)=>a+b,0)/generalScores.length*10)/10:null;
+    var wouldApply=data.filter(e=>e.would_apply===true).length;
+    var wouldNotApply=data.filter(e=>e.would_apply===false).length;
+    var unsure=data.filter(e=>e.would_apply===null&&e.id).length;
+    html+='<div class="stat-grid" style="margin-bottom:20px;">';
+    html+='<div class="stat-card"><div class="stat-label">Snittbetyg</div><div class="stat-val">'+(avgGeneral?avgGeneral+' ⭐':'—')+'</div><div class="stat-sub">av 5</div></div>';
+    html+='<div class="stat-card"><div class="stat-label">Skulle söka</div><div class="stat-val" style="color:#16a34a;">'+wouldApply+'</div><div class="stat-sub">Ja</div></div>';
+    html+='<div class="stat-card"><div class="stat-label">Skulle inte söka</div><div class="stat-val" style="color:#dc2626;">'+wouldNotApply+'</div><div class="stat-sub">Nej</div></div>';
+    html+='</div>';
+    html+='<div class="sec-title">Alla svar</div>';
+    data.forEach(e=>{
+      var b=e.bookings;
+      var progHtml='';
+      if(e.program_scores){
+        Object.entries(e.program_scores).forEach(([pid,ps])=>{
+          var prog=DB.programs.find(p=>p.id===pid);
+          var pname=prog?prog.icon+' '+prog.name:pid;
+          progHtml+='<div style="margin-top:8px;padding:8px;background:#f7faf8;border-radius:6px;"><strong class="text-sm">'+pname+'</strong>';
+          if(ps.score) progHtml+=' '+'⭐'.repeat(ps.score);
+          if(ps.answers){
+            Object.values(ps.answers).forEach(a=>{
+              progHtml+='<div class="text-sm" style="margin-top:4px;color:#4a6552;">'+a+'</div>';
+            });
+          }
+          progHtml+='</div>';
+        });
+      }
+      html+='<div class="card" style="margin-bottom:12px;">';
+      html+='<div class="flex-between mb-8"><strong>'+(b?b.student_name:'Okänd')+'</strong><span class="text-sm text-muted">'+(b?b.school+', åk '+b.grade:'')+'</span></div>';
+      html+='<div class="text-sm" style="margin-bottom:6px;">'+(e.general_score?'⭐'.repeat(e.general_score)+' ('+e.general_score+'/5)':'Inget betyg')+(e.would_apply===true?' · Skulle söka ✅':e.would_apply===false?' · Skulle inte söka ❌':' · Vet inte 🤔')+'</div>';
+      if(e.general_comment) html+='<div class="text-sm" style="color:#4a6552;font-style:italic;margin-bottom:6px;">"'+e.general_comment+'"</div>';
+      html+=progHtml;
+      html+='</div>';
+    });
+    document.getElementById('page-evaluations').innerHTML=html;
+  }).catch(()=>{
+    document.getElementById('page-evaluations').innerHTML='<div class="page-header"><h1>📝 Utvärderingar</h1></div><div class="error-box">Kunde inte ladda utvärderingar.</div>';
+  });
 }
 function renderKokAdmin(){
   const kitchenEmail=DB.settings.kitchenEmail||'';
