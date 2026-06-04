@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Utvärdering — Ingelstadgymnasiet</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#f7faf8;color:#1a2e1e;min-height:100vh;padding:20px;}
+.wrap{max-width:600px;margin:0 auto;}
+.header{background:#2d5a3d;padding:24px 28px;border-radius:12px 12px 0 0;color:#fff;}
+.header h1{font-size:1.3rem;font-weight:700;}
+.header p{color:#a8d4b8;font-size:.85rem;margin-top:4px;}
+.card{background:#fff;padding:28px;border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(45,90,61,.08);}
+.section{margin-bottom:28px;}
+.section-title{font-weight:700;color:#2d5a3d;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #c8ddd0;}
+.question{margin-bottom:20px;}
+.question label{display:block;font-weight:600;margin-bottom:8px;font-size:.95rem;}
+.stars{display:flex;gap:8px;margin-bottom:4px;}
+.star{font-size:2rem;cursor:pointer;opacity:.3;transition:opacity .15s;}
+.star.active{opacity:1;}
+textarea{width:100%;padding:12px;border:1.5px solid #c8ddd0;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.95rem;resize:vertical;min-height:80px;}
+textarea:focus{outline:none;border-color:#2d5a3d;}
+.radio-group{display:flex;gap:10px;flex-wrap:wrap;}
+.radio-opt{padding:8px 16px;border:1.5px solid #c8ddd0;border-radius:8px;cursor:pointer;font-size:.9rem;transition:all .15s;}
+.radio-opt.selected{background:#2d5a3d;color:#fff;border-color:#2d5a3d;}
+.btn{width:100%;padding:14px;background:#2d5a3d;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:8px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.info-box{background:#e8f4ed;border-left:4px solid #2d5a3d;padding:12px 16px;border-radius:8px;font-size:.9rem;margin-bottom:20px;}
+.error-box{background:#fee2e2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:8px;font-size:.9rem;margin-bottom:20px;color:#dc2626;}
+.success-wrap{text-align:center;padding:40px 20px;}
+.success-wrap .icon{font-size:3rem;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>🌲 Ingelstadgymnasiet</h1>
+    <p>Utvärdering av prova-på-besök</p>
+  </div>
+  <div class="card" id="content">
+    <div style="text-align:center;padding:40px;color:#7a9485;">Laddar...</div>
+  </div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const kod = params.get('kod');
+let bookingData = null;
+let scores = {};
+let progScores = {};
+
+async function init() {
+  if (!kod) { showError('Ingen bokningskod angiven.'); return; }
+  const res = await fetch('/api/evaluations?code=' + kod);
+  const data = await res.json();
+  if (data.error) { showError(data.error); return; }
+  if (data.already_submitted) { showAlready(); return; }
+  bookingData = data.booking;
+  renderForm();
+}
+
+function showError(msg) {
+  document.getElementById('content').innerHTML = '<div class="error-box">⚠️ ' + msg + '</div>';
+}
+
+function showAlready() {
+  document.getElementById('content').innerHTML = '<div class="success-wrap"><div class="icon">✅</div><h2>Tack!</h2><p style="color:#7a9485;margin-top:8px;">Du har redan lämnat in din utvärdering.</p></div>';
+}
+
+function getPrograms() {
+  const slots = bookingData.booking_slots || [];
+  const seen = new Set();
+  const progs = [];
+  slots.forEach(bs => {
+    const s = bs.slots;
+    if (!s || !s.programs) return;
+    const pid = s.program_id;
+    if (!seen.has(pid)) {
+      seen.add(pid);
+      progs.push({ id: pid, name: s.programs.name, icon: s.programs.icon, questions: s.programs.eval_questions || [] });
+    }
+  });
+  return progs;
+}
+
+function starHtml(key, label) {
+  return `<div class="question">
+    <label>${label}</label>
+    <div class="stars" id="stars-${key}">
+      ${[1,2,3,4,5].map(n => `<span class="star" data-key="${key}" data-val="${n}" onclick="setStar('${key}',${n})">⭐</span>`).join('')}
+    </div>
+  </div>`;
+}
+
+function setStar(key, val) {
+  if (key.startsWith('prog-')) progScores[key] = val;
+  else scores[key] = val;
+  document.querySelectorAll('.star[data-key="' + key + '"]').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+  });
+}
+
+function renderForm() {
+  const progs = getPrograms();
+  const b = bookingData;
+  let html = `<div class="info-box">Tack för ditt besök, <strong>${b.student_name}</strong>! Vi vill gärna veta hur det gick.</div>`;
+
+  html += `<div class="section"><div class="section-title">Om besöket på Ingelstadgymnasiet</div>`;
+  html += starHtml('general', 'Hur var ditt helhetsintryck av skolan? (1–5 stjärnor)');
+  html += `<div class="question"><label>Vad tyckte du om ditt besök? (fritext)</label><textarea id="general-comment" placeholder="Skriv gärna vad som var bra och vad som kan förbättras..."></textarea></div>`;
+  html += `<div class="question"><label>Kan du tänka dig att söka till Ingelstadgymnasiet?</label><div class="radio-group">
+    <div class="radio-opt" onclick="setWouldApply(true,this)">Ja</div>
+    <div class="radio-opt" onclick="setWouldApply(false,this)">Nej</div>
+    <div class="radio-opt" onclick="setWouldApply(null,this)">Vet inte</div>
+  </div></div></div>`;
+
+  progs.forEach(p => {
+    html += `<div class="section"><div class="section-title">${p.icon} ${p.name}</div>`;
+    html += starHtml('prog-' + p.id, 'Hur var ditt intryck av ' + p.name + '? (1–5 stjärnor)');
+    if (p.questions && p.questions.length) {
+      p.questions.forEach((q, i) => {
+        html += `<div class="question"><label>${q}</label><textarea id="prog-q-${p.id}-${i}" placeholder="Ditt svar..."></textarea></div>`;
+      });
+    }
+    html += `</div>`;
+  });
+
+  html += `<button class="btn" onclick="submitForm()">Skicka in utvärdering</button>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+let wouldApply = null;
+function setWouldApply(val, el) {
+  wouldApply = val;
+  document.querySelectorAll('.radio-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function submitForm() {
+  const progs = getPrograms();
+  const programScores = {};
+  progs.forEach(p => {
+    const key = 'prog-' + p.id;
+    const scoreVal = progScores[key] || null;
+    const answers = {};
+    (p.questions || []).forEach((q, i) => {
+      const el = document.getElementById('prog-q-' + p.id + '-' + i);
+      if (el && el.value) answers[i] = el.value;
+    });
+    programScores[p.id] = { score: scoreVal, answers };
+  });
+
+  const body = {
+    booking_id: bookingData.id,
+    general_score: scores['general'] || null,
+    general_comment: document.getElementById('general-comment')?.value || null,
+    program_scores: programScores,
+    would_apply: wouldApply,
+  };
+
+  const res = await fetch('/api/evaluations', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.error) { alert('Fel: ' + data.error); return; }
+
+  document.getElementById('content').innerHTML = `<div class="success-wrap">
+    <div class="icon">🎉</div>
+    <h2>Tack för din utvärdering!</h2>
+    <p style="color:#7a9485;margin-top:8px;">Vi tar dina synpunkter på allvar och arbetar ständigt för att förbättra prova-på-dagarna.</p>
+  </div>`;
+}
+
+init();
+</script>
+</body>
+</html>
