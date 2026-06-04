@@ -1,63 +1,71 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendFollowUpEmail } from '@/lib/email'
 
 export async function GET() {
   const today = new Date().toISOString().slice(0, 10)
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
 
-  // Find bookings where:
-  // 1. follow_up_sent is false
-  // 2. Last slot date is before today (visit has passed)
-  // 3. Either all programs have marked attendance OR it's been 7 days since last slot
-  const { data: bookings } = await supabaseAdmin
+  // Hitta bokningar där besöket passerat, uppföljning ej skickad, ej redan utvärderad
+  const { data: bookings, error } = await supabaseAdmin
     .from('bookings')
-    .select('*, booking_slots(slot_id, slots(date, program_id))')
-    .eq('cancelled', false)
+    .select(`
+      id, student_name, student_email, guardian_email,
+      follow_up_sent,
+      booking_slots ( slots ( date ) )
+    `)
     .eq('follow_up_sent', false)
 
-  if (!bookings?.length) return NextResponse.json({ processed: 0 })
+  if (error) {
+    console.error('CRON FEL:', error.message)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
-  let processed = 0
+  let sent = 0
+  let skipped = 0
 
-  for (const booking of bookings) {
-    const slots = booking.booking_slots?.map((bs: any) => bs.slots).filter(Boolean) || []
-    const dates = slots.map((s: any) => s.date).sort()
+  for (const booking of (bookings || [])) {
+    // Hitta senaste slot-datum för bokningen
+    const dates = (booking.booking_slots || [])
+      .map((bs: any) => bs.slots?.date)
+      .filter(Boolean)
+      .sort()
     const lastDate = dates[dates.length - 1]
-    if (!lastDate || lastDate >= today) continue
 
-    const daysSince = Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000)
+    // Skicka bara om besöket passerat (minst 1 dag sedan)
+    if (!lastDate || lastDate >= today) {
+      skipped++
+      continue
+    }
 
-    // Get attendance records for this booking
-    const programIds = [...new Set(slots.map((s: any) => s.program_id).filter(Boolean))] as string[]
-    const { data: attendance } = await supabaseAdmin
-      .from('attendance')
-      .select('*')
+    // Kolla om eleven redan svarat
+    const { data: existing } = await supabaseAdmin
+      .from('eval_answers')
+      .select('id')
       .eq('booking_id', booking.id)
+      .limit(1)
 
-    const allMarked = programIds.length > 0 && programIds.every((pid: string) =>
-      attendance?.find((a: any) => a.program_id === pid)
-    )
-    const atLeastOnePresent = attendance?.some((a: any) => a.status === 'present')
-    const allAbsent = (attendance?.length ?? 0) > 0 && attendance?.every((a: any) => a.status === 'absent')
+    if (existing && existing.length > 0) {
+      // Redan svarat — markera som skickad ändå så vi inte kollar igen
+      await supabaseAdmin
+        .from('bookings')
+        .update({ follow_up_sent: true })
+        .eq('id', booking.id)
+      skipped++
+      continue
+    }
 
-    // Send if: (all marked AND at least one present) OR (7 days passed AND at least one present)
-    // Never send if all absent
-    const shouldSend = !allAbsent && atLeastOnePresent && (allMarked || daysSince >= 7)
-
-    if (shouldSend) {
-      await sendFollowUpEmail({
-        id: booking.id,
-        student_name: booking.student_name,
-        student_email: booking.student_email,
-        guardian_email: booking.guardian_email,
-        code: booking.code,
-      })
-      await supabaseAdmin.from('bookings').update({ follow_up_sent: true }).eq('id', booking.id)
-      processed++
+    // Skicka uppföljningsmail med boknings-id som kod
+    try {
+      await sendFollowUpEmail(booking)
+      await supabaseAdmin
+        .from('bookings')
+        .update({ follow_up_sent: true })
+        .eq('id', booking.id)
+      sent++
+    } catch (err: any) {
+      console.error('CRON SMTP FEL för', booking.id, err?.message)
     }
   }
 
-  return NextResponse.json({ processed, checked: bookings.length })
+  return NextResponse.json({ ok: true, sent, skipped })
 }
-

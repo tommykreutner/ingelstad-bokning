@@ -140,7 +140,7 @@ export async function sendBookingConfirmation(booking: {
       from: `${settings.school_name || 'Ingelstadgymnasiet'} <${settings.smtp_user}>`,
       to: [booking.student_email, booking.guardian_email].filter(Boolean).join(', '),
       bcc: bcc.join(', ') || undefined,
-      subject: `Bokningsbekräftelse – Prova-på-dag (${booking.code})`,
+      subject: `Bokningsbekräftelse – Prova-på-dag (${booking.id})`,
       html, text,
     })
   } catch (err: any) {
@@ -187,7 +187,7 @@ export async function sendFollowUpEmail(booking: {
 }) {
   const settings = await getSettings()
   if (!settings) return
-  const evalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://boka.ingelstad.nu'}/utvardera.html?kod=${booking.code}`
+  const evalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://boka.ingelstad.nu'}/utvardera.html?kod=${booking.id}`
   const html = buildHtmlEmail([
     {
       title: 'Tack för ditt besök!',
