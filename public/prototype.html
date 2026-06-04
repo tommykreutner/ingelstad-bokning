@@ -228,7 +228,7 @@ tr:last-child td{border-bottom:none;}
 <!-- BOOKING FLOW -->
 <div id="screen-booking">
   <div class="bk-header">
-    <div class="bk-logo">🌲</div>
+    <div class="bk-logo" style="background:transparent;padding:2px;"><img src="/logotype_white.svg" alt="Ingelstadgymnasiet" style="height:28px;display:block;"></div>
     <div style="flex:1;"><h1 style="font-size:1.05rem;color:#fff;">Prova-på-dagar</h1><p style="font-size:.72rem;opacity:.65;color:#fff;">Ingelstadgymnasiet</p></div>
     <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none;" onclick="showBooking()">← Tillbaka</button>
   </div>
@@ -890,7 +890,7 @@ function renderDashboard(){
   const prog=currentUser.role==='personal'?DB.programs.find(p=>p.id===mp):null;
   const ovUsed=DB.overnight.reduce((a,o)=>a+o.booked,0);
   document.getElementById('page-dashboard').innerHTML=`
-    <div class="page-header"><h1>${prog?prog.icon+' '+prog.name:'🌲 Ingelstadgymnasiet'}</h1><p>Prova-på-dagar — översikt</p></div>
+    <div class="page-header"><h1>${prog?prog.icon+' '+prog.name:'Ingelstadgymnasiet'}</h1><p>Prova-på-dagar — översikt</p></div>
     <div class="stat-grid">
       ${(()=>{
         const today=new Date().toISOString().slice(0,10);
