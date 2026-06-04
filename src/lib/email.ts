@@ -181,3 +181,34 @@ export async function sendAdminNotification({ to, subject, body }: { to: string[
     })
   } catch (err) { console.error('Kunde inte skicka adminnotifiering:', err) }
 }
+
+export async function sendFollowUpEmail(booking: {
+  id: string; student_name: string; student_email: string; guardian_email: string; code: string
+}) {
+  const settings = await getSettings()
+  if (!settings) return
+  const evalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://boka.ingelstad.nu'}/utvardera.html?kod=${booking.code}`
+  const html = buildHtmlEmail([
+    {
+      title: 'Tack för ditt besök!',
+      content: `Hej ${booking.student_name}!\n\nTack för att du besökte oss på Ingelstadgymnasiet. Vi hoppas att du fick en bra bild av vad vi erbjuder.\n\nVi skulle uppskatta om du tog några minuter att fylla i vår korta utvärdering — din feedback hjälper oss att bli bättre!`,
+      highlight: true
+    },
+    {
+      title: 'Lämna din utvärdering',
+      content: `<a href="${evalUrl}" style="display:inline-block;background:#2d5a3d;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;">👉 Klicka här för att utvärdera ditt besök</a>\n\nLänken är giltig i 14 dagar.`
+    }
+  ])
+  try {
+    const t = await createTransporter()
+    await t.sendMail({
+      from: `${settings.school_name || 'Ingelstadgymnasiet'} <${settings.smtp_user}>`,
+      to: [booking.student_email, booking.guardian_email].filter(Boolean).join(', '),
+      subject: `Hur var ditt besök på Ingelstadgymnasiet?`,
+      html,
+      text: `Hej ${booking.student_name}!\n\nTack för ditt besök! Lämna gärna din utvärdering här: ${evalUrl}\n\nLänken är giltig i 14 dagar.`,
+    })
+  } catch (err: any) {
+    console.error('SMTP FEL uppföljning:', err?.message)
+  }
+}
