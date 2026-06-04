@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendFollowUpEmail } from '@/lib/email'
 
@@ -39,7 +39,7 @@ export async function GET() {
       attendance?.find((a: any) => a.program_id === pid)
     )
     const atLeastOnePresent = attendance?.some((a: any) => a.status === 'present')
-    const allAbsent = attendance?.length > 0 && attendance.every((a: any) => a.status === 'absent')
+    const allAbsent = (attendance?.length ?? 0) > 0 && attendance?.every((a: any) => a.status === 'absent')
 
     // Send if: (all marked AND at least one present) OR (7 days passed AND at least one present)
     // Never send if all absent
@@ -60,3 +60,4 @@ export async function GET() {
 
   return NextResponse.json({ processed, checked: bookings.length })
 }
+
