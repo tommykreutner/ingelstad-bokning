@@ -1120,6 +1120,15 @@ function renderBookings(activeDate){
               +'<button class="btn btn-sm" style="padding:4px 10px;background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\''+pid+'\',\'absent\')">❌ Kom inte</button>'
               +'</div>';
           }).join('');
+          if(b.overnight){
+            var attOv=DB.attendance.find(function(a){return a.booking_id===b.id&&a.program_id==='internat';});
+            var stOv=attOv?attOv.status:null;
+            rows+='<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">'
+              +'<span style="font-size:.78rem;flex:1;">🛏️ Internat</span>'
+              +'<button class="btn btn-sm" style="padding:4px 10px;background:'+(stOv==='present'?'#16a34a':'#f0fdf4')+';color:'+(stOv==='present'?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="markAttendance(\''+b.id+'\',\'internat\',\'present\')">✅ Kom</button>'
+              +'<button class="btn btn-sm" style="padding:4px 10px;background:'+(stOv==='absent'?'#dc2626':'#fff5f5')+';color:'+(stOv==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\'internat\',\'absent\')">❌ Kom inte</button>'
+              +'</div>';
+          }
           return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
             +'<div class="text-sm" style="font-weight:700;margin-bottom:4px;">Närvaro per program</div>'
             +rows+'</div>';
