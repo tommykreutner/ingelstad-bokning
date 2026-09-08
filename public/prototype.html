@@ -243,7 +243,7 @@ tr:last-child td{border-bottom:none;}
 
 <script>
 const DB = {
-  attendance:[],
+  attendance:[],checklistItems:[],checklistCompletions:[],
   settings:{schoolName:'Ingelstadgymnasiet',senderEmail:'provapå@ingelstad.nu',adminEmails:['admin@ingelstad.nu','rektor@ingelstad.nu'],kitchenEmail:'koket@ingelstad.nu',internatEmail:'internat@ingelstad.nu',smtpHost:'smtp.ingelstad.nu',smtpPort:'587',smtpUser:'noreply@ingelstad.nu',smtpPass:'',overnightCapacity:3,internatEmailText:'Välkommen till internatet! Incheckning sker i receptionen från kl 17:00. Frukost serveras 07:00–08:00. Ta med sängkläder eller hyr på plats.',adminEmailText:'Välkommen till Ingelstadgymnasiet! Vi ser fram emot ditt besök. Ta med bekräftelsekoden nedan.\n\nParkering finns vid huvudentrén. Check-in sker i receptionen kl 08:00.',blockedDates:['2026-04-27','2026-04-28','2026-04-29','2026-04-30','2026-05-01'],openTerms:['VT26'],termHistory:['HT24','VT24']},
   programs:[
     {id:'na',slotMode:'closed',name:'Naturvetenskap (NV)',icon:'🔬',isNV:true,hidden:true,defaultCapacity:8,emailText:'NV-programmet välkomnar dig! Ta med din vetenskapliga nyfikenhet. Vi ses i labbsalen.',nvCompatible:['djursjuk','hasthallning','lb-lantbruk'],description:'Utforska naturens lagar med experiment och teori.'},
@@ -596,13 +596,17 @@ function loginAs(user){
     fetch('/api/bookings').then(r=>r.json()),
     fetch('/api/staff').then(r=>r.json()),
     fetch('/api/attendance').then(r=>r.json()),
-  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes])=>{
+    fetch('/api/checklist-items').then(r=>r.json()),
+    fetch('/api/checklist-completions').then(r=>r.json()),
+  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
     if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
     // Build roomBookings from bookings
     DB.roomBookings=DB.bookings.flatMap(b=>b.roomBookings||[]);
     if(Array.isArray(attendanceRes)) DB.attendance=attendanceRes;
+    if(Array.isArray(checklistItemsRes)) DB.checklistItems=checklistItemsRes;
+    if(Array.isArray(checklistCompletionsRes)) DB.checklistCompletions=checklistCompletionsRes;
     else DB.attendance=[];
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
@@ -1085,6 +1089,23 @@ function renderBookings(activeDate){
               +'<button class="btn btn-sm" style="background:'+(status==='present'?'#16a34a':'#f0fdf4')+';color:'+(status==='present'?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="markAttendance(\''+b.id+'\',\''+mp+'\',\'present\')">✅ Kom</button>'
               +'<button class="btn btn-sm" style="background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\''+mp+'\',\'absent\')">❌ Kom inte</button>'
               +'</div></div>';
+          })()
+          +(function(){
+            if(!DB.checklistItems||!DB.checklistItems.length) return '';
+            var today=new Date().toISOString().slice(0,10);
+            var lastSlotDate=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.date:'';}).filter(Boolean).sort().pop();
+            if(!lastSlotDate||lastSlotDate>today) return '';
+            var rows=DB.checklistItems.map(function(item){
+              var comp=DB.checklistCompletions.find(function(cc){return cc.booking_id===b.id&&cc.item_id===item.id;});
+              var done=comp&&comp.completed;
+              return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">'
+                +'<span style="font-size:.9rem;flex:1;">'+item.icon+' '+item.label+'</span>'
+                +'<button class="btn btn-sm" style="padding:3px 12px;background:'+(done?'#16a34a':'#f0fdf4')+';color:'+(done?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="toggleChecklist(\''+b.id+'\',\''+item.id+'\','+(done?'true':'false')+')">'+(done?'✅ Klar':'Kryssa i')+'</button>'
+                +'</div>';
+            }).join('');
+            return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
+              +'<div class="text-sm" style="font-weight:700;margin-bottom:6px;">Checklista</div>'
+              +rows+'</div>';
           })()
           +'</div></div>';
       });
@@ -1831,6 +1852,25 @@ function getOvernightNightsForBooking(booking) {
   return [prevDay(day1), day1];
 }
 
+function toggleChecklist(bookingId, itemId, currentlyDone){
+  var completed=!currentlyDone;
+  fetch('/api/checklist-completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({booking_id:bookingId,item_id:itemId,completed:completed,completed_by:currentUser.name||currentUser.id})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.error){toast(data.error,'e');return;}
+    if(completed){
+      var existing=DB.checklistCompletions.findIndex(function(cc){return cc.booking_id===bookingId&&cc.item_id===itemId;});
+      if(existing>=0) DB.checklistCompletions[existing]=data;
+      else DB.checklistCompletions.push(data);
+    } else {
+      DB.checklistCompletions=DB.checklistCompletions.filter(function(cc){return !(cc.booking_id===bookingId&&cc.item_id===itemId);});
+    }
+    renderBookings(document.querySelector('.day-card.selected')?.dataset?.date);
+    toast(completed?'Ikryssad!':'Avrullad');
+  }).catch(function(){toast('Fel','e');});
+}
 function renderOvernight(){
   var today = new Date().toISOString().slice(0,10);
   var termEnd = DB.settings.openTerms.length ? termDateRange(DB.settings.openTerms[0]).end : '9999-12-31';
