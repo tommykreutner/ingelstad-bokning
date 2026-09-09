@@ -1983,6 +1983,20 @@ function renderOvernight(){
             +'<button class="btn btn-sm" style="background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendanceOvernight(\''+b.id+'\',\'absent\')">❌ Dök inte upp</button>'
             +'</div></div>';
         })()
+        +(function(){
+          if(!DB.checklistItems||!DB.checklistItems.length) return '';
+          var rows=DB.checklistItems.map(function(item){
+            var comp=DB.checklistCompletions.find(function(cc){return cc.booking_id===b.id&&cc.item_id===item.id;});
+            var done=comp&&comp.completed;
+            return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">'
+              +'<span style="font-size:.9rem;flex:1;">'+item.icon+' '+item.label+'</span>'
+              +'<button id="chk-'+b.id+'-'+item.id+'" class="btn btn-sm" style="padding:3px 12px;background:'+(done?'#16a34a':'#f0fdf4')+';color:'+(done?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="toggleChecklist(\''+b.id+'\',\''+item.id+'\','+(done?'true':'false')+')">'+(done?'✅ Klar':'Kryssa i')+'</button>'
+              +'</div>';
+          }).join('');
+          return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
+            +'<div class="text-sm" style="font-weight:700;margin-bottom:6px;">Checklista</div>'
+            +rows+'</div>';
+        })()
         +'</div>';
     });
   }
