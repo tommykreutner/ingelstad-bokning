@@ -598,7 +598,8 @@ function loginAs(user){
     fetch('/api/attendance').then(r=>r.json()),
     fetch('/api/checklist-items').then(r=>r.json()),
     fetch('/api/checklist-completions').then(r=>r.json()),
-  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes])=>{
+    fetch('/api/user-programs?user_id='+user.id).then(r=>r.json()),
+  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes,userProgramsRes])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
     if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
@@ -607,6 +608,8 @@ function loginAs(user){
     if(Array.isArray(attendanceRes)) DB.attendance=attendanceRes;
     if(Array.isArray(checklistItemsRes)) DB.checklistItems=checklistItemsRes;
     if(Array.isArray(checklistCompletionsRes)) DB.checklistCompletions=checklistCompletionsRes;
+    var extraProgIds=Array.isArray(userProgramsRes)?userProgramsRes.map(function(up){return up.program_id;}):[];
+    currentUser.programIds=[...new Set([currentUser.program].concat(extraProgIds).filter(Boolean))];
     else DB.attendance=[];
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
@@ -2440,20 +2443,26 @@ function addUserModal(){showModal(`<div class="modal-handle"></div><h3>Ny använ
   <div class="form-group"><label>Lösenord</label><input type="password" id="nu-p"></div>
   <div class="form-group"><label>Roll</label><select id="nu-r" onchange="document.getElementById('nu-pw').style.display=this.value==='personal'?'block':'none'">
     <option value="personal">Personal</option><option value="internat">Internatansvarig</option><option value="kok">Köket</option><option value="admin">Admin</option></select></div>
-  <div class="form-group" id="nu-pw"><label>Program</label><select id="nu-prog">
-    ${DB.programs.map(p=>`<option value="${p.id}">${p.icon} ${p.name}</option>`).join('')}</select></div>
+  <div class="form-group" id="nu-pw"><label>Program (kan välja flera)</label>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+    ${DB.programs.map(p=>`<label style="display:flex;align-items:center;gap:8px;font-size:.9rem;"><input type="checkbox" class="nu-prog-cb" value="${p.id}"> ${p.icon} ${p.name}</label>`).join('')}
+    </div></div>
   <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveNewUser()">Spara</button></div>`);}
 function saveNewUser(){
   const n=document.getElementById('nu-n').value.trim(),i=document.getElementById('nu-i').value.trim(),p=document.getElementById('nu-p').value,r=document.getElementById('nu-r').value;
   if(!n||!i||!p){toast('Fyll i alla fält','e');return;}
   if(DB.users.find(u=>u.id===i)){toast('Användarnamnet är taget','e');return;}
   const em=document.getElementById('nu-e').value;
-  const prog=r==='personal'?document.getElementById('nu-prog').value:null;
+  const progIds=r==='personal'?Array.from(document.querySelectorAll('.nu-prog-cb:checked')).map(function(cb){return cb.value;}):[];
+  const prog=progIds.length?progIds[0]:null;
   fetch('/api/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:i,name:n,email:em,role:r,programId:prog,password:p})})
     .then(r=>r.json())
     .then(data=>{
       if(data.error){toast(data.error,'e');return;}
       DB.users.push({id:data.id,name:data.name,role:data.role,program:data.program_id,email:data.email,pass:''});
+      if(progIds.length>1){
+        fetch('/api/user-programs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:data.id,program_ids:progIds})});
+      }
       closeModal();renderAdmin();toast('Användare skapad!');
     })
     .catch(()=>toast('Fel vid skapande','e'));
@@ -2464,10 +2473,19 @@ function editUserModal(id){
     <div class="form-group"><label>Namn</label><input type="text" id="eu-n" value="${u.name||''}"></div>
     <div class="form-group"><label>E-postadress</label><input type="email" id="eu-e" value="${u.email||''}"></div>
   <div class="form-group"><label>Nytt lösenord (tomt = oförändrat)</label><input type="password" id="eu-p"></div>
-    ${u.role==='personal'?`<div class="form-group"><label>Program</label><select id="eu-prog">${DB.programs.map(p=>`<option value="${p.id}" ${p.id===u.program?'selected':''}>${p.icon} ${p.name}</option>`).join('')}</select></div>`:''}
+    ${u.role==='personal'?`<div class="form-group"><label>Program (kan välja flera)</label><div id="eu-prog-wrap" style="display:flex;flex-direction:column;gap:6px;">${DB.programs.map(p=>`<label style="display:flex;align-items:center;gap:8px;font-size:.9rem;"><input type="checkbox" class="eu-prog-cb" value="${p.id}" ${p.id===u.program?'checked':''}> ${p.icon} ${p.name}</label>`).join('')}</div></div>`:''}
     <div class="modal-footer"><button class="btn btn-danger" onclick="deleteUser('${id}')">Ta bort</button><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="saveEditUser('${id}')">Spara</button></div>`);
+  if(u.role==='personal'){
+    fetch('/api/user-programs?user_id='+id).then(function(r){return r.json();}).then(function(rows){
+      if(!Array.isArray(rows)) return;
+      rows.forEach(function(row){
+        var cb=document.querySelector('.eu-prog-cb[value="'+row.program_id+'"]');
+        if(cb) cb.checked=true;
+      });
+    }).catch(function(){});
+  }
 }
-function saveEditUser(id){const u=DB.users.find(x=>x.id===id);const p=document.getElementById('eu-p')?.value;const em=document.getElementById('eu-e').value;const nm=document.getElementById('eu-n')?.value.trim()||u.name;const prog=u.role==='personal'?document.getElementById('eu-prog').value:null;const body={id,name:nm,email:em,role:u.role,programId:prog};if(p)body.password=p;fetch('/api/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}u.name=nm;u.email=em;if(prog)u.program=prog;closeModal();renderAdmin();toast('Uppdaterat!');}).catch(()=>toast('Fel vid uppdatering','e'));}
+function saveEditUser(id){const u=DB.users.find(x=>x.id===id);const p=document.getElementById('eu-p')?.value;const em=document.getElementById('eu-e').value;const nm=document.getElementById('eu-n')?.value.trim()||u.name;const progIds=u.role==='personal'?Array.from(document.querySelectorAll('.eu-prog-cb:checked')).map(function(cb){return cb.value;}):[];const prog=progIds.length?progIds[0]:null;const body={id,name:nm,email:em,role:u.role,programId:prog};if(p)body.password=p;fetch('/api/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}u.name=nm;u.email=em;if(prog)u.program=prog;if(u.role==='personal'){fetch('/api/user-programs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:id,program_ids:progIds})});}closeModal();renderAdmin();toast('Uppdaterat!');}).catch(()=>toast('Fel vid uppdatering','e'));}
 function deleteUser(id){if(id===currentUser.id){toast('Kan inte ta bort dig själv','e');return;}fetch('/api/staff?id='+id,{method:'DELETE'}).then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.users=DB.users.filter(u=>u.id!==id);closeModal();renderAdmin();toast('Borttagen');}).catch(()=>toast('Fel vid borttagning','e'));}
 
 // BOOKING FLOW
