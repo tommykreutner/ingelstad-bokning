@@ -1007,14 +1007,16 @@ function renderDashboard(){
 function renderBookings(activeDate){
   var mp=currentUser.program;
   var prog=mp?DB.programs.find(function(p){return p.id===mp;}):null;
-  var list=mp?DB.bookings.filter(function(b){return b.slots.some(function(sid){return DB.slots.find(function(s){return s.id===sid&&s.programId===mp;});});}):DB.bookings;
-  var mySlots=mp?DB.slots.filter(function(s){return s.programId===mp;}).sort(function(a,b){return a.date.localeCompare(b.date)||a.type.localeCompare(b.type);}):[];
+  var myProgIds=(currentUser.programIds&&currentUser.programIds.length)?currentUser.programIds:(mp?[mp]:null);
+  var list=myProgIds?DB.bookings.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&myProgIds.includes(s.programId);});}):DB.bookings;
+  var mySlots=myProgIds?DB.slots.filter(function(s){return myProgIds.includes(s.programId);}).sort(function(a,b){return a.date.localeCompare(b.date)||a.type.localeCompare(b.type);}):[];
   var selectedDate=activeDate||null;
-  var dateBookings=selectedDate?list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp&&s.date===selectedDate;});}):[];
+  var dateBookings=selectedDate?list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&myProgIds.includes(s.programId)&&s.date===selectedDate;});}):[];
 
-  var html='<div class="page-header"><h1>Bokningar</h1><p>'+(mp?prog?.name:'Alla program')+'</p></div>';
+  var headerLabel=mp?(myProgIds&&myProgIds.length>1?myProgIds.map(function(pid){var pp=DB.programs.find(function(x){return x.id===pid;});return pp?pp.icon+' '+pp.name:'';}).join(' \u00b7 '):prog?.name):'Alla program';
+  var html='<div class="page-header"><h1>Bokningar</h1><p>'+headerLabel+'</p></div>';
 
-  if(mp){
+  if(myProgIds){
     // Personal: day overview first
     html+='<div class="sec-title" style="margin-bottom:10px;">Mina dagar <span class="text-sm text-muted fw-6" style="font-weight:400;">klicka p\u00e5 en dag f\u00f6r att se elever</span></div>';
     if(!mySlots.length){
@@ -1081,17 +1083,25 @@ function renderBookings(activeDate){
           +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
           +'<br><div style="margin-top:6px;">'+b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var p=s?DB.programs.find(function(x){return x.id===s.programId;}):null;return s?'<span class="chip">'+(p?p.icon+' '+p.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;opacity:.8;"> · '+fmtDateLong(s.date)+'</span></span>':''}).join('')+'</div>'
           +(function(){
-            var att=DB.attendance.find(function(a){return a.booking_id===b.id&&a.program_id===mp;});
-            var status=att?att.status:null;
             var today=new Date().toISOString().slice(0,10);
-            var slotDate=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp?s.date:null;}).filter(Boolean).sort().pop();
-            if(!slotDate||slotDate>=today) return '';
+            var bProgIds=[...new Set(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.programId:null;}).filter(Boolean))];
+            var relevantProgIds=bProgIds.filter(function(pid){return !myProgIds||myProgIds.includes(pid);});
+            var pastProgIds=relevantProgIds.filter(function(pid){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===pid&&s.date<today;});});
+            if(!pastProgIds.length) return '';
+            var rows=pastProgIds.map(function(pid){
+              var pp=DB.programs.find(function(x){return x.id===pid;});
+              var att=DB.attendance.find(function(a){return a.booking_id===b.id&&a.program_id===pid;});
+              var status=att?att.status:null;
+              var label=pastProgIds.length>1?((pp?pp.icon+' '+pp.name:'')+' \u2014 '):'';
+              return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+                +(pastProgIds.length>1?'<span style="font-size:.82rem;flex:1;">'+(pp?pp.icon+' '+pp.name:'')+'</span>':'')
+                +'<button class="btn btn-sm" style="background:'+(status==='present'?'#16a34a':'#f0fdf4')+';color:'+(status==='present'?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="markAttendance(\''+b.id+'\',\''+pid+'\',\'present\')">✅ Kom</button>'
+                +'<button class="btn btn-sm" style="background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\''+pid+'\',\'absent\')">❌ Kom inte</button>'
+                +'</div>';
+            }).join('');
             return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
               +'<div class="text-sm" style="font-weight:700;margin-bottom:6px;">Närvaro</div>'
-              +'<div style="display:flex;gap:6px;">'
-              +'<button class="btn btn-sm" style="background:'+(status==='present'?'#16a34a':'#f0fdf4')+';color:'+(status==='present'?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="markAttendance(\''+b.id+'\',\''+mp+'\',\'present\')">✅ Kom</button>'
-              +'<button class="btn btn-sm" style="background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\''+mp+'\',\'absent\')">❌ Kom inte</button>'
-              +'</div></div>';
+              +rows+'</div>';
           })()
           +(function(){
             if(!DB.checklistItems||!DB.checklistItems.length) return '';
@@ -1598,6 +1608,10 @@ function saveInternatMailText(){
   fetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({internat_email_text:txt})})
     .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}DB.settings.internatEmailText=txt;toast('Mailtext sparad!');}).catch(()=>toast('Fel vid sparande','e'));
 }
+function switchActiveProgram(pid){
+  currentUser.program=pid;
+  renderProgAdmin();
+}
 function renderProgAdmin(){
   var mp=currentUser.program;
   var prog=mp?DB.programs.find(function(p){return p.id===mp;}):null;
@@ -1605,8 +1619,20 @@ function renderProgAdmin(){
   var u=DB.users.find(function(x){return x.id===currentUser.id;});
   var emailVal=(u&&u.email)||'';
   var emailTextVal=prog.emailText||'';
+  var switcherHtml='';
+  if(currentUser.programIds&&currentUser.programIds.length>1){
+    switcherHtml='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">'
+      +currentUser.programIds.map(function(pid){
+        var pp=DB.programs.find(function(x){return x.id===pid;});
+        if(!pp) return '';
+        var active=pid===mp;
+        return '<button class="btn btn-sm" style="background:'+(active?'var(--forest)':'#fff')+';color:'+(active?'#fff':'var(--forest)')+';border:1.5px solid var(--forest);" onclick="switchActiveProgram(\''+pid+'\')">'+pp.icon+' '+pp.name+'</button>';
+      }).join('')
+      +'</div>';
+  }
   document.getElementById('page-progadmin').innerHTML=
     '<div class="page-header"><h1>&#9881;&#65039; Admin</h1><p>'+prog.icon+' '+prog.name+'</p></div>'
+    +switcherHtml
     +'<div class="card" style="margin-bottom:16px;">'
     +'<p class="text-sm fw-6" style="margin-bottom:10px;">E-postadress</p>'
     +'<div class="form-group" style="margin-bottom:8px;"><label>Din e-postadress</label>'
