@@ -610,7 +610,6 @@ function loginAs(user){
     if(Array.isArray(checklistCompletionsRes)) DB.checklistCompletions=checklistCompletionsRes;
     var extraProgIds=Array.isArray(userProgramsRes)?userProgramsRes.map(function(up){return up.program_id;}):[];
     currentUser.programIds=[...new Set([currentUser.program].concat(extraProgIds).filter(Boolean))];
-    else DB.attendance=[];
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
 }
