@@ -51,7 +51,10 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'ID saknas' }, { status: 400 })
   const { error } = await supabaseAdmin.from('staff').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('DELETE staff error:', JSON.stringify(error))
+    return NextResponse.json({ error: error.message, details: error }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
 
