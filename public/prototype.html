@@ -891,12 +891,14 @@ function autoEmailStatsOnVTClose(tid){
 
 function renderDashboard(){
   const mp=currentUser.program;
-  const bks=mp?DB.bookings.filter(b=>b.slots.some(sid=>DB.slots.find(s=>s.id===sid&&s.programId===mp))):DB.bookings;
-  const sl=mp?DB.slots.filter(s=>s.programId===mp):DB.slots;
+  const myProgIds=(currentUser.programIds&&currentUser.programIds.length)?currentUser.programIds:(mp?[mp]:null);
+  const bks=myProgIds?DB.bookings.filter(b=>b.slots.some(sid=>{var s=DB.slots.find(x=>x.id===sid);return s&&myProgIds.includes(s.programId);})):DB.bookings;
+  const sl=myProgIds?DB.slots.filter(s=>myProgIds.includes(s.programId)):DB.slots;
   const prog=currentUser.role==='personal'?DB.programs.find(p=>p.id===mp):null;
   const ovUsed=DB.overnight.reduce((a,o)=>a+o.booked,0);
+  var dashTitle=currentUser.role==='personal'?(myProgIds&&myProgIds.length>1?myProgIds.map(function(pid){var pp=DB.programs.find(function(x){return x.id===pid;});return pp?pp.icon+' '+pp.name:'';}).join(' \u00b7 '):(prog?prog.icon+' '+prog.name:'Ingelstadgymnasiet')):'Ingelstadgymnasiet';
   document.getElementById('page-dashboard').innerHTML=`
-    <div class="page-header"><h1>${prog?prog.icon+' '+prog.name:'Ingelstadgymnasiet'}</h1><p>Prova-på-dagar — översikt</p></div>
+    <div class="page-header"><h1>${dashTitle}</h1><p>Prova-på-dagar — översikt</p></div>
     <div class="stat-grid">
       ${(()=>{
         const today=new Date().toISOString().slice(0,10);
@@ -1215,7 +1217,8 @@ function cancelBooking(id){
 // SLOTS
 function renderSlots(){
   const mp=currentUser.program;
-  const progs=mp?DB.programs.filter(p=>p.id===mp):DB.programs;
+  const myProgIds=(currentUser.programIds&&currentUser.programIds.length)?currentUser.programIds:(mp?[mp]:null);
+  const progs=myProgIds?DB.programs.filter(p=>myProgIds.includes(p.id)):DB.programs;
   document.getElementById('page-slots').innerHTML=`
     <div class="page-header"><h1>📅 Tider</h1><p>Lägg in och hantera prova-på-tillfällen</p></div>
     ${progs.map(prog=>`<div class="card" style="margin-bottom:16px;">
