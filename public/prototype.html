@@ -1128,9 +1128,27 @@ function renderBookings(activeDate){
     }
   } else {
     // Admin: full list with export
-    html+='<div class="mb-8"><button class="btn btn-secondary btn-sm" onclick="exportAllCSV()">Exportera CSV</button></div>';
-    if(!list.length) html+='<div class="card text-muted text-sm">Inga bokningar \u00e4nnu.</div>';
-    list.forEach(function(b){
+    var today0=new Date().toISOString().slice(0,10);
+    function bookingIsHandled(b){
+      var progIds=[...new Set(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.programId:null;}).filter(Boolean))];
+      var pastProgIds=progIds.filter(function(pid){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===pid&&s.date<today0;});});
+      if(!pastProgIds.length) return false;
+      var allMarked=pastProgIds.every(function(pid){return DB.attendance.find(function(a){return a.booking_id===b.id&&a.program_id===pid;});});
+      if(b.overnight){
+        var hasPastNight=b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.date<today0;});
+        if(hasPastNight){
+          var ovMarked=DB.attendance.find(function(a){return a.booking_id===b.id&&a.program_id==='internat';});
+          allMarked=allMarked&&!!ovMarked;
+        }
+      }
+      return allMarked;
+    }
+    var handledCount=list.filter(bookingIsHandled).length;
+    var showHistoric=!!window._showHistoricBookings;
+    var visibleList=showHistoric?list:list.filter(function(b){return !bookingIsHandled(b);});
+    html+='<div class="mb-8" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button class="btn btn-secondary btn-sm" onclick="exportAllCSV()">Exportera CSV</button>'+(handledCount>0?'<button class="btn btn-ghost btn-sm" onclick="toggleHistoricBookings()">'+(showHistoric?'D\u00f6lj avklarade':'Visa avklarade ('+handledCount+')')+'</button>':'')+'</div>';
+    if(!visibleList.length) html+='<div class="card text-muted text-sm">'+(list.length?'Inga bokningar att visa \u2014 alla \u00e4r avklarade.':'Inga bokningar \u00e4nnu.')+'</div>';
+    visibleList.forEach(function(b){
       html+='<div class="card" style="margin-bottom:12px;">'
         +'<div class="flex-between mb-8"><div><strong>'+b.studentName+'</strong> <span class="badge badge-personal" style="font-size:.68rem;">'+b.id+'</span></div>'
         +'<button class="btn btn-danger btn-sm" onclick="cancelBooking(\''+b.id+'\')">Avboka</button></div>'
@@ -1885,6 +1903,10 @@ function getOvernightNightsForBooking(booking) {
   return [prevDay(day1), day1];
 }
 
+function toggleHistoricBookings(){
+  window._showHistoricBookings=!window._showHistoricBookings;
+  renderBookings(document.querySelector('.day-card.selected')?.dataset?.date);
+}
 function toggleChecklist(bookingId, itemId, currentlyDone){
   var completed=!currentlyDone;
   fetch('/api/checklist-completions',{
