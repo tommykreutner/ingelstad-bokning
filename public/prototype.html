@@ -1108,8 +1108,8 @@ function renderBookings(activeDate){
               var label=pastProgIds.length>1?((pp?pp.icon+' '+pp.name:'')+' \u2014 '):'';
               return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
                 +(pastProgIds.length>1?'<span style="font-size:.82rem;flex:1;">'+(pp?pp.icon+' '+pp.name:'')+'</span>':'')
-                +'<button class="btn btn-sm" style="background:'+(status==='present'?'#16a34a':'#f0fdf4')+';color:'+(status==='present'?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="markAttendance(\''+b.id+'\',\''+pid+'\',\'present\')">✅ Kom</button>'
-                +'<button class="btn btn-sm" style="background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\''+pid+'\',\'absent\')">❌ Kom inte</button>'
+                +'<button id="att-p-'+b.id+'-'+pid+'" class="btn btn-sm" style="background:'+(status==='present'?'#16a34a':'#f0fdf4')+';color:'+(status==='present'?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="markAttendance(\''+b.id+'\',\''+pid+'\',\'present\')">✅ Kom</button>'
+                +'<button id="att-a-'+b.id+'-'+pid+'" class="btn btn-sm" style="background:'+(status==='absent'?'#dc2626':'#fff5f5')+';color:'+(status==='absent'?'#fff':'#dc2626')+';border:1.5px solid #dc2626;" onclick="markAttendance(\''+b.id+'\',\''+pid+'\',\'absent\')">❌ Kom inte</button>'
                 +'</div>';
             }).join('');
             return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
@@ -1213,8 +1213,18 @@ function markAttendance(bookingId,programId,status){
       const existing=DB.attendance.findIndex(a=>a.booking_id===bookingId&&a.program_id===programId);
       if(existing>=0) DB.attendance[existing]=data;
       else DB.attendance.push(data);
-      renderBookings(document.querySelector('.day-card.selected')?.dataset?.date);
-      toast('Närvaro sparad!');
+      var btnP=document.getElementById('att-p-'+bookingId+'-'+programId);
+      var btnA=document.getElementById('att-a-'+bookingId+'-'+programId);
+      if(btnP&&btnA){
+        btnP.style.background=status==='present'?'#16a34a':'#f0fdf4';
+        btnP.style.color=status==='present'?'#fff':'#16a34a';
+        btnA.style.background=status==='absent'?'#dc2626':'#fff5f5';
+        btnA.style.color=status==='absent'?'#fff':'#dc2626';
+        toast('Närvaro sparad!');
+      } else {
+        renderBookings(document.querySelector('.day-card.selected')?.dataset?.date);
+        toast('Närvaro sparad!');
+      }
     }).catch(()=>toast('Fel vid sparande','e'));
 }
 function markAttendanceOvernight(bookingId,status){
