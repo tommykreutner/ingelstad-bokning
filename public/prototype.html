@@ -1028,7 +1028,7 @@ function renderBookings(activeDate){
       html+='<div style="margin-bottom:16px;">';
       Object.entries(byDate).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){
         var date=entry[0], slots=entry[1];
-        var bkgsOnDay=list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===mp&&s.date===date;});});
+        var bkgsOnDay=list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&myProgIds.includes(s.programId)&&s.date===date;});});
         // Skip days with no bookings
         if(!bkgsOnDay.length) return;
         var isSelected=date===selectedDate;
@@ -1038,7 +1038,9 @@ function renderBookings(activeDate){
         html+='<div onclick="renderBookings(\''+date+'\')" style="border:1.5px solid '+(isSelected?'var(--forest)':full?'#fca5a5':'var(--border)')+';border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;background:'+(isSelected?'var(--forest-light)':full?'#fff7f7':'#fff')+';transition:border-color .15s;">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
           +'<div><strong style="font-size:.93rem;">'+fmtDate(date)+'</strong>'
-          +' '+slots.map(function(s){return '<span class="tag tag-'+s.type+'" style="margin-right:2px;">'+s.type.toUpperCase()+'</span>';}).join('')+'</div>'
+          +' '+slots.map(function(s){return '<span class="tag tag-'+s.type+'" style="margin-right:2px;">'+s.type.toUpperCase()+'</span>';}).join('')
+          +(myProgIds&&myProgIds.length>1?' '+[...new Set(slots.map(function(s){return s.programId;}))].map(function(pid){var pp=DB.programs.find(function(x){return x.id===pid;});return pp?'<span class="chip" style="font-size:.68rem;padding:2px 8px;">'+pp.icon+' '+pp.name+'</span>':'';}).join(' '):'')
+          +'</div>'
           +'<div style="text-align:right;flex-shrink:0;">'
           +'<div style="font-size:.85rem;font-weight:700;color:'+(full?'var(--red)':isSelected?'var(--forest)':'var(--ink2)')+';">'+totalBooked+'/'+totalCap+' bokade</div>'
   
