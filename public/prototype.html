@@ -1077,7 +1077,7 @@ function renderBookings(activeDate){
     if(unconfCount>0) html+='<div class="info-box amber" style="margin-bottom:12px;">⚠️ '+unconfCount+' passerade datum saknar närvaro-bekräftelse.</div>';
     if(hiddenDayCount>0) html+='<div style="margin-bottom:12px;"><button class="btn btn-ghost btn-sm" onclick="toggleHistoricDays()">'+(showHistoricDays?'Dölj avklarade dagar':'📁 Visa '+hiddenDayCount+' avklarade dagar')+'</button></div>';
     if(selectedDate){
-      html+='<div class="sec-title" style="margin-bottom:10px;">'+fmtDate(selectedDate)
+      html+='<div id="day-detail" class="sec-title" style="margin-bottom:10px;">'+fmtDate(selectedDate)
         +' \u2014 '+dateBookings.length+' elev(er)'
         +'<button class="btn btn-ghost btn-sm" onclick="exportDayCSV(\''+selectedDate+'\')">Exportera</button></div>';
       if(!dateBookings.length){
@@ -1204,6 +1204,10 @@ function renderBookings(activeDate){
     });
   }
   document.getElementById('page-bookings').innerHTML=html;
+  if(selectedDate){
+    var detailEl=document.getElementById('day-detail');
+    if(detailEl) setTimeout(function(){detailEl.scrollIntoView({behavior:'smooth',block:'start'});},50);
+  }
 }
 function markAttendance(bookingId,programId,status){
   fetch('/api/attendance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking_id:bookingId,program_id:programId,status:status})})
