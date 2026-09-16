@@ -1025,12 +1025,22 @@ function renderBookings(activeDate){
     } else {
       var byDate={};
       mySlots.forEach(function(sl){if(!byDate[sl.date])byDate[sl.date]=[];byDate[sl.date].push(sl);});
+      var today1=new Date().toISOString().slice(0,10);
+      function dayBookingHandled(b,date){
+        var att=DB.attendance.find(function(a){return a.booking_id===b.id&&myProgIds.includes(a.program_id)&&b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.id&&s.date===date&&s.programId===a.program_id;});});
+        return !!att;
+      }
+      var hiddenDayCount=0;
+      var showHistoricDays=!!window._showHistoricDays;
       html+='<div style="margin-bottom:16px;">';
       Object.entries(byDate).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){
         var date=entry[0], slots=entry[1];
         var bkgsOnDay=list.filter(function(b){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&myProgIds.includes(s.programId)&&s.date===date;});});
         // Skip days with no bookings
         if(!bkgsOnDay.length) return;
+        var isPast=date<today1;
+        var allHandled=isPast&&bkgsOnDay.length>0&&bkgsOnDay.every(function(b){return dayBookingHandled(b,date);});
+        if(allHandled&&!showHistoricDays){hiddenDayCount++;return;}
         var isSelected=date===selectedDate;
         var totalBooked=slots.reduce(function(a,s){return a+s.booked;},0);
         var totalCap=slots.reduce(function(a,s){return a+s.capacity;},0);
@@ -1065,7 +1075,7 @@ function renderBookings(activeDate){
       }
     });
     if(unconfCount>0) html+='<div class="info-box amber" style="margin-bottom:12px;">⚠️ '+unconfCount+' passerade datum saknar närvaro-bekräftelse.</div>';
-    if(archCount>0) html+='<div style="margin-bottom:12px;"><span class="text-sm text-muted">📁 '+archCount+' bekräftade datum i arkivet</span></div>';
+    if(hiddenDayCount>0) html+='<div style="margin-bottom:12px;"><button class="btn btn-ghost btn-sm" onclick="toggleHistoricDays()">'+(showHistoricDays?'Dölj avklarade dagar':'📁 Visa '+hiddenDayCount+' avklarade dagar')+'</button></div>';
     if(selectedDate){
       html+='<div class="sec-title" style="margin-bottom:10px;">'+fmtDate(selectedDate)
         +' \u2014 '+dateBookings.length+' elev(er)'
@@ -1903,6 +1913,10 @@ function getOvernightNightsForBooking(booking) {
   return [prevDay(day1), day1];
 }
 
+function toggleHistoricDays(){
+  window._showHistoricDays=!window._showHistoricDays;
+  renderBookings(document.querySelector('.day-card.selected')?.dataset?.date);
+}
 function toggleHistoricBookings(){
   window._showHistoricBookings=!window._showHistoricBookings;
   renderBookings(document.querySelector('.day-card.selected')?.dataset?.date);
