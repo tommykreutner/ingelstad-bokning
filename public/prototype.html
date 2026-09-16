@@ -1692,7 +1692,13 @@ function renderProgAdmin(){
     +'<textarea id="pa-emailtext" rows="5" style="font-size:.9rem;">'+emailTextVal+'</textarea></div>'
     +'<p class="form-hint" style="margin-bottom:12px;">Visas i bekr\u00e4ftelsemailet f\u00f6r alla som bokar '+prog.name+'.</p>'
     +'<button class="btn btn-primary btn-sm" onclick="saveProgMailText()">Spara text</button>'
+    +'</div>'
+    +'<div class="card" style="margin-top:16px;">'
+    +'<div class="flex-between mb-8"><p class="text-sm fw-6">Utvärderingsfrågor för '+prog.name+'</p><button class="btn btn-secondary btn-sm" onclick="addEvalQuestion(\'program\',\''+mp+'\')">+ Ny fråga</button></div>'
+    +'<p class="form-hint" style="margin-bottom:12px;">Dessa frågor visas i utvärderingsformuläret för elever som besökt '+prog.name+'.</p>'
+    +'<div id="prog-questions-card"><p class="text-sm text-muted">Laddar...</p></div>'
     +'</div>';
+  loadEvalQuestions('program', mp, 'prog-questions-card');
 }
 function saveProgEmail(){
   var email=(document.getElementById('pa-email')||{value:''}).value.trim();
@@ -2172,7 +2178,72 @@ function renderAdmin(){
       </div>
       <div class="form-group" style="margin-top:12px;margin-bottom:8px;"><label>Allmän del i bekräftelsemail</label><textarea id="se-text" rows="4">${DB.settings.adminEmailText}</textarea></div>
       <button class="btn btn-primary btn-sm" onclick="saveEmail()">Spara</button>
+    </div>
+
+    <div class="sec-title" style="margin-top:4px;">Utvärderingsfrågor — Globala <button class="btn btn-secondary btn-sm" onclick="addEvalQuestion('global',null)">+ Ny fråga</button></div>
+    <div class="card" id="global-questions-card">
+      <p class="text-sm text-muted">Laddar frågor...</p>
     </div>`;
+  loadEvalQuestions('global', null, 'global-questions-card');
+}
+function loadEvalQuestions(scope, programId, containerId) {
+  var url = '/api/eval-questions?scope=' + scope;
+  if (programId) url += '&program_id=' + programId;
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    if (!Array.isArray(data) || !data.length) {
+      el.innerHTML = '<p class="text-sm text-muted">Inga frågor tillagda ännu.</p>';
+      return;
+    }
+    var typeLabel = {scale:'1–5 stjärnor', yesno:'Ja/Nej', text:'Fritext'};
+    el.innerHTML = data.map(function(q){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">'
+        +'<span style="flex:1;font-size:.9rem;">'+q.question+'</span>'
+        +'<span class="badge" style="background:#e8f4ed;color:#2d5a3d;font-size:.68rem;">'+( typeLabel[q.type]||q.type)+'</span>'
+        +'<button class="btn btn-danger btn-sm" style="padding:3px 10px;" onclick="deleteEvalQuestion(\''+q.id+'\',\''+containerId+'\',\''+scope+'\','+JSON.stringify(programId)+')">Ta bort</button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){
+    var el=document.getElementById(containerId);
+    if(el) el.innerHTML='<p class="text-sm text-muted" style="color:#dc2626;">Kunde inte ladda frågor.</p>';
+  });
+}
+function addEvalQuestion(scope, programId) {
+  var typeOpts = '<option value="scale">1–5 stjärnor</option><option value="yesno">Ja/Nej</option><option value="text">Fritext</option>';
+  showModal('<div class="modal-handle"></div><h3>Ny utvärderingsfråga</h3>'
+    +'<p class="modal-sub">'+(scope==='global'?'Global (alla elever)':scope==='internat'?'Internat':'Programspecifik')+'</p>'
+    +'<div class="form-group"><label>Fråga</label><input type="text" id="eq-text" placeholder="Skriv frågan här..."></div>'
+    +'<div class="form-group"><label>Svarstyp</label><select id="eq-type">'+typeOpts+'</select></div>'
+    +'<div class="modal-footer">'
+    +'<button class="btn btn-ghost" onclick="closeModal()">Avbryt</button>'
+    +'<button class="btn btn-primary" onclick="saveEvalQuestion(\''+scope+'\','+JSON.stringify(programId)+')">Spara</button>'
+    +'</div>');
+}
+function saveEvalQuestion(scope, programId) {
+  var q = (document.getElementById('eq-text')||{value:''}).value.trim();
+  var t = (document.getElementById('eq-type')||{value:'text'}).value;
+  if (!q) { toast('Skriv en fråga först', 'e'); return; }
+  fetch('/api/eval-questions', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({scope:scope, program_id:programId||null, question:q, type:t})
+  }).then(function(r){return r.json();}).then(function(data){
+    if (data.error) { toast(data.error,'e'); return; }
+    closeModal();
+    toast('Fråga sparad!');
+    var containerId = scope==='global'?'global-questions-card':scope==='internat'?'internat-questions-card':'prog-questions-card';
+    loadEvalQuestions(scope, programId, containerId);
+  }).catch(function(){ toast('Fel vid sparande','e'); });
+}
+function deleteEvalQuestion(id, containerId, scope, programId) {
+  if (!confirm('Ta bort frågan?')) return;
+  fetch('/api/eval-questions?id=' + id, {method:'DELETE'})
+    .then(function(r){return r.json();}).then(function(data){
+      if (data.error) { toast(data.error,'e'); return; }
+      toast('Fråga borttagen');
+      loadEvalQuestions(scope, programId, containerId);
+    }).catch(function(){ toast('Fel','e'); });
 }
 function toggleNV(pid,tid,checked){const p=DB.programs.find(x=>x.id===pid);if(checked&&!p.nvCompatible.includes(tid))p.nvCompatible.push(tid);else p.nvCompatible=p.nvCompatible.filter(x=>x!==tid);toast('NV-konfiguration uppdaterad');}
 function toggleSlotMode(pid,isOpen){
