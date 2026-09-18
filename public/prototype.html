@@ -599,7 +599,8 @@ function loginAs(user){
     fetch('/api/checklist-items').then(r=>r.json()),
     fetch('/api/checklist-completions').then(r=>r.json()),
     fetch('/api/user-programs?user_id='+user.id).then(r=>r.json()),
-  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes,userProgramsRes])=>{
+    fetch('/api/closed-rooms').then(r=>r.json()),
+  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes,userProgramsRes,closedRoomsRes])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
     if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
@@ -610,6 +611,7 @@ function loginAs(user){
     if(Array.isArray(checklistCompletionsRes)) DB.checklistCompletions=checklistCompletionsRes;
     var extraProgIds=Array.isArray(userProgramsRes)?userProgramsRes.map(function(up){return up.program_id;}):[];
     currentUser.programIds=[...new Set([currentUser.program].concat(extraProgIds).filter(Boolean))];
+    if(Array.isArray(closedRoomsRes)) DB.closedRooms=closedRoomsRes;
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
 }
@@ -1589,6 +1591,7 @@ function setIAType(type){
   });
 }
 function saveClosedRoom(){
+  var newRooms=[];
   var room=document.getElementById('ia-room').value;
   var roomVal=room==='all'?'all':parseInt(room);
   var isWeekday=document.getElementById('ia-weekday-wrap').style.display!=='none';
@@ -1604,7 +1607,7 @@ function saveClosedRoom(){
       if(cur.getDay()===wday){
         var d=cur.toISOString().slice(0,10);
         if(!DB.closedRooms.some(function(cr){return cr.room===roomVal&&cr.date===d;})){
-          DB.closedRooms.push({room:roomVal,date:d});added++;
+          DB.closedRooms.push({room:roomVal,date:d});newRooms.push({room:roomVal,date:d});added++;
         }
       }
       cur.setDate(cur.getDate()+1);
@@ -1618,7 +1621,7 @@ function saveClosedRoom(){
     while(cur<=end){
       var d=cur.toISOString().slice(0,10);
       if(!DB.closedRooms.some(function(cr){return cr.room===roomVal&&cr.date===d;})){
-        DB.closedRooms.push({room:roomVal,date:d});added++;
+        DB.closedRooms.push({room:roomVal,date:d});newRooms.push({room:roomVal,date:d});added++;
       }
       cur.setDate(cur.getDate()+1);
     }
@@ -1628,14 +1631,25 @@ function saveClosedRoom(){
     if(!d){toast('Välj ett datum','e');return;}
     if(!DB.closedRooms.some(function(cr){return cr.room===roomVal&&cr.date===d;})){
       DB.closedRooms.push({room:roomVal,date:d});
+      newRooms.push({room:roomVal,date:d});
     }
     toast('Natt stängd');
+  }
+  if(newRooms.length){
+    fetch('/api/closed-rooms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rooms:newRooms})})
+      .then(function(r){return r.json();})
+      .then(function(data){if(data.error) toast('Kunde inte spara: '+data.error,'e');})
+      .catch(function(){toast('Fel vid sparande till servern','e');});
   }
   renderInternatAdmin();
 }
 function removeClosedRoom(room,date){
   var roomVal=room==='all'?'all':parseInt(room);
   DB.closedRooms=DB.closedRooms.filter(function(cr){return !(cr.room===roomVal&&cr.date===date);});
+  fetch('/api/closed-rooms?room='+encodeURIComponent(room)+'&date='+encodeURIComponent(date),{method:'DELETE'})
+    .then(function(r){return r.json();})
+    .then(function(data){if(data.error) toast('Kunde inte ta bort: '+data.error,'e');})
+    .catch(function(){toast('Fel vid borttagning','e');});
   renderInternatAdmin();toast('St\u00e4ngning borttagen');
 }
 function saveInternatEmail(){
