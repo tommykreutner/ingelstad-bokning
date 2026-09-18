@@ -623,14 +623,14 @@ function showStaffLogin(){document.getElementById('screen-booking').style.displa
 function navItems(){
   const r=currentUser?.role,items=[];
   if(r) items.push({id:'dashboard',icon:'📊',label:'Översikt'});
-  if(r==='admin'||r==='personal') items.push({id:'bookings',icon:'📋',label:'Bokningar'});
+  if(r==='admin'||r==='personal'||r==='syv') items.push({id:'bookings',icon:'📋',label:'Bokningar'});
   if(r==='admin'||r==='personal') items.push({id:'slots',icon:'📅',label:'Tider'});
   if(r==='personal') items.push({id:'progadmin',icon:'⚙️',label:'Admin'});
   if(r==='admin'||r==='internat') items.push({id:'overnight',icon:'🛏️',label:'Internat'});
   if(r==='internat') items.push({id:'internatadmin',icon:'⚙️',label:'Admin'});
   if(r==='kok') items.push({id:'bookings',icon:'📋',label:'Bokningar'});
   if(r==='kok') items.push({id:'kokadmin',icon:'⚙️',label:'Inställningar'});
-  if(r==='admin'||r==='personal'||r==='internat') items.push({id:'evaluations',icon:'📝',label:'Svar'});
+  if(r==='admin'||r==='personal'||r==='internat'||r==='syv') items.push({id:'evaluations',icon:'📝',label:'Svar'});
   if(r==='admin') items.push({id:'admin',icon:'⚙️',label:'Admin'});
   return items;
 }
@@ -1175,6 +1175,7 @@ function renderBookings(activeDate){
         +b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var pr=s?DB.programs.find(function(p){return p.id===s.programId;}):null;return s?'<span class="chip">'+(pr?pr.icon+' '+pr.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;font-weight:400;">'+fmtDateLong(s.date)+'</span></span>':''}).join('')
         +'</div>'
         +(function(){
+          if(currentUser.role==='syv') return '';
           var today=new Date().toISOString().slice(0,10);
           var progIds=[...new Set(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.programId:null;}).filter(Boolean))];
           var pastProgs=progIds.filter(function(pid){return b.slots.some(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s&&s.programId===pid&&s.date<today;});});
@@ -1201,6 +1202,20 @@ function renderBookings(activeDate){
           return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
             +'<div class="text-sm" style="font-weight:700;margin-bottom:4px;">Närvaro per program</div>'
             +rows+'</div>';
+        })()
+        +(function(){
+          if(!DB.checklistItems||!DB.checklistItems.length) return '';
+          var rows2=DB.checklistItems.map(function(item){
+            var comp=DB.checklistCompletions.find(function(cc){return cc.booking_id===b.id&&cc.item_id===item.id;});
+            var done=comp&&comp.completed;
+            return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">'
+              +'<span style="font-size:.9rem;flex:1;">'+item.icon+' '+item.label+'</span>'
+              +'<button id="chk-'+b.id+'-'+item.id+'" class="btn btn-sm" style="padding:3px 12px;background:'+(done?'#16a34a':'#f0fdf4')+';color:'+(done?'#fff':'#16a34a')+';border:1.5px solid #16a34a;" onclick="toggleChecklist(\''+b.id+'\',\''+item.id+'\','+(done?'true':'false')+')">'+(done?'✅ Klar':'Kryssa i')+'</button>'
+              +'</div>';
+          }).join('');
+          return '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">'
+            +'<div class="text-sm" style="font-weight:700;margin-bottom:6px;">Checklista</div>'
+            +rows2+'</div>';
         })()
         +'</div>';
     });
@@ -2607,7 +2622,7 @@ function addUserModal(){showModal(`<div class="modal-handle"></div><h3>Ny använ
   <div class="form-group"><label>E-postadress</label><input type="email" id="nu-e" placeholder="namn@ingelstad.nu"></div>
   <div class="form-group"><label>Lösenord</label><input type="password" id="nu-p"></div>
   <div class="form-group"><label>Roll</label><select id="nu-r" onchange="document.getElementById('nu-pw').style.display=this.value==='personal'?'block':'none'">
-    <option value="personal">Personal</option><option value="internat">Internatansvarig</option><option value="kok">Köket</option><option value="admin">Admin</option></select></div>
+    <option value="personal">Personal</option><option value="internat">Internatansvarig</option><option value="syv">SYV</option><option value="kok">Köket</option><option value="admin">Admin</option></select></div>
   <div class="form-group" id="nu-pw"><label>Program (kan välja flera)</label>
     <div style="display:flex;flex-direction:column;gap:6px;">
     ${DB.programs.map(p=>`<label style="display:flex;align-items:center;gap:8px;font-size:.9rem;"><input type="checkbox" class="nu-prog-cb" value="${p.id}"> ${p.icon} ${p.name}</label>`).join('')}
