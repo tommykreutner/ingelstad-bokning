@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabaseAdmin.from('programs').insert({
     id: body.id, name: body.name, icon: body.icon || '??',
     is_nv: body.isNV || false, hidden: body.hidden || false,
-    slot_mode: body.slotMode || 'closed',
+    slot_mode: 'closed',
     default_capacity: body.defaultCapacity || 10,
     email_text: body.emailText || '',
     nv_compatible: body.nvCompatible || [],
@@ -26,18 +26,31 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
+
 export async function PATCH(req: NextRequest) {
   const session = await getSession()
-  if (!session || session.role !== 'admin') {
+  if (!session) {
     return NextResponse.json({ error: 'Ej behorig' }, { status: 403 })
   }
   const { id, ...updates } = await req.json()
+  const isAdmin = session.role === 'admin'
+  const isOwnProgram = session.program_id === id
+  if (!isAdmin) {
+    if (!isOwnProgram) {
+      return NextResponse.json({ error: 'Ej behorig' }, { status: 403 })
+    }
+    const allowed: any = {}
+    if ('email_text' in updates) allowed.email_text = updates.email_text
+    const { data, error } = await supabaseAdmin
+      .from('programs').update(allowed).eq('id', id).select().single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data)
+  }
   const { data, error } = await supabaseAdmin
     .from('programs').update(updates).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
-
 
 export async function DELETE(req: NextRequest) {
   const session = await getSession()

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getSession, hashPassword } from '@/lib/auth'
 
 export async function GET() {
   const session = await getSession()
-  if (!session || session.role !== 'admin') {
+  if (!session) {
     return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   }
   const { data, error } = await supabaseAdmin
@@ -30,11 +30,24 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const session = await getSession()
-  if (!session || session.role !== 'admin') {
+  if (!session) {
     return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   }
   const { id, name, email, role, programId, password } = await req.json()
-  const updates: any = { email, role, program_id: programId || null, ...(name ? { name } : {}) }
+  const isAdmin = session.role === 'admin'
+  const isSelf = session.id === id
+  if (!isAdmin && !isSelf) {
+    return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
+  }
+  const updates: any = {}
+  if (isAdmin) {
+    updates.email = email
+    updates.role = role
+    updates.program_id = programId || null
+    if (name) updates.name = name
+  } else {
+    updates.email = email
+  }
   if (password) updates.password_hash = hashPassword(password)
   const { data, error } = await supabaseAdmin
     .from('staff').update(updates).eq('id', id).select('id, username, name, email, role, program_id').single()
@@ -57,5 +70,3 @@ export async function DELETE(req: NextRequest) {
   }
   return NextResponse.json({ ok: true })
 }
-
-

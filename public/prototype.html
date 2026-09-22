@@ -1842,7 +1842,7 @@ function saveSlot(pid){
     const type=document.getElementById('sl-type').value;
     if(!date){toast('Välj ett datum','e');return;}
     if(DB.settings.blockedDates.includes(date)){toast('Datumet är blockerat','e');return;}
-    if(!isDateInOpenTerm(date)){toast('Terminen är inte öppen för bokning','e');return;}
+    if(!isDateInAnyTerm(date)){toast('Terminen är inte öppen för bokning','e');return;}
     slots.push({programId:pid,date,type,capacity:cap});
   }
   if(!slots.length){toast('Inga giltiga datum','e');return;}
@@ -2498,13 +2498,6 @@ function addProgModal(){showModal(`<div class="modal-handle"></div><h3>Nytt prog
   <div class="form-group"><label>Namn</label><input type="text" id="np-n" placeholder="Programmets namn"></div>
   <div class="form-group"><label>Ikon (emoji)</label><input type="text" id="np-i" placeholder="🎓" maxlength="2"></div>
   <div class="form-group"><label>Standardplatser</label><input type="number" id="np-c" value="10" min="1"></div>
-  <div class="form-group"><label>Utgångsläge för tider</label>
-    <select id="np-mode">
-      <option value="closed">🔴 Stängd — personal öppnar dagar de kan ta emot</option>
-      <option value="open">🟢 Öppen — personal stänger dagar de inte kan</option>
-    </select>
-    <p class="form-hint">Öppen passar program som tar emot nästan varje dag. Stängd passar program med få tillfällen.</p>
-  </div>
   <div class="form-group"><label>Text i bokningsmail</label><textarea id="np-e" placeholder="Information till eleven..."></textarea></div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
     <label class="toggle"><input type="checkbox" id="np-nv"><span class="tslider"></span></label>
@@ -2516,7 +2509,7 @@ function saveNewProg(){
   const id=name.toLowerCase().replace(/\s+/g,'').replace(/[åä]/g,'a').replace(/ö/g,'o').replace(/[^a-z0-9]/g,'');
   const icon=document.getElementById('np-i').value||'🎓';
   const isNV=document.getElementById('np-nv').checked;
-  const slotMode=document.getElementById('np-mode').value;
+  const slotMode='closed';
   const defaultCapacity=parseInt(document.getElementById('np-c').value)||10;
   const emailText=document.getElementById('np-e').value;
   fetch('/api/programs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,name,icon,isNV,slotMode,defaultCapacity,emailText,nvCompatible:[],description:''})})
@@ -2534,7 +2527,6 @@ function editProgModal(id){
     <div class="form-group"><label>Namn</label><input type="text" id="ep-name" value="${p.name}"></div>
     <div class="form-group"><label>Ikon</label><input type="text" id="ep-icon" value="${p.icon||'🎓'}" placeholder="Emoji"></div>
     <div class="form-group"><label>Beskrivning (visas i programlistan)</label><input type="text" id="ep-desc" value="${p.description||''}"></div>
-    <div class="form-group"><label>Standardläge</label><select id="ep-sm"><option value="closed" ${p.slotMode==='closed'?'selected':''}>Stängt (öppna tider manuellt)</option><option value="open" ${p.slotMode==='open'?'selected':''}>Öppet (stäng dagar manuellt)</option></select></div>
     <div class="form-group"><label>Standardplatser</label><input type="number" id="ep-c" value="${p.defaultCapacity}" min="1"></div>
     <div class="form-group"><label>Text i bokningsmail</label><textarea id="ep-e" rows="4">${p.emailText}</textarea></div>
     <div class="form-group"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="ep-hidden" ${p.hidden?'checked':''}> Dölj program (visas inte för elever)</label></div>
@@ -2548,29 +2540,13 @@ function editProgModal(id){
 }
 function saveEditProg(id){
   const p=DB.programs.find(x=>x.id===id);
-  const sm=document.getElementById('ep-sm').value;
   const cap=parseInt(document.getElementById('ep-c').value)||p.defaultCapacity;
   const et=document.getElementById('ep-e').value;
   const name=document.getElementById('ep-name')?.value.trim()||p.name;
   const icon=document.getElementById('ep-icon')?.value.trim()||p.icon;
   const desc=document.getElementById('ep-desc')?.value.trim()||p.description||'';
   const hidden=document.getElementById('ep-hidden')?.checked||false;
-  const modeChanged=sm!==p.slotMode;
-  if(modeChanged){
-    if(DB.settings.openTerms.length>0){toast('Stäng bokningen innan du ändrar programläge.','e');return;}
-    const hasBookings=DB.bookings.some(b=>b.slots.some(sid=>{const s=DB.slots.find(x=>x.id===sid);return s&&s.programId===id;}));
-    if(hasBookings){toast('Det finns aktiva bokningar på detta program. Du kan inte ändra läge.','e');return;}
-    const progSlots=DB.slots.filter(s=>s.programId===id);
-    if(progSlots.length>0){
-      if(!confirm('Alla '+progSlots.length+' inlagda tider för '+p.name+' kommer att raderas. Fortsätta?')) return;
-      Promise.all(progSlots.map(s=>fetch('/api/slots?id='+s.id,{method:'DELETE'}))).then(()=>{
-        DB.slots=DB.slots.filter(s=>s.programId!==id);
-        doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden);
-      });
-      return;
-    }
-  }
-  doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden);
+  doSaveProgram(id,p,'closed',cap,et,name,icon,desc,hidden);
 }
 function deleteProgConfirm(id){
   const p=DB.programs.find(x=>x.id===id);
