@@ -1007,6 +1007,15 @@ function renderDashboard(){
 }
 
 // BOOKINGS
+function sortedSlotIds(b){
+  return b.slots.slice().sort(function(sidA,sidB){
+    var sa=DB.slots.find(function(x){return x.id===sidA;}),sb=DB.slots.find(function(x){return x.id===sidB;});
+    if(!sa||!sb) return 0;
+    if(sa.date!==sb.date) return sa.date<sb.date?-1:1;
+    var rank={fm:0,hel:1,em:2};
+    return (rank[sa.type]||0)-(rank[sb.type]||0);
+  });
+}
 function renderBookings(activeDate){
   var mp=currentUser.program;
   var prog=mp?DB.programs.find(function(p){return p.id===mp;}):null;
@@ -1096,7 +1105,7 @@ function renderBookings(activeDate){
           +(b.overnight?'<br>\ud83d\udecf\ufe0f \u00d6vernattning bokad':'')
           +(b.specialFood?'<br>\ud83c\udf7d\ufe0f Specialkost: '+b.specialFood:'')
           +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
-          +'<br><div style="margin-top:6px;">'+b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var p=s?DB.programs.find(function(x){return x.id===s.programId;}):null;return s?'<span class="chip">'+(p?p.icon+' '+p.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;opacity:.8;"> · '+fmtDateLong(s.date)+'</span></span>':''}).join('')+'</div>'
+          +'<br><div style="margin-top:6px;">'+sortedSlotIds(b).map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var p=s?DB.programs.find(function(x){return x.id===s.programId;}):null;return s?'<span class="chip">'+(p?p.icon+' '+p.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;opacity:.8;"> · '+fmtDateLong(s.date)+'</span></span>':''}).join('')+'</div>'
           +(function(){
             var today=new Date().toISOString().slice(0,10);
             var bProgIds=[...new Set(b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.programId:null;}).filter(Boolean))];
@@ -1172,7 +1181,7 @@ function renderBookings(activeDate){
         +(b.otherInfo?'<br>\u2139\ufe0f '+b.otherInfo:'')
         +'</div>'
         +'<div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;">'
-        +b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var pr=s?DB.programs.find(function(p){return p.id===s.programId;}):null;return s?'<span class="chip">'+(pr?pr.icon+' '+pr.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;font-weight:400;">'+fmtDateLong(s.date)+'</span></span>':''}).join('')
+        +sortedSlotIds(b).map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});var pr=s?DB.programs.find(function(p){return p.id===s.programId;}):null;return s?'<span class="chip">'+(pr?pr.icon+' '+pr.name:'')+' <span class="tag tag-'+s.type+'">'+s.type.toUpperCase()+'</span> <span style="font-size:.7rem;font-weight:400;">'+fmtDateLong(s.date)+'</span></span>':''}).join('')
         +'</div>'
         +(function(){
           if(currentUser.role==='syv') return '';
