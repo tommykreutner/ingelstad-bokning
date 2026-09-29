@@ -41,6 +41,7 @@ export async function PATCH(req: NextRequest) {
     }
     const allowed: any = {}
     if ('email_text' in updates) allowed.email_text = updates.email_text
+    if ('description' in updates) allowed.description = updates.description
     const { data, error } = await supabaseAdmin
       .from('programs').update(allowed).eq('id', id).select().single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

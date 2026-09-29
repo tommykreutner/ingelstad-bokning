@@ -1703,6 +1703,7 @@ function renderProgAdmin(){
   var u=DB.users.find(function(x){return x.id===currentUser.id;});
   var emailVal=(u&&u.email)||'';
   var emailTextVal=prog.emailText||'';
+  var descVal=prog.description||'';
   var switcherHtml='';
   if(currentUser.programIds&&currentUser.programIds.length>1){
     switcherHtml='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">'
@@ -1723,6 +1724,12 @@ function renderProgAdmin(){
     +'<input type="email" id="pa-email" value="'+emailVal+'" placeholder="namn@ingelstad.nu"></div>'
     +'<p class="form-hint" style="margin-bottom:12px;">Du f\u00e5r BCC vid varje ny bokning p\u00e5 '+prog.name+'.</p>'
     +'<button class="btn btn-primary btn-sm" onclick="saveProgEmail()">Spara adress</button>'
+    +'</div>'
+    +'<div class="card" style="margin-top:16px;">'
+    +'<p class="text-sm fw-6" style="margin-bottom:10px;">Beskrivning</p>'
+    +'<div class="form-group" style="margin-bottom:8px;"><label>Beskrivning (visas i programlistan f\u00f6r eleven)</label>'
+    +'<input type="text" id="pa-desc" value="'+descVal+'"></div>'
+    +'<button class="btn btn-primary btn-sm" onclick="saveProgDescription()">Spara beskrivning</button>'
     +'</div>'
     +'<div class="card">'
     +'<p class="text-sm fw-6" style="margin-bottom:10px;">Programmets del i bekr\u00e4ftelsemail</p>'
@@ -1753,6 +1760,14 @@ function saveProgMailText(){
   var et=(document.getElementById('pa-emailtext')||{value:''}).value;
   fetch('/api/programs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:mp,email_text:et})})
     .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}prog.emailText=et;toast('Mailtext sparad!');}).catch(()=>toast('Fel vid sparande','e'));
+}
+function saveProgDescription(){
+  var mp=currentUser.program;
+  var prog=DB.programs.find(function(p){return p.id===mp;});
+  if(!prog) return;
+  var desc=(document.getElementById('pa-desc')||{value:''}).value.trim();
+  fetch('/api/programs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:mp,description:desc})})
+    .then(r=>r.json()).then(data=>{if(data.error){toast(data.error,'e');return;}prog.description=desc;toast('Beskrivning sparad!');}).catch(()=>toast('Fel vid sparande','e'));
 }
 function saveProgEmailText(progId){
   const prog=DB.programs.find(p=>p.id===progId);
