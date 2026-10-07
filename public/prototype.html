@@ -2796,7 +2796,7 @@ function slotsForDay(date, nvPkgIds, regProgIds){
     if(!compatId) return;
     const compatProg=DB.programs.find(p=>p.id===compatId);
     if(!compatProg) return;
-    const nvSlots=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+    const nvSlots=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&(s.type==='fm'||s.type==='em')&&s.booked<s.capacity&&isDateBookable(s.date));
     nvSlots.forEach(nvS=>{
       const cType=nvS.type==='fm'?'em':'fm';
       const cs=DB.slots.find(s=>s.programId===compatId&&s.date===date&&(s.type===cType||s.type==='hel')&&s.booked<s.capacity);
@@ -2944,7 +2944,7 @@ function buildCombos(){
   // Helper: find NV slot + paired compat slot on a date
   function nvPairForDate(date, compatId){
     if(!nv) return null;
-    const nvSlots=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&s.booked<s.capacity&&isDateBookable(s.date));
+    const nvSlots=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&(s.type==='fm'||s.type==='em')&&s.booked<s.capacity&&isDateBookable(s.date));
     for(const nvS of nvSlots){
       const nvType=nvS.type; // fm or em
       const compatType=nvType==='fm'?'em':'fm';
@@ -3137,6 +3137,7 @@ function buildCombos(){
           const picks=[];
           const typeOverride={};
           let minSpots=999;
+          const helClaims={};
           for(const a of assignment){
             const hs=getHalfSlot(a.date,a.pid,a.type);
             if(!hs) return null;
@@ -3144,7 +3145,16 @@ function buildCombos(){
             if(dayUsed.has(a.type)) return null;
             dayUsed.add(a.type);
             picks.push(hs);
-            if(hs.isHel) typeOverride[hs.slotId]=a.type;
+            if(hs.isHel){
+              helClaims[hs.slotId]=(helClaims[hs.slotId]||0)+1;
+              if(helClaims[hs.slotId]>=2){
+                // Båda halvorna i den här tilldelningen landade på SAMMA heldags-slot
+                // (ett program ska ha hela dagen) — boka den hel, splitta inte.
+                delete typeOverride[hs.slotId];
+              } else {
+                typeOverride[hs.slotId]=a.type;
+              }
+            }
             minSpots=Math.min(minSpots,hs.spots);
           }
           if(minSpots<=0) return null;
