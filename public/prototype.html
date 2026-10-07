@@ -35,6 +35,8 @@ button,input,select,textarea{font-family:'Nunito',sans-serif;}
 .badge-admin{background:#fef3c7;color:#92400e;}
 .badge-personal{background:var(--sky-light);color:var(--sky);}
 .badge-internat{background:#f3e8ff;color:#6b21a8;}
+.badge-syv{background:#ffe4e6;color:#9f1239;}
+.badge-kok{background:#fff7ed;color:#9a3412;}
 .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:700;}
 .tag-fm{background:#dbeafe;color:#1e40af;}
 .tag-em{background:#dcfce7;color:#15803d;}
@@ -2193,7 +2195,7 @@ function renderAdmin(){
 
     <div class="sec-title" style="margin-top:4px;">Personal <button class="btn btn-secondary btn-sm" onclick="addUserModal()">+ Ny</button></div>
     <div class="table-wrap"><table><thead><tr><th>Namn</th><th>Roll</th><th>Program</th><th></th></tr></thead><tbody>
-    ${DB.users.map(u=>`<tr><td>${u.name}</td><td><span class="badge badge-${u.role}" style="font-size:.68rem;">${{admin:'Admin',personal:'Personal',internat:'Internat',kok:'Köket'}[u.role]}</span></td>
+    ${DB.users.map(u=>`<tr><td>${u.name}</td><td><span class="badge badge-${u.role}" style="font-size:.68rem;">${{admin:'Admin',personal:'Personal',internat:'Internat',kok:'Köket',syv:'SYV'}[u.role]||u.role}</span></td>
       <td class="td-m text-sm">${u.program?DB.programs.find(p=>p.id===u.program)?.name||'—':'—'}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="editUserModal('${u.id}')">✏️</button></td></tr>`).join('')}
     </tbody></table></div>
@@ -3367,6 +3369,8 @@ function computeBCC(booking){
     });
   });
   // Internat if overnight
+  // SYV/Mentor: skolövergripande roll, inte knuten till ett program — får BCC på alla bokningar
+  DB.users.filter(u=>u.role==='syv'&&u.email).forEach(u=>bcc.push({label:u.name+' (SYV)',email:u.email}));
   if(booking.overnight&&DB.settings.internatEmail){
     bcc.push({label:'Internatpersonal',email:DB.settings.internatEmail});
     // Also internat users
