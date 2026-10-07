@@ -604,7 +604,7 @@ function loginAs(user){
     fetch('/api/closed-rooms').then(r=>r.json()),
   ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes,userProgramsRes,closedRoomsRes])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
-    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
+    if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,guardianPhone:b.guardian_phone||'',phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
     // Build roomBookings from bookings
     DB.roomBookings=DB.bookings.flatMap(b=>b.roomBookings||[]);
@@ -1279,7 +1279,31 @@ function exportDayCSV(date){
   var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bokningar_'+date+'.csv';a.click();
 }
-function exportAllCSV(){toast('CSV-export simulerad');}
+function exportAllCSV(){
+  var items=(DB.checklistItems||[]).slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
+  var headerCols=['Boknings-id','Namn','Skola','Kommun','Åk','Telefon','E-post','Vårdnadshavare e-post','Vårdnadshavare telefon','Program(s)','Besöksdatum','Övernattning','Termin']
+    .concat(items.map(function(it){return it.label;}))
+    .concat(['Specialkost','Övrigt','Bokningskod']);
+  var lines=['\ufeff'+headerCols.map(function(h){return '"'+String(h).replace(/"/g,'""')+'"';}).join(',')];
+  DB.bookings.forEach(function(b){
+    var slotObjs=b.slots.map(function(sid){return DB.slots.find(function(x){return x.id===sid;});}).filter(Boolean);
+    var progNames=[...new Set(slotObjs.map(function(s){var p=DB.programs.find(function(x){return x.id===s.programId;});return p?p.name:'';}).filter(Boolean))].join(' + ');
+    var uniqDates=[...new Set(slotObjs.map(function(s){return s.date;}))].sort();
+    var datesLabel=uniqDates.map(fmtDate).join(' + ');
+    var term=uniqDates.length?termLabel(getTermId(uniqDates[0])).replace('Hoest','Höst').replace('Vaar','Vår'):'';
+    var checklistVals=items.map(function(it){
+      var comp=DB.checklistCompletions.find(function(cc){return cc.booking_id===b.id&&cc.item_id===it.id;});
+      return comp&&comp.completed?'Ja':'Nej';
+    });
+    var row=[b.id,b.studentName,b.school,b.municipality||'',b.grade,b.phone,b.studentEmail,b.guardianEmail||'',b.guardianPhone||'',progNames,datesLabel,b.overnight?'Ja':'Nej',term]
+      .concat(checklistVals)
+      .concat([b.specialFood||'',b.otherInfo||'',b.code||'']);
+    lines.push(row.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(','));
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='alla_bokningar_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  toast('CSV exporterad!');
+}
 
 function cancelBooking(id){
   showModal(`<div class="modal-handle"></div><h3>Avboka bokning?</h3><p class="modal-sub">Eleven notifieras via e-post (simulerat).</p>
@@ -3496,7 +3520,7 @@ async function confirmBooking(){
   if(data.error){toast(data.error,'e');return;}
   // Update local DB
   createdSlotIds.forEach(sid=>{const s=DB.slots.find(x=>x.id===sid);if(s)s.booked=Math.min(s.booked+1,s.capacity);});
-  DB.bookings.push({id:data.id,studentName:bookingState.studentName,studentEmail:bookingState.studentEmail,guardianEmail:bookingState.guardianEmail,phone:bookingState.phone,school:bookingState.school,municipality:bookingState.municipality,grade:bookingState.grade,days:bookingState.days,overnight:bookingState.overnight,slots:createdSlotIds,specialFood:bookingState.specialFood,otherInfo:bookingState.otherInfo,code:data.code,createdAt:new Date().toISOString().slice(0,10)});
+  DB.bookings.push({id:data.id,studentName:bookingState.studentName,studentEmail:bookingState.studentEmail,guardianEmail:bookingState.guardianEmail,guardianPhone:bookingState.guardianPhone||'',phone:bookingState.phone,school:bookingState.school,municipality:bookingState.municipality,grade:bookingState.grade,days:bookingState.days,overnight:bookingState.overnight,slots:createdSlotIds,specialFood:bookingState.specialFood,otherInfo:bookingState.otherInfo,code:data.code,createdAt:new Date().toISOString().slice(0,10)});
   bookingState.code=data.code;bookingState.bookingId=data.id;
   const newBooking=DB.bookings[DB.bookings.length-1];
   bookingState.step=6;renderBStep();
