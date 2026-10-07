@@ -1169,7 +1169,7 @@ function renderBookings(activeDate){
     var handledCount=list.filter(bookingIsHandled).length;
     var showHistoric=!!window._showHistoricBookings;
     var visibleList=showHistoric?list:list.filter(function(b){return !bookingIsHandled(b);});
-    html+='<div class="mb-8" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'+(currentUser.role!=='kok'?'<button class="btn btn-secondary btn-sm" onclick="exportAllCSV()">Exportera CSV</button>':'')+(handledCount>0?'<button class="btn btn-ghost btn-sm" onclick="toggleHistoricBookings()">'+(showHistoric?'D\u00f6lj avklarade':'Visa avklarade ('+handledCount+')')+'</button>':'')+'</div>';
+    html+='<div class="mb-8" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'+(currentUser.role!=='kok'?'<button class="btn btn-secondary btn-sm" onclick="openExportModal()">Exportera CSV</button>':'')+(handledCount>0?'<button class="btn btn-ghost btn-sm" onclick="toggleHistoricBookings()">'+(showHistoric?'D\u00f6lj avklarade':'Visa avklarade ('+handledCount+')')+'</button>':'')+'</div>';
     if(!visibleList.length) html+='<div class="card text-muted text-sm">'+(list.length?'Inga bokningar att visa \u2014 alla \u00e4r avklarade.':'Inga bokningar \u00e4nnu.')+'</div>';
     visibleList.forEach(function(b){
       html+='<div class="card" style="margin-bottom:12px;">'
@@ -1279,30 +1279,69 @@ function exportDayCSV(date){
   var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bokningar_'+date+'.csv';a.click();
 }
-function exportAllCSV(){
+function allKnownTermIds(){
+  var ids=new Set([...(DB.settings.openTerms||[]),...(DB.settings.termHistory||[])]);
+  DB.bookings.forEach(function(b){
+    (b.slots||[]).forEach(function(sid){
+      var s=DB.slots.find(function(x){return x.id===sid;});
+      if(s) ids.add(getTermId(s.date));
+    });
+  });
+  return [...ids].sort(function(a,b){return termDateRange(b).start.localeCompare(termDateRange(a).start);});
+}
+function openExportModal(){
+  var terms=allKnownTermIds();
+  var termRows=terms.length?terms.map(function(tid){
+    return '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;"><input type="checkbox" class="exp-term-cb" value="'+tid+'" checked> '+termLabel(tid).replace('Hoest','Höst').replace('Vaar','Vår')+' ('+tid+')</label>';
+  }).join(''):'<p class="text-sm text-muted">Inga terminer med bokningar ännu.</p>';
+  var gradeLabels={'8':'Åk 8','9':'Åk 9','Har gått ut grundskolan':'Har gått ut grundskolan'};
+  var gradeRows=['8','9','Har gått ut grundskolan'].map(function(g){
+    return '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;"><input type="checkbox" class="exp-grade-cb" value="'+g+'" checked> '+gradeLabels[g]+'</label>';
+  }).join('');
+  showModal('<div class="modal-handle"></div><h3>Exportera CSV</h3>'+
+    '<p class="modal-sub">Kryssa i vilka terminer och årskurser som ska vara med. Allt är ikryssat som standard (= total historik).</p>'+
+    '<p class="text-sm fw-6" style="margin:10px 0 6px;">Terminer (besöksdatum)</p>'+
+    '<div style="display:flex;gap:8px;margin-bottom:6px;"><button class="btn btn-ghost btn-sm" onclick="document.querySelectorAll(\'.exp-term-cb\').forEach(function(c){c.checked=true;})">Markera alla</button><button class="btn btn-ghost btn-sm" onclick="document.querySelectorAll(\'.exp-term-cb\').forEach(function(c){c.checked=false;})">Avmarkera alla</button></div>'+
+    '<div style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px;">'+termRows+'</div>'+
+    '<p class="text-sm fw-6" style="margin:0 0 6px;">Årskurser</p>'+
+    '<div style="margin-bottom:14px;">'+gradeRows+'</div>'+
+    '<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-primary" onclick="runFilteredExport()">Exportera CSV</button></div>');
+}
+function runFilteredExport(){
+  var selectedTerms=Array.from(document.querySelectorAll('.exp-term-cb:checked')).map(function(c){return c.value;});
+  var selectedGrades=Array.from(document.querySelectorAll('.exp-grade-cb:checked')).map(function(c){return c.value;});
+  if(!selectedGrades.length){toast('Välj minst en årskurs','e');return;}
+  if(!selectedTerms.length&&allKnownTermIds().length){toast('Välj minst en termin','e');return;}
   var items=(DB.checklistItems||[]).slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
   var headerCols=['Boknings-id','Namn','Skola','Kommun','Åk','Telefon','E-post','Vårdnadshavare e-post','Vårdnadshavare telefon','Program(s)','Besöksdatum','Övernattning','Termin']
     .concat(items.map(function(it){return it.label;}))
     .concat(['Specialkost','Övrigt','Bokningskod']);
   var lines=['\ufeff'+headerCols.map(function(h){return '"'+String(h).replace(/"/g,'""')+'"';}).join(',')];
+  var count=0;
   DB.bookings.forEach(function(b){
     var slotObjs=b.slots.map(function(sid){return DB.slots.find(function(x){return x.id===sid;});}).filter(Boolean);
-    var progNames=[...new Set(slotObjs.map(function(s){var p=DB.programs.find(function(x){return x.id===s.programId;});return p?p.name:'';}).filter(Boolean))].join(' + ');
     var uniqDates=[...new Set(slotObjs.map(function(s){return s.date;}))].sort();
+    if(!uniqDates.length) return;
+    var bookingTermIds=[...new Set(uniqDates.map(getTermId))];
+    if(!bookingTermIds.some(function(tid){return selectedTerms.includes(tid);})) return;
+    if(!selectedGrades.includes(b.grade)) return;
+    var progNames=[...new Set(slotObjs.map(function(s){var p=DB.programs.find(function(x){return x.id===s.programId;});return p?p.name:'';}).filter(Boolean))].join(' + ');
     var datesLabel=uniqDates.map(fmtDate).join(' + ');
-    var term=uniqDates.length?termLabel(getTermId(uniqDates[0])).replace('Hoest','Höst').replace('Vaar','Vår'):'';
+    var termCell=bookingTermIds.map(function(tid){return termLabel(tid).replace('Hoest','Höst').replace('Vaar','Vår');}).join(' + ');
     var checklistVals=items.map(function(it){
       var comp=DB.checklistCompletions.find(function(cc){return cc.booking_id===b.id&&cc.item_id===it.id;});
       return comp&&comp.completed?'Ja':'Nej';
     });
-    var row=[b.id,b.studentName,b.school,b.municipality||'',b.grade,b.phone,b.studentEmail,b.guardianEmail||'',b.guardianPhone||'',progNames,datesLabel,b.overnight?'Ja':'Nej',term]
+    var row=[b.id,b.studentName,b.school,b.municipality||'',b.grade,b.phone,b.studentEmail,b.guardianEmail||'',b.guardianPhone||'',progNames,datesLabel,b.overnight?'Ja':'Nej',termCell]
       .concat(checklistVals)
       .concat([b.specialFood||'',b.otherInfo||'',b.code||'']);
     lines.push(row.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(','));
+    count++;
   });
   var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='alla_bokningar_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  toast('CSV exporterad!');
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bokningar_export_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  closeModal();
+  toast(count+' bokning(ar) exporterade');
 }
 
 function cancelBooking(id){
