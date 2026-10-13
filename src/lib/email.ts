@@ -128,24 +128,43 @@ export async function sendBookingConfirmation(booking: {
   const staffEmails = (staffData || []).filter((s: any) => s.email).map((s: any) => s.email)
   const internatEmails = booking.overnight ? await supabaseAdmin.from('staff').select('email').eq('role', 'internat').then(({data}) => (data||[]).filter((s:any)=>s.email).map((s:any)=>s.email)) : []
 
-  const bcc = [...(settings.admin_emails || []), ...staffEmails,
+  const { data: syvData } = await supabaseAdmin.from('staff').select('email').eq('role', 'syv')
+  const syvEmails = (syvData || []).filter((s: any) => s.email).map((s: any) => s.email)
+
+  const bcc = [...(settings.admin_emails || []), ...staffEmails, ...syvEmails,
     ...(booking.overnight && settings.internat_email ? [settings.internat_email] : []),
     ...internatEmails,
     ...(booking.special_food && settings.kitchen_email ? [settings.kitchen_email] : []),
   ].filter(Boolean)
 
+  const toList = [booking.student_email, booking.guardian_email].filter(Boolean)
+  let accepted: string[] = []
+  let rejected: string[] = []
+  let sendError: string | null = null
   try {
     const t = await createTransporter()
-    await t.sendMail({
+    const info = await t.sendMail({
       from: `${settings.school_name || 'Ingelstadgymnasiet'} <${settings.smtp_user}>`,
-      to: [booking.student_email, booking.guardian_email].filter(Boolean).join(', '),
+      to: toList.join(', '),
       bcc: bcc.join(', ') || undefined,
       subject: `Bokningsbekräftelse – Prova-på-dag (${booking.id})`,
       html, text,
     })
+    const addr = (a: any) => (typeof a === 'string' ? a : a?.address)
+    accepted = ((info.accepted || []) as any[]).map(addr).filter(Boolean)
+    rejected = ((info.rejected || []) as any[]).map(addr).filter(Boolean)
   } catch (err: any) {
+    sendError = err?.message || String(err)
     console.error('SMTP FEL:', err?.message, err?.code)
   }
+
+  // TILLFÄLLIG LOGG: vilka adresser gick bekräftelsen till? (tabellen email_log)
+  const { error: logErr } = await supabaseAdmin.from('email_log').insert({
+    booking_id: booking.id, kind: 'bekraftelse',
+    to_addresses: toList, bcc_addresses: bcc,
+    accepted, rejected, error: sendError,
+  })
+  if (logErr) console.error('email_log misslyckades:', logErr.message)
 }
 
 export async function sendCancellationEmail(booking: {
