@@ -2316,7 +2316,7 @@ function saveNewProg(){
     .then(r=>r.json())
     .then(data=>{
       if(data.error){toast(data.error,'e');return;}
-      DB.programs.push({id:data.id,name:data.name,icon:data.icon||'🎓',isNV:data.is_nv,hidden:data.hidden,slotMode:data.slot_mode,defaultCapacity:data.default_capacity,emailText:data.email_text||'',nvCompatible:data.nv_compatible||[],description:data.description||''});
+      DB.programs.push({id:data.id,name:data.name,icon:data.icon||'🎓',isNV:data.is_nv,hidden:data.hidden,slotMode:data.slot_mode,defaultCapacity:data.default_capacity,emailText:data.email_text||'',nvCompatible:data.nv_compatible||[],description:data.description||'',allowedTypes:(Array.isArray(data.allowed_types)&&data.allowed_types.length)?data.allowed_types:['hel','fm','em']});
       closeModal();renderAdmin();toast('Program skapat!');
     })
     .catch(()=>toast('Fel vid skapande','e'));
@@ -2329,6 +2329,11 @@ function editProgModal(id){
     <div class="form-group"><label>Beskrivning (visas i programlistan)</label><input type="text" id="ep-desc" value="${p.description||''}"></div>
     <div class="form-group"><label>Standardplatser</label><input type="number" id="ep-c" value="${p.defaultCapacity}" min="1"></div>
     <div class="form-group"><label>Text i bokningsmail</label><textarea id="ep-e" rows="4">${p.emailText}</textarea></div>
+    <div class="form-group"><label>Tillåtna bokningstyper</label>
+      <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" class="ep-type" value="hel" ${(p.allowedTypes||['hel','fm','em']).includes('hel')?'checked':''}> Heldag</label>
+      <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" class="ep-type" value="fm" ${(p.allowedTypes||['hel','fm','em']).includes('fm')?'checked':''}> Endast förmiddag (halvdag)</label>
+      <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" class="ep-type" value="em" ${(p.allowedTypes||['hel','fm','em']).includes('em')?'checked':''}> Endast eftermiddag (halvdag)</label>
+      <p class="form-hint">Avmarkera det programmet inte vill ta emot. Exempel: avmarkera "Endast eftermiddag" om eleverna alltid ska vara med på förmiddagen.</p></div>
     <div class="form-group"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="ep-hidden" ${p.hidden?'checked':''}> Dölj program (visas inte för elever)</label></div>
     <div class="modal-footer" style="justify-content:space-between;">
       <button class="btn btn-danger btn-sm" onclick="deleteProgConfirm('${id}')">🗑 Radera</button>
@@ -2346,7 +2351,9 @@ function saveEditProg(id){
   const icon=document.getElementById('ep-icon')?.value.trim()||p.icon;
   const desc=document.getElementById('ep-desc')?.value.trim()||p.description||'';
   const hidden=document.getElementById('ep-hidden')?.checked||false;
-  doSaveProgram(id,p,'closed',cap,et,name,icon,desc,hidden);
+  const allowedTypes=Array.from(document.querySelectorAll('.ep-type:checked')).map(function(x){return x.value;});
+  if(!allowedTypes.length){toast('Välj minst en bokningstyp','e');return;}
+  doSaveProgram(id,p,'closed',cap,et,name,icon,desc,hidden,allowedTypes);
 }
 function deleteProgConfirm(id){
   const p=DB.programs.find(x=>x.id===id);
@@ -2384,11 +2391,11 @@ function doDeleteProg(){
       closeModal();renderAdmin();toast('Program raderat!');
     }).catch(()=>toast('Fel vid radering','e'));
 }
-function doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden){
-  fetch('/api/programs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,slot_mode:sm,default_capacity:cap,email_text:et,name,icon,description:desc,hidden})})
+function doSaveProgram(id,p,sm,cap,et,name,icon,desc,hidden,allowedTypes){
+  fetch('/api/programs',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,slot_mode:sm,default_capacity:cap,email_text:et,name,icon,description:desc,hidden,allowed_types:allowedTypes})})
     .then(r=>r.json()).then(data=>{
       if(data.error){toast(data.error,'e');return;}
-      p.slotMode=sm;p.defaultCapacity=cap;p.emailText=et;p.name=name;p.icon=icon;p.description=desc;p.hidden=hidden;
+      p.slotMode=sm;p.defaultCapacity=cap;p.emailText=et;p.name=name;p.icon=icon;p.description=desc;p.hidden=hidden;if(allowedTypes) p.allowedTypes=allowedTypes;
       closeModal();renderAdmin();toast('Sparat!');
     }).catch(()=>toast('Fel vid sparande','e'));
 }
@@ -2650,6 +2657,18 @@ function buildCombosTest(days,overnight,regProgIds,nvPkgIds){
   bookingState.days=saved.days;bookingState.overnight=saved.overnight;bookingState.programs=saved.programs;
   return result;
 }
+// Får programmet ta emot den här typen? role: 'hel' (hel dag), 'fm' eller 'em' (halvdag).
+// Saknas inställningen (äldre data) tillåts allt.
+function progAllows(pid,role){
+  var p=DB.programs.find(function(x){return x.id===pid;});
+  if(!p||!Array.isArray(p.allowedTypes)||!p.allowedTypes.length) return true;
+  return p.allowedTypes.includes(role);
+}
+// Mest begränsade program först, så att t.ex. ett program som bara tar FM hinner få FM innan ett flexibelt program tar den.
+function orderByHalfFlex(pids){
+  function flex(pid){return (progAllows(pid,'fm')?1:0)+(progAllows(pid,'em')?1:0);}
+  return pids.slice().sort(function(a,b){return flex(a)-flex(b);});
+}
 function buildCombos(){
   try {
   const nv=DB.programs.find(p=>p.isNV);
@@ -2724,6 +2743,7 @@ function buildCombos(){
     for(const nvS of nvSlots){
       const nvType=nvS.type; // fm or em
       const compatType=nvType==='fm'?'em':'fm';
+      if(!progAllows(compatId,compatType)) continue;
       const compatAvail=getSlotsForProg(date,compatId);
       const cs=compatAvail.find(s=>s.type===compatType)||compatAvail.find(s=>s.type==='hel');
       if(cs){
@@ -2766,22 +2786,22 @@ function buildCombos(){
         const usedTypes=new Set();
         const picks=[];
         let ok=true;
-        for(const pid of regProgIds.slice(0,2)){
+        for(const pid of orderByHalfFlex(regProgIds.slice(0,2))){
           const prog=DB.programs.find(p=>p.id===pid);
           if(!prog){ok=false;break;}
           const avail=getSlotsForProg(date,pid);
           // Try FM first, then EM, then HEL (as either)
           let pick=null;
           for(const t of['fm','em']){
-            if(usedTypes.has(t)) continue;
+            if(usedTypes.has(t)||!progAllows(pid,t)) continue;
             const s=avail.find(s=>s.type===t);
             if(s){pick={slotId:s.id,type:t,label:prog.icon+' '+prog.name+' '+t.toUpperCase(),spots:s.capacity-s.booked};break;}
           }
           if(!pick){
             const hel=avail.find(s=>s.type==='hel');
             if(hel){
-              const t=usedTypes.has('fm')?'em':'fm';
-              pick={slotId:hel.id,type:t,label:prog.icon+' '+prog.name+' '+t.toUpperCase(),spots:hel.capacity-hel.booked};
+              const t=['fm','em'].find(function(x){return !usedTypes.has(x)&&progAllows(pid,x);});
+              if(t) pick={slotId:hel.id,type:t,label:prog.icon+' '+prog.name+' '+t.toUpperCase(),spots:hel.capacity-hel.booked};
             }
           }
           if(!pick){ok=false;break;}
@@ -2803,7 +2823,7 @@ function buildCombos(){
       allDates.forEach(date=>{
         const prog=regProgIds.length>0?DB.programs.find(p=>p.id===regProgIds[0]):null;
         if(!prog) return;
-        const pid=regProgIds[0];
+        const pid=regProgIds[0];if(!progAllows(pid,'hel')) return;
         const avail=getSlotsForProg(date,pid);
         const hel=avail.find(s=>s.type==='hel');
         if(hel){combos.push({date,date2:null,label:prog.icon+' '+prog.name+' (heldag)',slots:[hel.id],minSpots:hel.capacity-hel.booked,isNV:false});return;}
@@ -2848,8 +2868,8 @@ function buildCombos(){
           const usedOnOtherDay=new Set();
           const otherPicks=[];
           let ok=true;
-          for(const pid of allHalfProgs){
-            const halfSlots=halfSlotsForProg(otherDay,pid).filter(h=>!usedOnOtherDay.has(h.type));
+          for(const pid of orderByHalfFlex(allHalfProgs)){
+            const halfSlots=halfSlotsForProg(otherDay,pid).filter(h=>!usedOnOtherDay.has(h.type)&&progAllows(pid,h.type));
             // Prefer fm then em
             const pick=halfSlots.find(h=>h.type==='fm')||halfSlots.find(h=>h.type==='em');
             if(!pick){ok=false;break;}
@@ -2873,7 +2893,7 @@ function buildCombos(){
       // No NV: each reg prog gets a full day or the two days share half-slots
       if(regProgIds.length===1){
         // Same prog both days
-        const pid=regProgIds[0],prog=DB.programs.find(p=>p.id===pid);
+        const pid=regProgIds[0],prog=DB.programs.find(p=>p.id===pid);if(!progAllows(pid,'hel')) continue;
         if(!prog) continue;
         const getFullDay=(date)=>{
           const avail=getSlotsForProg(date,pid);
@@ -2914,6 +2934,13 @@ function buildCombos(){
           const typeOverride={};
           let minSpots=999;
           const helClaims={};
+          // Ett program som får både FM och EM samma dag har en hel dag ('hel'); annars en halvdag.
+          const roleByProgDay={};
+          assignment.forEach(function(a){var k=a.pid+'::'+a.date;(roleByProgDay[k]=roleByProgDay[k]||[]).push(a.type);});
+          for(const k in roleByProgDay){
+            const ts=roleByProgDay[k], rpid=k.split('::')[0];
+            if(!(ts.length>=2?progAllows(rpid,'hel'):progAllows(rpid,ts[0]))) return null;
+          }
           for(const a of assignment){
             const hs=getHalfSlot(a.date,a.pid,a.type);
             if(!hs) return null;
@@ -3312,7 +3339,7 @@ async function initDB(){
       fetch('/api/settings').then(r=>r.json()),
       fetch('/api/closed-rooms').then(r=>r.json()),
     ]);
-    if(Array.isArray(progs)) DB.programs=progs.map(p=>({id:p.id,name:p.name,icon:p.icon||'🎓',isNV:p.is_nv,hidden:p.hidden,slotMode:p.slot_mode,defaultCapacity:p.default_capacity,emailText:p.email_text||'',nvCompatible:p.nv_compatible||[],description:p.description||''}));
+    if(Array.isArray(progs)) DB.programs=progs.map(p=>({id:p.id,name:p.name,icon:p.icon||'🎓',isNV:p.is_nv,hidden:p.hidden,slotMode:p.slot_mode,defaultCapacity:p.default_capacity,emailText:p.email_text||'',nvCompatible:p.nv_compatible||[],description:p.description||'',allowedTypes:(Array.isArray(p.allowed_types)&&p.allowed_types.length)?p.allowed_types:['hel','fm','em']}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
     if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,guardianPhone:b.guardian_phone||'',phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
