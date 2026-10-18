@@ -707,6 +707,28 @@ function sortedSlotIds(b){
     return (rank[sa.type]||0)-(rank[sb.type]||0);
   });
 }
+function sortBookingsByVisit(list){
+  var today=new Date().toISOString().slice(0,10);
+  function span(b){
+    var ds=b.slots.map(function(sid){var s=DB.slots.find(function(x){return x.id===sid;});return s?s.date:null;}).filter(Boolean).sort();
+    return ds.length?{first:ds[0],last:ds[ds.length-1]}:null;
+  }
+  function group(sp){
+    if(!sp) return 3;
+    if(sp.first<=today&&sp.last>=today) return 0;
+    if(sp.first>today) return 1;
+    return 2;
+  }
+  return list.map(function(b){var sp=span(b);return {b:b,sp:sp,g:group(sp)};})
+    .sort(function(x,y){
+      if(x.g!==y.g) return x.g-y.g;
+      var nx=x.b.studentName||'',ny=y.b.studentName||'';
+      if(x.g===0||x.g===1) return x.sp.first.localeCompare(y.sp.first)||x.sp.last.localeCompare(y.sp.last)||nx.localeCompare(ny,'sv');
+      if(x.g===2) return y.sp.last.localeCompare(x.sp.last)||nx.localeCompare(ny,'sv');
+      return nx.localeCompare(ny,'sv');
+    })
+    .map(function(o){return o.b;});
+}
 function renderBookings(activeDate){
   var mp=currentUser.program;
   var prog=mp?DB.programs.find(function(p){return p.id===mp;}):null;
@@ -857,7 +879,7 @@ function renderBookings(activeDate){
     }
     var handledCount=list.filter(bookingIsHandled).length;
     var showHistoric=!!window._showHistoricBookings;
-    var visibleList=showHistoric?list:list.filter(function(b){return !bookingIsHandled(b);});
+    var visibleList=sortBookingsByVisit(showHistoric?list:list.filter(function(b){return !bookingIsHandled(b);}));
     html+='<div class="mb-8" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'+(currentUser.role!=='kok'?'<button class="btn btn-secondary btn-sm" onclick="openExportModal()">Exportera CSV</button>':'')+(handledCount>0?'<button class="btn btn-ghost btn-sm" onclick="toggleHistoricBookings()">'+(showHistoric?'D\u00f6lj avklarade':'Visa avklarade ('+handledCount+')')+'</button>':'')+'</div>';
     if(!visibleList.length) html+='<div class="card text-muted text-sm">'+(list.length?'Inga bokningar att visa \u2014 alla \u00e4r avklarade.':'Inga bokningar \u00e4nnu.')+'</div>';
     visibleList.forEach(function(b){
