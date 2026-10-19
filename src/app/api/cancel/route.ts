@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
-      .select('*, booking_slots(slot_id)')
+      .select('*, booking_slots(slot_id, slots(date, type, program_id, programs(name, icon)))')
       .eq('code', code.toUpperCase())
       .eq('cancelled', false)
       .single()
@@ -29,6 +29,11 @@ export async function POST(req: NextRequest) {
     // Mark booking cancelled
     await supabaseAdmin.from('bookings').update({ cancelled: true }).eq('id', booking.id)
 
+    const cancelSlots = (booking.booking_slots || []).map((bs: any) => ({
+      date: bs.slots?.date, type: bs.slots?.type, program_id: bs.slots?.program_id,
+      program_name: bs.slots?.programs?.name || '', program_icon: bs.slots?.programs?.icon || '',
+    })).filter((s: any) => s.date)
+
     // Send cancellation email
     await sendCancellationEmail({
       id: booking.id,
@@ -36,6 +41,9 @@ export async function POST(req: NextRequest) {
       student_email: booking.student_email,
       guardian_email: booking.guardian_email,
       code: booking.code,
+      overnight: booking.overnight,
+      special_food: booking.special_food,
+      slots: cancelSlots,
     })
 
     return NextResponse.json({ ok: true })

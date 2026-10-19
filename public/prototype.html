@@ -1056,8 +1056,25 @@ function runFilteredExport(){
 }
 
 function cancelBooking(id){
-  showModal(`<div class="modal-handle"></div><h3>Avboka bokning?</h3><p class="modal-sub">Eleven notifieras via e-post (simulerat).</p>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-danger" onclick="DB.bookings=DB.bookings.filter(b=>b.id!=='${id}');closeModal();renderBookings();toast('Bokning avbokad')">Avboka</button></div>`);
+  const b=DB.bookings.find(x=>x.id===id);
+  if(!b){toast('Bokningen hittades inte','e');return;}
+  showModal(`<div class="modal-handle"></div><h3>Avboka bokning?</h3><p class="modal-sub">${b.studentName} (${b.id}) avbokas. Eleven, vårdnadshavare och berörd personal får ett avbokningsmail, och tider och rum frigörs.</p>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Avbryt</button><button class="btn btn-danger" id="cancel-go" onclick="doCancelBooking('${id}')">Avboka</button></div>`);
+}
+async function doCancelBooking(id){
+  const b=DB.bookings.find(x=>x.id===id);
+  if(!b){closeModal();return;}
+  const btn=document.getElementById('cancel-go');
+  if(btn){btn.disabled=true;btn.textContent='Avbokar…';}
+  try{
+    const r=await fetch('/api/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:b.code})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||j.error){toast(j.error||'Kunde inte avboka','e');closeModal();return;}
+    (b.slots||[]).forEach(sid=>{const s=DB.slots.find(x=>x.id===sid);if(s&&s.booked>0)s.booked--;});
+    DB.bookings=DB.bookings.filter(x=>x.id!==id);
+    DB.roomBookings=(DB.roomBookings||[]).filter(rb=>rb.bookingId!==id);
+    closeModal();renderBookings();toast('Bokning avbokad – avbokningsmail skickat');
+  }catch(e){toast('Kunde inte avboka – kontrollera anslutningen','e');closeModal();}
 }
 
 // SLOTS

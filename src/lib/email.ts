@@ -124,18 +124,7 @@ export async function sendBookingConfirmation(booking: {
 
   // Get staff emails
   const programIds = [...new Set(booking.slots.map((s: any) => s.program_id).filter(Boolean))]
-  const { data: staffData } = await supabaseAdmin.from('staff').select('email').eq('role', 'personal').in('program_id', programIds.length ? programIds : ['__none__'])
-  const staffEmails = (staffData || []).filter((s: any) => s.email).map((s: any) => s.email)
-  const internatEmails = booking.overnight ? await supabaseAdmin.from('staff').select('email').eq('role', 'internat').then(({data}) => (data||[]).filter((s:any)=>s.email).map((s:any)=>s.email)) : []
-
-  const { data: syvData } = await supabaseAdmin.from('staff').select('email').eq('role', 'syv')
-  const syvEmails = (syvData || []).filter((s: any) => s.email).map((s: any) => s.email)
-
-  const bcc = [...(settings.admin_emails || []), ...staffEmails, ...syvEmails,
-    ...(booking.overnight && settings.internat_email ? [settings.internat_email] : []),
-    ...internatEmails,
-    ...(booking.special_food && settings.kitchen_email ? [settings.kitchen_email] : []),
-  ].filter(Boolean)
+  const bcc = await buildBcc(settings, programIds as string[], !!booking.overnight, !!booking.special_food)
 
   const toList = [booking.student_email, booking.guardian_email].filter(Boolean)
   let accepted: string[] = []
@@ -167,24 +156,76 @@ export async function sendBookingConfirmation(booking: {
   if (logErr) console.error('email_log misslyckades:', logErr.message)
 }
 
+// Gemensam BCC-lista: bekräftelse och avbokning går till samma personer.
+async function buildBcc(settings: any, programIds: string[], overnight: boolean, specialFood: boolean): Promise<string[]> {
+  const { data: staffData } = await supabaseAdmin.from('staff').select('email').eq('role', 'personal').in('program_id', programIds.length ? programIds : ['__none__'])
+  const staffEmails = (staffData || []).filter((s: any) => s.email).map((s: any) => s.email)
+  const { data: internatData } = overnight ? await supabaseAdmin.from('staff').select('email').eq('role', 'internat') : { data: [] as any[] }
+  const internatEmails = (internatData || []).filter((s: any) => s.email).map((s: any) => s.email)
+  const { data: syvData } = await supabaseAdmin.from('staff').select('email').eq('role', 'syv')
+  const syvEmails = (syvData || []).filter((s: any) => s.email).map((s: any) => s.email)
+  const all: string[] = [...(settings.admin_emails || []), ...staffEmails, ...syvEmails,
+    ...(overnight && settings.internat_email ? [settings.internat_email] : []),
+    ...internatEmails,
+    ...(specialFood && settings.kitchen_email ? [settings.kitchen_email] : []),
+  ].filter(Boolean)
+  const seen = new Set<string>()
+  return all.map(e => String(e).trim()).filter(e => { const k = e.toLowerCase(); if (!e || seen.has(k)) return false; seen.add(k); return true })
+}
+
 export async function sendCancellationEmail(booking: {
   id: string; student_name: string; student_email: string; guardian_email: string; guardian_phone?: string; code: string
+  overnight?: boolean; special_food?: string
+  slots?: Array<{ date: string; type: string; program_name: string; program_icon: string; program_id?: string }>
 }) {
   const settings = await getSettings()
   if (!settings) return
-  const html = buildHtmlEmail([{
-    title: 'Avbokning bekräftad',
-    content: `Hej ${booking.student_name},\n\nDin bokning (<strong>${booking.code}</strong>) har avbokats.\n\nHör av dig till skolan om du har frågor.`
-  }])
+
+  const slots = booking.slots || []
+  const byDate: Record<string, typeof slots> = {}
+  slots.forEach(s => { if (!byDate[s.date]) byDate[s.date] = []; byDate[s.date].push(s) })
+  const scheduleContent = Object.entries(byDate).sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([date, ss]) => `<strong>${fmtDate(date)}:</strong> ${ss.map(s => `${s.program_icon} ${s.program_name} (${s.type==='fm'?'FM':s.type==='em'?'EM':'Heldag'})`).join(' + ')}`)
+    .join('\n')
+    + (booking.overnight ? '\n🛏️ Övernattning avbokad' : '')
+
+  const intro = `Hej!\n\nBokningen för <strong>${booking.student_name}</strong> (${booking.id}) har avbokats.\n\nHör av dig till skolan om du har frågor.`
+  const sections: Array<{title?: string, content: string, highlight?: boolean}> = [{ title: 'Avbokning bekräftad', content: intro }]
+  if (scheduleContent.trim()) sections.push({ title: 'Avbokade tider', content: scheduleContent, highlight: true })
+  const html = buildHtmlEmail(sections)
+  const text = sections.map(s => (s.title ? `--- ${s.title.toUpperCase()} ---\n` : '') + s.content.replace(/<[^>]+>/g,'')).join('\n\n')
+
+  // Samma mottagare som bokningsbekräftelsen: elev + vårdnadshavare (till), personal m.fl. (BCC)
+  const programIds = [...new Set(slots.map(s => s.program_id).filter(Boolean))] as string[]
+  const bcc = await buildBcc(settings, programIds, !!booking.overnight, !!booking.special_food)
+  const toList = [booking.student_email, booking.guardian_email].filter(Boolean)
+
+  let accepted: string[] = []
+  let rejected: string[] = []
+  let sendError: string | null = null
   try {
     const t = await createTransporter()
-    await t.sendMail({
+    const info = await t.sendMail({
       from: `${settings.school_name || 'Ingelstadgymnasiet'} <${settings.smtp_user}>`,
-      to: [booking.student_email, booking.guardian_email].filter(Boolean).join(', '),
-      subject: `Avbokning bekräftad (${booking.code})`,
-      html, text: `Hej ${booking.student_name},\n\nDin bokning (${booking.code}) har avbokats.\n\nHör av dig till skolan om du har frågor.`,
+      to: toList.join(', '),
+      bcc: bcc.join(', ') || undefined,
+      subject: `Avbokning bekräftad (${booking.id})`,
+      html, text,
     })
-  } catch (err) { console.error('Kunde inte skicka avbokningsmail:', err) }
+    const addr = (a: any) => (typeof a === 'string' ? a : a?.address)
+    accepted = ((info.accepted || []) as any[]).map(addr).filter(Boolean)
+    rejected = ((info.rejected || []) as any[]).map(addr).filter(Boolean)
+  } catch (err: any) {
+    sendError = err?.message || String(err)
+    console.error('Kunde inte skicka avbokningsmail:', sendError)
+  }
+
+  const { error: logErr } = await supabaseAdmin.from('email_log').insert({
+    booking_id: booking.id, kind: 'avbokning',
+    to_addresses: toList, bcc_addresses: bcc,
+    accepted, rejected, error: sendError,
+  })
+  if (logErr) console.error('email_log misslyckades:', logErr.message)
 }
 
 export async function sendAdminNotification({ to, subject, body }: { to: string[], subject: string, body: string }) {
