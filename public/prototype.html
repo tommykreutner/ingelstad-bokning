@@ -1810,7 +1810,7 @@ function renderOvernight(){
   function buildMatrix() {
     var rows = '';
     allNights.forEach(function(night){
-      rows += '<tr><td style="font-size:.78rem;font-weight:700;padding:8px 10px;"><div>'+fmtDate(night)+'</div><div style="font-weight:400;color:var(--muted);font-size:.7rem;">ankomst '+fmtDate(prevDay(night))+'</div></td>';
+      rows += '<tr><td style="font-size:.78rem;font-weight:700;padding:8px 10px;"><div>'+fmtDate(night)+'</div><div style="font-weight:400;color:var(--muted);font-size:.7rem;">ankomst '+fmtDate(night)+' kv\u00e4ll, avresa '+fmtDate(nextDay(night))+'</div></td>';
       for(var r=1;r<=cap;r++){
         var rb = DB.roomBookings.find(function(x){return x.date===night&&x.room===r;});
         var bkg = rb ? DB.bookings.find(function(b){return b.id===rb.bookingId;}) : null;
