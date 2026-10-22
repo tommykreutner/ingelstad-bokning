@@ -1,5 +1,6 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -21,6 +22,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const body = await req.json()
   const { scope, program_id, question, type, sort_order } = body
   if (!scope || !question || !type) return NextResponse.json({ error: 'Saknar fält' }, { status: 400 })
@@ -36,6 +38,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const body = await req.json()
   const { id, ...fields } = body
   if (!id) return NextResponse.json({ error: 'Saknar id' }, { status: 400 })
@@ -52,6 +55,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Saknar id' }, { status: 400 })

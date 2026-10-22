@@ -1,7 +1,9 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
 
 export async function GET(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const bookingId = searchParams.get('booking_id')
   let query = supabaseAdmin
@@ -15,6 +17,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { booking_id, item_id, completed, completed_by } = await req.json()
   if (!booking_id || !item_id) return NextResponse.json({ error: 'Saknar data' }, { status: 400 })
 

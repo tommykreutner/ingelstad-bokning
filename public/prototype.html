@@ -256,6 +256,11 @@ const DB = {
   bookings:[]
 };
 let currentUser=null, bookingState={};
+// Inloggningsnyckeln hålls bara i sidans minne och skickas som header till /api. (Ingen cookie behövs.)
+window._tok=null;
+(function(){var _f=window.fetch;window.fetch=function(u,o){
+  try{if(window._tok&&typeof u==='string'&&u.indexOf('/api/')===0){o=Object.assign({},o);o.headers=Object.assign({},o.headers,{Authorization:'Bearer '+window._tok});}}catch(e){}
+  return _f.call(this,u,o);};})();
 
 // AUTH
 function doLogin(){
@@ -267,7 +272,7 @@ function doLogin(){
     .then(r=>r.json())
     .then(data=>{
       if(data.error){errEl.textContent=data.error;errEl.classList.remove('hidden');return;}
-      const usr=DB.users.find(x=>x.id==='admin')||DB.users[0];
+      window._tok=data.token||null;const usr=DB.users.find(x=>x.id==='admin')||DB.users[0];
       const u2=Object.assign({},usr,{id:data.user.id,name:data.user.name,role:data.user.role,program:data.user.program_id,email:data.user.email});
       loginAs(u2);
     })
@@ -291,7 +296,8 @@ function loginAs(user){
     fetch('/api/checklist-completions').then(r=>r.json()),
     fetch('/api/user-programs?user_id='+user.id).then(r=>r.json()),
     fetch('/api/closed-rooms').then(r=>r.json()),
-  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes,userProgramsRes,closedRoomsRes])=>{
+    fetch('/api/settings').then(r=>r.json()).catch(()=>null),
+  ]).then(([slotsRes,bookingsRes,staffRes,attendanceRes,checklistItemsRes,checklistCompletionsRes,userProgramsRes,closedRoomsRes,settingsFull])=>{
     if(Array.isArray(slotsRes)) DB.slots=slotsRes.map(s=>({id:s.id,programId:s.program_id,date:s.date,type:s.type,capacity:s.capacity,booked:s.booked}));
     if(Array.isArray(bookingsRes)) DB.bookings=bookingsRes.map(b=>({id:b.id,studentName:b.student_name,studentEmail:b.student_email,guardianEmail:b.guardian_email,guardianPhone:b.guardian_phone||'',phone:b.phone,school:b.school,municipality:b.municipality,grade:b.grade,days:b.days,overnight:b.overnight,slots:(b.booking_slots||[]).map(bs=>bs.slot_id),specialFood:b.special_food||'',otherInfo:b.other_info||'',code:b.code,createdAt:b.created_at,roomBookings:(b.room_bookings||[]).map(rb=>({bookingId:b.id,room:rb.room,date:rb.date}))}));
     if(Array.isArray(staffRes)) DB.users=staffRes.map(u=>({id:u.id,name:u.name,role:u.role,program:u.program_id,email:u.email,pass:''}));
@@ -302,11 +308,17 @@ function loginAs(user){
     if(Array.isArray(checklistCompletionsRes)) DB.checklistCompletions=checklistCompletionsRes;
     var extraProgIds=Array.isArray(userProgramsRes)?userProgramsRes.map(function(up){return up.program_id;}):[];
     currentUser.programIds=[...new Set([currentUser.program].concat(extraProgIds).filter(Boolean))];
+    if(settingsFull&&!settingsFull.error) applyFullSettings(settingsFull);
     if(Array.isArray(closedRoomsRes)) DB.closedRooms=closedRoomsRes;
     showPage('dashboard');
   }).catch(()=>showPage('dashboard'));
 }
-function doLogout(){currentUser=null;document.getElementById('screen-app').style.display='none';showBooking();}
+// Inställningarna som hämtas före inloggning saknar interna adresser och serveruppgifter; efter inloggning hämtas allt.
+function applyFullSettings(settingsRes){
+  Object.assign(DB.settings,{schoolName:settingsRes.school_name,senderEmail:settingsRes.sender_email,adminEmails:settingsRes.admin_emails||[],kitchenEmail:settingsRes.kitchen_email,internatEmail:settingsRes.internat_email,internatEmailText:settingsRes.internat_email_text,adminEmailText:settingsRes.admin_email_text,foodOptions:settingsRes.food_options||['Vegetarisk','Glutenfri','Laktosfri','Nötallergi','Annan allergi'],kitchenEmailText:settingsRes.kitchen_email_text||'',overnightCapacity:settingsRes.overnight_capacity||3,smtpHost:settingsRes.smtp_host,smtpPort:settingsRes.smtp_port,smtpUser:settingsRes.smtp_user,openTerms:settingsRes.open_terms||[],blockedDates:(settingsRes.blocked_dates||[]).map(d=>d.slice(0,10))});
+  DB.settings._full=true;
+}
+function doLogout(){window._tok=null;currentUser=null;document.getElementById('screen-app').style.display='none';showBooking();}
 function showLogin(){document.getElementById('screen-booking').style.display='none';document.getElementById('screen-login').style.display='flex';}
 function showStaffLogin(){document.getElementById('screen-booking').style.display='none';document.getElementById('screen-login').style.display='flex';}
 
@@ -2291,6 +2303,7 @@ function toggleBookingOpen(){
   }
 }
 function saveEmail(){
+  if(!DB.settings._full){toast('Inställningarna är inte inlästa – ladda om sidan och logga in igen','e');return;}
   const senderEmail=document.getElementById('se-mail').value;
   const adminEmails=document.getElementById('se-admin').value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
   const internatEmail=document.getElementById('se-internat').value;

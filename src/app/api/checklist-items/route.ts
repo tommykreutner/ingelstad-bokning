@@ -1,5 +1,6 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
 
 export async function GET() {
   const { data, error } = await supabaseAdmin
@@ -12,6 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { label, icon, sort_order } = await req.json()
   if (!label) return NextResponse.json({ error: 'Saknar label' }, { status: 400 })
   const { data, error } = await supabaseAdmin
@@ -23,6 +25,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Saknar id' }, { status: 400 })

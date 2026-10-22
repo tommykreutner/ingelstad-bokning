@@ -1,7 +1,9 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
 
 export async function GET(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const userId = searchParams.get('user_id')
   let query = supabaseAdmin.from('user_programs').select('*')
@@ -12,6 +14,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const session = await getSession()
+  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   const { user_id, program_ids } = await req.json()
   if (!user_id || !Array.isArray(program_ids)) {
     return NextResponse.json({ error: 'Saknar data' }, { status: 400 })

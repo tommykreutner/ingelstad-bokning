@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendCancellationEmail } from '@/lib/email'
+import { clientIp, noteFailure, tooMany } from '@/lib/ratelimit'
+
+const WINDOW = 15 * 60 * 1000
 
 export async function POST(req: NextRequest) {
   try {
     const { code } = await req.json()
-    if (!code) return NextResponse.json({ error: 'Bokningskod saknas' }, { status: 400 })
+    if (!code || typeof code !== 'string') return NextResponse.json({ error: 'Bokningskod saknas' }, { status: 400 })
+    // Skydd mot gissning av bokningskoder: max 15 felaktiga försök per 15 minuter och IP-adress
+    const ipKey = 'cancel:' + clientIp(req)
+    if (tooMany(ipKey, 15, WINDOW)) {
+      return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429 })
+    }
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
@@ -15,6 +23,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error || !booking) {
+      noteFailure(ipKey, WINDOW)
       return NextResponse.json({ error: 'Bokning hittades inte eller redan avbokad' }, { status: 404 })
     }
 
@@ -56,13 +65,21 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const code = searchParams.get('kod')
   if (!code) return NextResponse.json({ error: 'Kod saknas' }, { status: 400 })
+  const ipKey = 'cancel:' + clientIp(req)
+  if (tooMany(ipKey, 15, WINDOW)) {
+    return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429 })
+  }
 
   const { data, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, student_name, student_email, school, grade, days, overnight, code, cancelled, booking_slots(slot_id, slots(date, type, programs(name, icon)))')
+    .select('id, student_name, days, overnight, code, cancelled, booking_slots(slot_id, slots(date, type, programs(name, icon)))')
     .eq('code', code.toUpperCase())
     .single()
 
-  if (error || !data) return NextResponse.json({ error: 'Bokning hittades inte' }, { status: 404 })
-  return NextResponse.json(data)
+  if (error || !data) {
+    noteFailure(ipKey, WINDOW)
+    return NextResponse.json({ error: 'Bokning hittades inte' }, { status: 404 })
+  }
+  // Bara förnamnet och schemat visas, inga kontaktuppgifter
+  return NextResponse.json({ ...data, student_name: String(data.student_name || '').split(' ')[0] })
 }

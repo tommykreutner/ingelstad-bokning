@@ -1,5 +1,6 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -25,8 +26,11 @@ export async function GET(req: Request) {
       .limit(1)
 
     if (existing && existing.length > 0) return NextResponse.json({ already_submitted: true })
-    return NextResponse.json({ booking })
+    return NextResponse.json({ booking: { ...booking, student_name: String(booking.student_name || '').split(' ')[0] } })
   }
+
+  // Statistiken (svar med elevnamn) är bara för personal
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
   // Statistik: hämta svar med fråga + bokning
   let query = supabaseAdmin

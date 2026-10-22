@@ -1,7 +1,10 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
+import { cleanText } from '@/lib/sanitize'
 
 export async function GET(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const termStart = searchParams.get('term_start')
   const termEnd = searchParams.get('term_end')
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
   const rows = answers.map((a: any) => ({
     booking_id,
     question_id: a.question_id,
-    answer: a.answer ?? null,
+    answer: typeof a.answer === 'string' ? cleanText(a.answer, 4000) : (a.answer ?? null),
   }))
 
   const { error } = await supabaseAdmin

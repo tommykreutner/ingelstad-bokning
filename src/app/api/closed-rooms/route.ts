@@ -1,5 +1,6 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
 
 export async function GET() {
   const { data, error } = await supabaseAdmin.from('closed_rooms').select('*').order('date')
@@ -9,6 +10,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { rooms } = await req.json()
   // rooms: [{room, date}] — room is 'all' or a number
   if (!Array.isArray(rooms) || !rooms.length) {
@@ -24,6 +26,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (!(await getSession())) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const room = searchParams.get('room')
   const date = searchParams.get('date')

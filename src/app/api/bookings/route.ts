@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendBookingConfirmation } from '@/lib/email'
 import crypto from 'crypto'
+import { getSession } from '@/lib/auth'
+import { cleanText, cleanEmail } from '@/lib/sanitize'
 
-function generateCode(): string {
-  return crypto.randomBytes(2).toString('hex').toUpperCase()
+// 8 tecken ger över fyra miljarder möjligheter (tidigare 4 tecken = 65 536, vilket gick att gissa).
+function generateCode(bytes = 4): string {
+  return crypto.randomBytes(bytes).toString('hex').toUpperCase()
 }
 
 function generateId(count: number): string {
@@ -49,10 +52,29 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const {
-      studentName, studentEmail, guardianEmail, phone, guardianPhone,
-      school, municipality, grade, days, overnight,
-      specialFood, otherInfo, slotIds, slotDates,
+      days, overnight, slotIds, slotDates,
     } = body
+    if (!Array.isArray(slotIds) || !slotIds.length) {
+      return NextResponse.json({ error: 'Inga tider valda' }, { status: 400 })
+    }
+
+    // Rensa texten som eleven fyllt i (inga HTML-taggar eller citattecken som kan störa personalens vyer).
+    // Saknade fält lämnas som de var, så databasen får samma värden som förut.
+    const ct = (v: any, max: number) => (v == null ? v : cleanText(v, max))
+    const studentName = ct(body.studentName, 120)
+    const phone = ct(body.phone, 40)
+    const guardianPhone = ct(body.guardianPhone, 40)
+    const school = ct(body.school, 150)
+    const municipality = ct(body.municipality, 100)
+    const grade = ct(body.grade, 20)
+    const specialFood = ct(body.specialFood, 500)
+    const otherInfo = ct(body.otherInfo, 2000)
+    const studentEmail = body.studentEmail == null ? body.studentEmail : cleanEmail(body.studentEmail)
+    const guardianEmail = body.guardianEmail == null ? body.guardianEmail : cleanEmail(body.guardianEmail)
+    if (!studentName) return NextResponse.json({ error: 'Namn saknas' }, { status: 400 })
+    if (studentEmail === null || guardianEmail === null) {
+      return NextResponse.json({ error: 'Ogiltig e-postadress' }, { status: 400 })
+    }
 
     // Get settings for capacity
     const { data: settings } = await supabaseAdmin.from('settings').select('*').single()
@@ -61,15 +83,21 @@ export async function POST(req: NextRequest) {
     // Count existing bookings for ID
     const { count } = await supabaseAdmin.from('bookings').select('*', { count: 'exact', head: true })
     const id = generateId(count || 0)
-    const code = generateCode()
+    let code = generateCode()
 
     // Insert booking
-    const { error: bookingError } = await supabaseAdmin.from('bookings').insert({
+    const bookingRow = () => ({
       id, student_name: studentName, student_email: studentEmail, guardian_phone: guardianPhone,
       guardian_email: guardianEmail, phone, school, municipality, grade,
       days, overnight: overnight || false,
       special_food: specialFood || null, other_info: otherInfo || null, code,
     })
+    let { error: bookingError } = await supabaseAdmin.from('bookings').insert(bookingRow())
+    // Reservlösning: om kolumnen `code` bara rymmer 4 tecken (22001 = värdet för långt), använd en kort kod.
+    if (bookingError && (bookingError as any).code === '22001') {
+      code = generateCode(2)
+      ;({ error: bookingError } = await supabaseAdmin.from('bookings').insert(bookingRow()))
+    }
     if (bookingError) throw bookingError
 
     // Insert booking_slots + increment booked count
@@ -126,6 +154,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getSession()
   const { searchParams } = new URL(req.url)
   const programId = searchParams.get('program')
 
@@ -145,6 +174,15 @@ export async function GET(req: NextRequest) {
       )
     : data
 
+  if (!session) {
+    // Obehörig (t.ex. en elev som bokar) ser bara vilka tider och rum som är upptagna, inga personuppgifter.
+    return NextResponse.json((filtered || []).map((b: any) => ({
+      id: b.id, days: b.days, overnight: b.overnight, created_at: b.created_at,
+      student_name: '', student_email: '', guardian_email: '', guardian_phone: '', phone: '',
+      school: '', municipality: '', grade: '', special_food: '', other_info: '', code: '',
+      booking_slots: b.booking_slots, room_bookings: b.room_bookings,
+    })))
+  }
   return NextResponse.json(filtered)
 }
 
