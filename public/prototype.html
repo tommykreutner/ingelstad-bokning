@@ -2769,9 +2769,17 @@ function buildCombos(){
   // Helper: find NV slot + paired compat slot on a date
   function nvPairForDate(date, compatId){
     if(!nv) return null;
-    const nvSlots=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&(s.type==='fm'||s.type==='em')&&s.booked<s.capacity&&isDateBookable(s.date));
-    for(const nvS of nvSlots){
-      const nvType=nvS.type; // fm or em
+    // NV bokas alltid som halvdag. Finns både FM/EM-tider och en heldagstid används FM/EM först; en heldagstid
+    // får också användas som halvdag (den delas upp i FM + EM när bokningen bekräftas, precis som för andra program).
+    // NV tar eftermiddagen först, så att det andra programmet får förmiddagen.
+    // En heldagstid som redan har en bokning delas inte upp (då skulle platserna räknas dubbelt).
+    const nvAvail=DB.slots.filter(s=>s.programId===nv.id&&s.date===date&&(s.type==='fm'||s.type==='em'||s.type==='hel')&&s.booked<s.capacity&&(s.type!=='hel'||s.booked===0)&&isDateBookable(s.date));
+    const nvCands=[];
+    nvAvail.filter(s=>s.type!=='hel').forEach(s=>nvCands.push({nvS:s,nvType:s.type}));
+    nvAvail.filter(s=>s.type==='hel').forEach(s=>{nvCands.push({nvS:s,nvType:'em'});nvCands.push({nvS:s,nvType:'fm'});});
+    for(const cand of nvCands){
+      const nvS=cand.nvS;
+      const nvType=cand.nvType; // fm or em
       const compatType=nvType==='fm'?'em':'fm';
       if(!progAllows(compatId,compatType)) continue;
       const compatAvail=getSlotsForProg(date,compatId);
@@ -2783,7 +2791,8 @@ function buildCombos(){
         const csId=cs.virtual?'virtual-'+compatId+'-'+date+'-'+compatType:cs.id;
         const orderedSlots=nvType==='fm'?[nvS.id,csId]:[csId,nvS.id];
         const typeOverride={};
-        if(cs.type==='hel') typeOverride[csId]=compatType;
+        if(cs.type==='hel'&&cs.booked===0) typeOverride[csId]=compatType;
+        if(nvS.type==='hel') typeOverride[nvS.id]=nvType;
         const compatSpots=cs.virtual?cs.capacity:(cs.capacity-cs.booked);
         return {nvSlotId:nvS.id,compatSlotId:csId,nvType,compatType,label,slots:orderedSlots,typeOverride,
                 usedTypes:{fm:nvType==='fm'?nvS.id:csId, em:nvType==='em'?nvS.id:csId},
@@ -2806,7 +2815,7 @@ function buildCombos(){
           const compatId=nvPkgId.replace('nv-','');
           const pair=nvPairForDate(date,compatId);
           if(!pair) return;
-          combos.push({date,date2:null,label:pair.label,slots:pair.slots,minSpots:pair.spots,isNV:true});
+          combos.push({date,date2:null,label:pair.label,slots:pair.slots,minSpots:pair.spots,isNV:true,typeOverride:pair.typeOverride});
         });
       });
     } else if(regProgIds.length>=2){
@@ -2916,7 +2925,9 @@ function buildCombos(){
           const otherLabel=otherPicks.length>0?otherPicks.map(p=>p.label).join(' + '):'(fri halvdag)';
           const label1=nvDay===d1?pair.label:otherLabel;
           const label2=nvDay===d2?pair.label:otherLabel;
-          combos.push({date:d1,date2:d2,label:label1,label2,slots:allSlotIds,minSpots,isNV:true});
+          const nvOvr=Object.assign({},pair.typeOverride);
+          otherPicks.forEach(p=>{const rs=DB.slots.find(x=>x.id===p.slotId);if(rs&&rs.type==='hel'&&rs.booked===0)nvOvr[p.slotId]=p.type;});
+          combos.push({date:d1,date2:d2,label:label1,label2,slots:allSlotIds,minSpots,isNV:true,typeOverride:nvOvr});
         }
       }
     } else {
