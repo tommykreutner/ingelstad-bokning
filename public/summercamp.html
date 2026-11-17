@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SummerCamp — Ingelstadgymnasiet</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#f7faf8;color:#1a2e1e;padding:16px 14px 40px;font-size:15px;}
+.wrap{max-width:620px;margin:0 auto;}
+.header{background:linear-gradient(135deg,#1e3d2a,#2d5a3d);padding:22px 26px;border-radius:16px 16px 0 0;color:#fff;}
+.header h1{font-family:'Playfair Display',serif;font-size:1.5rem;}
+.header p{color:#a8d4b8;font-size:.88rem;margin-top:4px;}
+.card{background:#fff;padding:26px;border-radius:0 0 16px 16px;box-shadow:0 4px 24px rgba(45,90,61,.10);}
+.sec{font-weight:700;color:#2d5a3d;font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;margin:26px 0 12px;padding-bottom:8px;border-bottom:2px solid #e8f4ed;}
+.sec:first-of-type{margin-top:0;}
+.intro{line-height:1.6;margin-bottom:22px;white-space:pre-line;}
+.track{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1.5px solid #c8ddd0;border-radius:12px;margin-bottom:10px;cursor:pointer;transition:all .12s;}
+.track:hover{border-color:#2d5a3d;}
+.track.sel{border-color:#2d5a3d;background:#e8f4ed;}
+.track.full{opacity:.55;cursor:not-allowed;background:#f3f4f3;}
+.track .ic{font-size:1.7rem;line-height:1;}
+.track .nm{font-weight:700;}
+.track .ds{font-size:.85rem;color:#4a6552;margin-top:2px;line-height:1.45;}
+.track .lf{font-size:.78rem;font-weight:700;margin-top:6px;color:#2d5a3d;}
+.track.full .lf{color:#991b1b;}
+.track.few .lf{color:#b45309;}
+label.f{display:block;font-size:.82rem;font-weight:700;color:#4a6552;margin-bottom:5px;}
+.row{margin-bottom:14px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:480px){.two{grid-template-columns:1fr;gap:0;}}
+input[type=text],input[type=email],input[type=tel],select,textarea{width:100%;padding:12px 14px;border:1.5px solid #c8ddd0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:1rem;color:#1a2e1e;background:#fff;min-height:46px;}
+textarea{min-height:84px;resize:vertical;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#2d5a3d;}
+.opts{display:flex;gap:8px;flex-wrap:wrap;}
+.opt{padding:11px 16px;border:1.5px solid #c8ddd0;border-radius:10px;cursor:pointer;font-weight:600;font-size:.92rem;}
+.opt.sel{background:#2d5a3d;color:#fff;border-color:#2d5a3d;}
+.hint{font-size:.8rem;color:#7a9485;margin-top:5px;line-height:1.4;}
+.gdpr{background:#f0fdf4;border-left:4px solid #2d5a3d;padding:14px 16px;border-radius:8px;font-size:.82rem;line-height:1.5;margin:22px 0 14px;}
+.gdpr label{display:flex;gap:10px;align-items:flex-start;margin-top:12px;cursor:pointer;font-weight:600;}
+.gdpr input{margin-top:3px;flex-shrink:0;}
+.btn{width:100%;padding:16px;background:#2d5a3d;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;}
+.btn:hover{background:#1e3d2a;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn.danger{background:#b91c1c;}
+.err{background:#fee2e2;border-left:4px solid #dc2626;color:#991b1b;padding:12px 14px;border-radius:8px;margin-bottom:16px;font-size:.9rem;display:none;}
+.msg{text-align:center;padding:40px 12px;}
+.msg .big{font-size:3rem;margin-bottom:12px;}
+.msg h2{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:10px;}
+.msg p{color:#4a6552;line-height:1.6;margin-bottom:8px;}
+.code{display:inline-block;background:#e8f4ed;color:#1e3d2a;font-weight:700;letter-spacing:2px;padding:8px 16px;border-radius:8px;margin:6px 0;}
+.hp{position:absolute;left:-9999px;}
+details.inf{border:1.5px solid #c8ddd0;border-radius:12px;margin-bottom:10px;background:#fff;}
+details.inf summary{padding:13px 16px;font-weight:700;color:#2d5a3d;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;}
+details.inf summary::-webkit-details-marker{display:none;}
+details.inf summary::after{content:'+';font-size:1.3rem;line-height:1;color:#7a9485;}
+details.inf[open] summary::after{content:'\2212';}
+.inb{padding:0 16px 14px;line-height:1.55;font-size:.92rem;}
+.inb p{margin:6px 0;}.inb ul{margin:6px 0 6px 18px;}.inb h4{margin:14px 0 4px;font-size:.92rem;}
+.tm{display:flex;gap:12px;padding:3px 0;border-bottom:1px dotted #dfeae3;}.tm b{min-width:48px;color:#2d5a3d;}
+.gear{margin-top:8px;font-size:.82rem;line-height:1.45;color:#1e3d2a;background:#fff;border-radius:8px;padding:8px 10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1 id="h-title">SummerCamp</h1>
+    <p id="h-sub">Ingelstadgymnasiet</p>
+  </div>
+  <div class="card" id="content"><div class="msg"><p>Laddar...</p></div></div>
+</div>
+<script>
+var cfg=null,state={track:'',room:'',own:'',consent:false};
+var qs=new URLSearchParams(location.search);
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function $(id){return document.getElementById(id);}
+function show(html){$('content').innerHTML=html;postHeight();}
+// Berättar för sidan som bäddar in formuläret hur högt det är, så att iframen kan få rätt höjd utan egen rullningslist
+function postHeight(){try{if(window.parent!==window)window.parent.postMessage({type:'summercamp-height',height:Math.ceil(document.body.getBoundingClientRect().height)},'*');}catch(e){}}
+if(window.ResizeObserver)new ResizeObserver(postHeight).observe(document.body);window.addEventListener('load',postHeight);
+// Lägerinformationen skrivs i admin med enkel markering: ## rubrik, ### underrubrik, - punkt, 09:00 tid
+function renderInfo(text){
+  var secs=[],cur=null;
+  String(text||'').split(/\r?\n/).forEach(function(raw){
+    var l=raw.trim();
+    if(l.indexOf('## ')===0){cur={title:l.slice(3),html:''};secs.push(cur);return;}
+    if(!cur){cur={title:'',html:''};secs.push(cur);}
+    if(!l){cur.closeUl&&(cur.html+='</ul>',cur.closeUl=false);return;}
+    var m=/^(\d{1,2}[:.]\d{2})\s+(.*)$/.exec(l);
+    if(l.indexOf('- ')===0){if(!cur.closeUl){cur.html+='<ul>';cur.closeUl=true;}cur.html+='<li>'+esc(l.slice(2))+'</li>';return;}
+    if(cur.closeUl){cur.html+='</ul>';cur.closeUl=false;}
+    if(l.indexOf('### ')===0)cur.html+='<h4>'+esc(l.slice(4))+'</h4>';
+    else if(m)cur.html+='<div class="tm"><b>'+esc(m[1])+'</b><span>'+esc(m[2])+'</span></div>';
+    else cur.html+='<p>'+esc(l)+'</p>';
+  });
+  return secs.map(function(s,i){
+    if(s.closeUl)s.html+='</ul>';
+    if(!s.title)return '<div class="inb" style="padding:0 0 10px;">'+s.html+'</div>';
+    return '<details class="inf"'+(i===0?' open':'')+'><summary>'+esc(s.title)+'</summary><div class="inb">'+s.html+'</div></details>';
+  }).join('');
+}
+function msg(icon,title,text){show('<div class="msg"><div class="big">'+icon+'</div><h2>'+esc(title)+'</h2><p>'+text+'</p></div>');}
+
+async function init(){
+  if(qs.get('avboka')) return initCancel(qs.get('avboka'));
+  try{
+    var r=await fetch('/api/camp');cfg=await r.json();
+    if(cfg.error){msg('⚠️','Anmälan är inte tillgänglig',esc(cfg.error));return;}
+  }catch(e){msg('⚠️','Kunde inte ladda sidan','Försök igen om en stund.');return;}
+  $('h-title').textContent=cfg.title||'SummerCamp';
+  $('h-sub').textContent='Ingelstadgymnasiet'+(cfg.dates_text?' · '+cfg.dates_text:'');
+  if(cfg.status==='not_yet') return msg('⏳','Anmälan har inte öppnat än',cfg.opens_at?'Anmälan öppnar '+esc(new Date(cfg.opens_at).toLocaleString('sv-SE',{dateStyle:'long',timeStyle:'short'}))+'.':'Titta in igen lite senare.');
+  if(cfg.status!=='open') return msg('🔒','Anmälan är stängd',cfg.status==='ended'?'Tiden för anmälan har gått ut.':'Det går inte att anmäla sig just nu.');
+  renderForm();
+}
+
+function renderForm(){
+  var h='';
+  if(cfg.intro_text) h+='<div class="intro">'+esc(cfg.intro_text)+'</div>';
+  if(cfg.info_text) h+='<div class="sec">Om lägret</div>'+renderInfo(cfg.info_text);
+  if(cfg.billing_text) h+='<div class="sec">Avgift och betalning</div><div class="intro">'+esc(cfg.billing_text)+'</div>';
+  h+='<div class="err" id="err"></div>';
+  h+='<div class="sec">Välj inriktning</div><div id="tracks"></div><div id="oa"></div>';
+  h+='<div class="sec">Om dig</div>'
+  +'<div class="two"><div class="row"><label class="f">Förnamn *</label><input type="text" id="fn" autocomplete="given-name"></div><div class="row"><label class="f">Efternamn *</label><input type="text" id="ln" autocomplete="family-name"></div></div>'
+  +'<div class="row"><label class="f">Din e-post *</label><input type="email" id="se" autocomplete="email"></div>'
+  +'<div class="row"><label class="f">Ditt telefonnummer *</label><input type="tel" id="ph" autocomplete="tel"></div>'
+  +'<div class="row"><label class="f">Nuvarande skola *</label><input type="text" id="sc"></div>'
+  +'<div class="two"><div class="row"><label class="f">Hemkommun *</label><input type="text" id="mu"></div>'
+  +'<div class="row"><label class="f">Årskurs *</label><select id="gr"><option value="">Välj...</option>'+(cfg.grade_options||[]).map(function(g){return '<option>'+esc(g)+'</option>';}).join('')+'</select></div></div>';
+  h+='<div class="sec">Vårdnadshavare</div>'
+  +'<div class="row"><label class="f">Vårdnadshavares namn *</label><input type="text" id="gn" autocomplete="name"></div>'
+  +'<div class="row"><label class="f">Vårdnadshavares e-post *</label><input type="email" id="ge"></div>'
+  +'<div class="row"><label class="f">Vårdnadshavares telefon *</label><input type="tel" id="gp"></div>';
+  h+='<div class="sec">Tröja och boende</div>'
+  +'<div class="row"><label class="f">Tröjstorlek *</label><select id="ts"><option value="">Välj...</option>'+(cfg.shirt_sizes||[]).map(function(g){return '<option>'+esc(g)+'</option>';}).join('')+'</select></div>'
+  +'<div class="row"><label class="f">Boende *</label><div class="opts" id="room">'
+  +'<div class="opt" data-v="dubbel">Dubbelrum</div><div class="opt" data-v="enkel">Enkelrum</div></div>'
+  +'<div class="hint">Vi försöker ordna önskat rum men kan inte lova det.</div></div>'
+  +'<div class="row" id="rm-row" style="display:none"><label class="f">Vill du bo med någon särskild?</label><input type="text" id="rm" placeholder="Skriv namnet, annars lämnar du tomt"><div class="hint">Önskemålet måste vara ömsesidigt, så be din kompis skriva ditt namn.</div></div>';
+  h+='<div class="sec">Övrigt</div>'
+  +'<div class="row"><label class="f">Specialkost</label><select id="sf"><option value="">Ingen special</option>'+(cfg.food_options||[]).map(function(g){return '<option>'+esc(g)+'</option>';}).join('')+'</select></div>'
+  +'<div class="row"><label class="f">Allergier, funktionsvariationer eller annat vi bör känna till</label><textarea id="ot" placeholder="Frivilligt..."></textarea></div>';
+  h+='<input class="hp" type="text" id="website" tabindex="-1" autocomplete="off">';
+  h+='<div class="gdpr"><strong>Hantering av personuppgifter</strong><br>Ingelstadgymnasiet är personuppgiftsansvarig för de uppgifter du lämnar här (namn, kontaktuppgifter, skola, hemkommun, årskurs, tröjstorlek, kost och önskemål om boende). Uppgifterna används för att administrera '+esc(cfg.title||'SummerCamp')+' och raderas när de inte längre behövs för det. Du har rätt att begära tillgång till, rättelse eller radering genom att kontakta <a href="mailto:info@ingelstad.nu">info@ingelstad.nu</a>.'
+  +'<label><input type="checkbox" id="gd"> Jag godkänner att Ingelstadgymnasiet lagrar mina uppgifter enligt ovan.</label></div>';
+  h+='<button class="btn" id="go" onclick="submitForm()">Skicka anmälan</button>';
+  show(h);
+  drawTracks();
+  document.querySelectorAll('#room .opt').forEach(function(o){o.onclick=function(){
+    state.room=o.getAttribute('data-v');
+    document.querySelectorAll('#room .opt').forEach(function(x){x.classList.toggle('sel',x===o);});
+    $('rm-row').style.display=state.room==='dubbel'?'block':'none';
+  };});
+}
+
+function drawTracks(){
+  $('tracks').innerHTML=(cfg.tracks||[]).map(function(t){
+    var cls='track'+(t.full?' full':'')+(t.left>0&&t.left<=3?' few':'')+(state.track===t.id?' sel':'');
+    var lf=t.full?'Fullbokad':(t.left===1?'1 plats kvar':t.left+' platser kvar');
+    return '<div class="'+cls+'" data-id="'+esc(t.id)+'"><div class="ic">'+esc(t.icon)+'</div><div><div class="nm">'+esc(t.name)+'</div>'+(t.description?'<div class="ds">'+esc(t.description)+'</div>':'')+'<div class="lf">'+lf+'</div>'+(state.track===t.id&&t.gear_text?'<div class="gear"><strong>Ta med för '+esc(t.name)+':</strong> '+esc(t.gear_text)+'</div>':'')+'</div></div>';
+  }).join('')||'<p class="hint">Det finns inga inriktningar att välja just nu.</p>';
+  document.querySelectorAll('#tracks .track').forEach(function(el){el.onclick=function(){
+    var t=cfg.tracks.find(function(x){return x.id===el.getAttribute('data-id');});
+    if(!t||t.full)return;
+    if(state.track!==t.id)state.own='';
+    state.track=t.id;drawTracks();
+  };});
+  drawOwn();
+}
+
+// Frågan om egen hund/häst hör till inriktningen och visas bara när den har en sådan fråga
+function drawOwn(){
+  var t=(cfg.tracks||[]).find(function(x){return x.id===state.track;});
+  var box=$('oa');
+  if(!t||!t.own_animal_text){box.innerHTML='';state.own='';return;}
+  box.innerHTML='<div class="row"><label class="f">'+esc(t.own_animal_text)+' *</label><div class="opts" id="own"><div class="opt'+(state.own==='ja'?' sel':'')+'" data-v="ja">Ja</div><div class="opt'+(state.own==='nej'?' sel':'')+'" data-v="nej">Nej</div></div></div>';
+  document.querySelectorAll('#own .opt').forEach(function(o){o.onclick=function(){
+    state.own=o.getAttribute('data-v');
+    document.querySelectorAll('#own .opt').forEach(function(x){x.classList.toggle('sel',x===o);});
+  };});
+}
+
+function showErr(t){var e=$('err');e.textContent=t;e.style.display='block';e.scrollIntoView({behavior:'smooth',block:'center'});}
+function v(id){return $(id).value.trim();}
+
+async function submitForm(){
+  $('err').style.display='none';
+  if(v('website')) return; // honungsfälla för robotar
+  var need=[['fn','förnamn'],['ln','efternamn'],['se','din e-post'],['ph','ditt telefonnummer'],['sc','skola'],['mu','hemkommun'],['gr','årskurs'],['gn','vårdnadshavares namn'],['ge','vårdnadshavares e-post'],['gp','vårdnadshavares telefon'],['ts','tröjstorlek']];
+  if(!state.track) return showErr('Välj en inriktning.');
+  var tr=(cfg.tracks||[]).find(function(x){return x.id===state.track;})||{};
+  if(tr.own_animal_text&&!state.own) return showErr('Svara ja eller nej: '+tr.own_animal_text);
+  for(var i=0;i<need.length;i++){ if(!v(need[i][0])) return showErr('Fyll i '+need[i][1]+'.'); }
+  if(!state.room) return showErr('Välj boende.');
+  if(!$('gd').checked) return showErr('Du måste godkänna hanteringen av personuppgifter.');
+  var b=$('go');b.disabled=true;b.textContent='Skickar...';
+  var body={trackId:state.track,studentName:v('fn')+' '+v('ln'),studentEmail:v('se'),phone:v('ph'),school:v('sc'),municipality:v('mu'),grade:v('gr'),
+    guardianName:v('gn'),guardianEmail:v('ge'),guardianPhone:v('gp'),ownAnimal:tr.own_animal_text?state.own:'',tshirt:v('ts'),roomPref:state.room,roommateWish:state.room==='dubbel'?v('rm'):'',
+    specialFood:v('sf'),otherInfo:v('ot'),consent:true};
+  try{
+    var r=await fetch('/api/camp/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var d=await r.json();
+    if(!r.ok){
+      b.disabled=false;b.textContent='Skicka anmälan';
+      if(d.code==='FULL'){ // någon annan hann före: uppdatera platserna
+        try{var rr=await fetch('/api/camp');var nc=await rr.json();if(nc.tracks){cfg.tracks=nc.tracks;state.track='';drawTracks();}}catch(e){}
+      }
+      return showErr(d.error||'Något gick fel. Försök igen.');
+    }
+    var t=cfg.tracks.find(function(x){return x.id===state.track;})||{};
+    msg('✅','Din plats är bokad!','Du är anmäld till <strong>'+esc((t.icon||'')+' '+(t.name||''))+'</strong>. Vi har skickat ett mail till dig och din vårdnadshavare. Du får en slutgiltig bekräftelse senare.<br><br>Ditt anmälningsnummer: <span class="code">'+esc(d.id)+'</span><br>Din avbokningskod: <span class="code">'+esc(d.code)+'</span><br><br>Kontrollera skräpposten om du inte hittar mailet.');
+  }catch(e){b.disabled=false;b.textContent='Skicka anmälan';showErr('Kunde inte skicka. Kontrollera uppkopplingen och försök igen.');}
+}
+
+async function initCancel(code){
+  $('h-sub').textContent='Avboka din plats';
+  try{
+    var r=await fetch('/api/camp/cancel?code='+encodeURIComponent(code));var d=await r.json();
+    if(!r.ok) return msg('⚠️','Hittade ingen anmälan',esc(d.error||'Anmälan finns inte eller är redan avbokad.'));
+    show('<div class="msg"><div class="big">🗓️</div><h2>Avboka platsen?</h2><p>Hej '+esc(d.first_name)+'! Vill du avboka din plats på <strong>'+esc(d.track)+'</strong>? Då blir den ledig för någon annan.</p><br><button class="btn danger" id="cgo">Ja, avboka</button></div>');
+    $('cgo').onclick=async function(){
+      this.disabled=true;
+      var r2=await fetch('/api/camp/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code})});
+      var d2=await r2.json();
+      if(r2.ok) msg('✅','Avbokat','Din plats är avbokad och vi har skickat en bekräftelse på mail.');
+      else msg('⚠️','Kunde inte avboka',esc(d2.error||'Försök igen eller kontakta skolan.'));
+    };
+  }catch(e){msg('⚠️','Något gick fel','Försök igen om en stund.');}
+}
+init();
+</script>
+</body>
+</html>

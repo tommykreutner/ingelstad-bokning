@@ -6,7 +6,7 @@ export async function getSettings() {
   return data
 }
 
-async function createTransporter() {
+export async function createTransporter() {
   const settings = await getSettings()
   if (!settings?.smtp_host) throw new Error('SMTP-inställningar saknas.')
   return nodemailer.createTransport({
@@ -46,7 +46,7 @@ function nl2br(text: string): string {
   return makeLink(text).replace(/\n/g, '<br>')
 }
 
-function buildHtmlEmail(sections: Array<{title?: string, content: string, highlight?: boolean, raw?: boolean}>): string {
+export function buildHtmlEmail(sections: Array<{title?: string, content: string, highlight?: boolean, raw?: boolean}>, subtitle: string = 'Prova-på-dagar'): string {
   const sectionsHtml = sections.map(s => `
     <div style="margin-bottom:20px;">
       ${s.title ? `<div style="font-weight:700;color:#2d5a3d;font-size:13px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #c8ddd0;">${s.title}</div>` : ''}
@@ -57,7 +57,7 @@ function buildHtmlEmail(sections: Array<{title?: string, content: string, highli
     <div style="max-width:600px;margin:0 auto;padding:20px;">
       <div style="background:#2d5a3d;padding:24px 28px;border-radius:12px 12px 0 0;">
         <div style="color:#fff;font-size:20px;font-weight:700;">🌲 Ingelstadgymnasiet</div>
-        <div style="color:#a8d4b8;font-size:13px;margin-top:4px;">Prova-på-dagar</div>
+        <div style="color:#a8d4b8;font-size:13px;margin-top:4px;">${subtitle}</div>
       </div>
       <div style="background:#fff;padding:28px;border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(45,90,61,.08);">
         ${sectionsHtml}
@@ -157,7 +157,7 @@ export async function sendBookingConfirmation(booking: {
 }
 
 // Gemensam BCC-lista: bekräftelse och avbokning går till samma personer.
-async function buildBcc(settings: any, programIds: string[], overnight: boolean, specialFood: boolean): Promise<string[]> {
+export async function buildBcc(settings: any, programIds: string[], overnight: boolean, specialFood: boolean): Promise<string[]> {
   const { data: staffData } = await supabaseAdmin.from('staff').select('email').eq('role', 'personal').in('program_id', programIds.length ? programIds : ['__none__'])
   const staffEmails = (staffData || []).filter((s: any) => s.email).map((s: any) => s.email)
   const { data: internatData } = overnight ? await supabaseAdmin.from('staff').select('email').eq('role', 'internat') : { data: [] as any[] }

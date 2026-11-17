@@ -223,6 +223,7 @@ tr:last-child td{border-bottom:none;}
     <div id="page-kokadmin" class="page-view"></div>
     <div id="page-stats" class="page-view"></div>
     <div id="page-evaluations" class="page-view"></div>
+    <div id="page-camp" class="page-view"></div>
   </div>
   <div class="bottom-nav" id="bottom-nav"></div>
 </div>
@@ -333,6 +334,7 @@ function navItems(){
   if(r==='internat') items.push({id:'internatadmin',icon:'⚙️',label:'Admin'});
   if(r==='kok') items.push({id:'bookings',icon:'📋',label:'Bokningar'});
   if(r==='kok') items.push({id:'kokadmin',icon:'⚙️',label:'Inställningar'});
+  if(r==='admin'||r==='personal'||r==='internat') items.push({id:'camp',icon:'⛺',label:'Camp'});
   if(r==='admin'||r==='personal'||r==='internat'||r==='syv') items.push({id:'evaluations',icon:'📝',label:'Svar'});
   if(r==='admin') items.push({id:'admin',icon:'⚙️',label:'Admin'});
   return items;
@@ -343,7 +345,7 @@ function showPage(id){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
   const page=document.getElementById('page-'+id),btn=document.getElementById('bnav-'+id);
   if(page)page.classList.add('active');if(btn)btn.classList.add('active');
-  ({dashboard:renderDashboard,bookings:renderBookings,slots:renderSlots,overnight:renderOvernight,admin:renderAdmin,stats:renderStatsPage,progadmin:renderProgAdmin,internatadmin:renderInternatAdmin,kokadmin:renderKokAdmin,evaluations:renderEvaluations})[id]?.();
+  ({dashboard:renderDashboard,bookings:renderBookings,slots:renderSlots,overnight:renderOvernight,admin:renderAdmin,stats:renderStatsPage,progadmin:renderProgAdmin,internatadmin:renderInternatAdmin,kokadmin:renderKokAdmin,evaluations:renderEvaluations,camp:function(){if(window.renderCamp)window.renderCamp();}})[id]?.();
 }
 
 // DASHBOARD
@@ -3404,5 +3406,6 @@ async function initDB(){
 // Start on booking flow
 initDB().then(()=>showBooking());
 </script>
+<script src="/camp-admin.js"></script>
 </body>
 </html>
