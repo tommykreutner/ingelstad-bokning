@@ -1,7 +1,0 @@
-﻿const fs=require("fs");
-let c=fs.readFileSync("public/prototype.html","utf-8");
-const old = "            +(unconfirmed.length>0?'<div class=\"stat-card\" style=\"grid-column:1/-1;border-left:4px solid #f59e0b;\"><div class=\"stat-label\">⚠️ Obekräftade besök</div><div class=\"stat-val\" style=\"color:#d97706;\">'+unconfirmed.length+'</div><div class=\"stat-sub\">passerade besök utan närvaro-markering</div></div>':'');\r\n        }";
-const newCode = "            +(unconfirmed.length>0?'<div class=\"stat-card\" style=\"grid-column:1/-1;border-left:4px solid #f59e0b;\"><div class=\"stat-label\">⚠️ Obekräftade besök</div><div class=\"stat-val\" style=\"color:#d97706;\">'+unconfirmed.length+'</div><div class=\"stat-sub\">passerade besök utan närvaro-markering</div></div>':'');\r\n          return '<div class=\"stat-card\"><div class=\"stat-label\">Kommande bokningar</div><div class=\"stat-val\">'+upcoming.length+'</div><div class=\"stat-sub\">fram till terminens slut</div></div>'+(unconfirmed.length>0?'<div class=\"stat-card\" style=\"grid-column:1/-1;border-left:4px solid #f59e0b;\"><div class=\"stat-label\">⚠️ Obekräftade besök</div><div class=\"stat-val\" style=\"color:#d97706;\">'+unconfirmed.length+'</div><div class=\"stat-sub\">passerade besök utan närvaro-markering</div></div>':'');\r\n        }";
-c=c.replace(old,newCode);
-fs.writeFileSync("public/prototype.html",c);
-console.log("Done:", c.includes("return '<div class=\"stat-card\"><div class=\"stat-label\">Kommande bokningar"));
